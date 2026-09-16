@@ -1,0 +1,3 @@
+CREATE DATABASE rentflow_db;
+
+SHOW DATABASES;
