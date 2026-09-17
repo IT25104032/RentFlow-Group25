@@ -1,3 +1,5 @@
-CREATE DATABASE rentflow_db;
+CREATE DATABASE IF NOT EXISTS rentflow_db;
+
+USE rentflow_db;
 
 SHOW DATABASES;
