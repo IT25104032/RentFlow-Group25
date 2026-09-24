@@ -21,21 +21,15 @@ created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
 PRIMARY KEY(customer_id),
 
-CONSTRAINT fk_customers_company
-FOREIGN KEY (company_id)
-REFERENCES company(company_id)
+CONSTRAINT fk_customers_company FOREIGN KEY (company_id) REFERENCES company(company_id)
 ON UPDATE CASCADE ON DELETE RESTRICT,
 
-CONSTRAINT fk_customers_created_by
-FOREIGN KEY (created_by)
-REFERENCES sys_user(user_id)
+CONSTRAINT fk_customers_created_by FOREIGN KEY (created_by) REFERENCES sys_user(user_id)
 ON UPDATE CASCADE ON DELETE RESTRICT,
 
-CONSTRAINT check_customers_type
-CHECK (customer_type IN ('INDIVIDUAL', 'BUSINESS')),
+CONSTRAINT check_customers_type CHECK (customer_type IN ('INDIVIDUAL', 'BUSINESS')),
 
-CONSTRAINT check_customers_status
-CHECK (customer_status IN ('ACTIVE', 'INACTIVE', 'BLOCKED'))
+CONSTRAINT check_customers_status CHECK (customer_status IN ('ACTIVE', 'INACTIVE', 'BLOCKED'))
 
 );
 
@@ -44,7 +38,7 @@ CHECK (customer_status IN ('ACTIVE', 'INACTIVE', 'BLOCKED'))
 
 CREATE TABLE customer_document (
 document_id INT AUTO_INCREMENT,
-customer_id INT,
+customer_id INT NOT NULL,
 document_type VARCHAR(30) NOT NULL,
 document_number VARCHAR(80) NOT NULL,
 document_copy_path VARCHAR(500) NOT NULL,
@@ -55,18 +49,13 @@ notes VARCHAR(255),
 
 PRIMARY KEY(document_id),
 
-CONSTRAINT fk_customer_documents_customer
-FOREIGN KEY (customer_id)
-REFERENCES customer(customer_id)
+CONSTRAINT fk_customer_documents_customer FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
 ON UPDATE CASCADE ON DELETE RESTRICT,
 
-CONSTRAINT fk_customer_documents_checked_by
-FOREIGN KEY (checked_by)
-REFERENCES sys_user(user_id)
+CONSTRAINT fk_customer_documents_checked_by FOREIGN KEY (checked_by) REFERENCES sys_user(user_id)
 ON UPDATE CASCADE ON DELETE RESTRICT,
 
-CONSTRAINT check_customer_documents_type
-CHECK (document_type IN ('NIC_ID', 'DRIVING_LICENCE','PASSPORT','OTHER'))
+CONSTRAINT check_customer_documents_type CHECK (document_type IN ('NIC_ID', 'DRIVING_LICENCE','PASSPORT','OTHER'))
 );
 
 
@@ -85,19 +74,16 @@ notes VARCHAR(255),
 
 PRIMARY KEY (secondary_contact_id),
 
-CONSTRAINT uq_secondary_contact_customer
-UNIQUE (customer_id),
+CONSTRAINT uq_secondary_contact_customer UNIQUE (customer_id),
 
-CONSTRAINT fk_secondary_contacts_customer
-FOREIGN KEY (customer_id)
-REFERENCES customer(customer_id)
+CONSTRAINT fk_secondary_contacts_customer FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
 ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 
 #4. RENTAL
 
-CREATE TABLE RENTAL (
+CREATE TABLE rental (
 rental_id INT AUTO_INCREMENT,
 company_id INT NOT NULL,
 customer_id INT NOT NULL,
@@ -186,41 +172,75 @@ CONSTRAINT check_rental_extensions_charge CHECK (extension_charge >= 0)
 );
 
 
-#POPULATING THE DATABASE
+#POPULATING THE DATABASE (using sample data)
 
 #1. Register a new customer
-INSERT INTO customer (company_id, customer_name, email, phone, address, customer_type, customer_status, created_by, created_at)
-VALUES (1001, 'John Perera', 'john.perera@email.com', '0771234567', '25 Main Street, Colombo', 'INDIVIDUAL', 'ACTIVE', 5, NOW());
+INSERT INTO customer (company_id, customer_name, email, phone, address, customer_type, customer_status, created_by)
+VALUES
+(1001, 'Kasun Jayasinghe', 'kasun@email.com', '0711234567', 'Colombo', 'INDIVIDUAL', 'ACTIVE', 3),
 
-#2. Add identification document
-INSERT INTO customer_document (customer_id, document_type, document_number, document_copy_path, expiry_date, checked_by, checked_at, notes)
-VALUES (1, 'NIC_ID', '199512345678', '/documents/customers/1/nic.pdf', NULL, 5, NOW(), 'Identification checked and verified');
+(1001, 'Sunrise Construction Pvt Ltd', 'info@sunrise.lk', '0114567890', 'Kandy', 'BUSINESS', 'ACTIVE', 3),
+
+(1001, 'Dilshan Perera', 'dilshan@email.com', '0769876543', 'Gampaha', 'INDIVIDUAL', 'ACTIVE', 4);
+
+#2. Add customer identification document
+INSERT INTO customer_document (customer_id, document_type, document_number, document_copy_path, expiry_date, checked_by, notes)
+VALUES
+(1, 'NIC_ID', '200012345678', '/documents/kasun_nic.pdf', NULL, 3, 'NIC checked'),
+
+(2, 'OTHER', 'BR-2025-001', '/documents/sunrise_registration.pdf', NULL, 3, 'Business registration checked'),
+
+(3, 'DRIVING_LICENCE', 'B1234567', '/documents/dilshan_licence.pdf', '2028-05-15', 4, 'Licence checked');
 
 
+#3. Add customer's secondary contact for follow up
+INSERT INTO customer_secondary_contact (customer_id, contact_name, relationship, phone_number, alternate_phone, email, address)
+VALUES
+(1, 'Sunil Jayasinghe', 'Father', '0775551111', NULL, 'sunil@email.com', 'Colombo'),
+
+(2, 'Ruwan Silva', 'Manager', '0775552222', '0715552222', 'ruwan@sunrise.lk', 'Kandy'),
+
+(3, 'Nimal Perera', 'Brother', '0775553333', NULL, 'nimalp@email.com', 'Gampaha');
+ 
+ 
 #3. Create rental
-INSERT INTO rental (rental_id, company_id, customer_id, created_by, rental_date, start_date, due_date, rental_status, notes, created_at)
-VALUES (1001, 1001, 1, 5, NOW(), '2026-09-20', '2026-09-25', 'DRAFT', 'New equipment rental', NOW());
+INSERT INTO rental
+(company_id, customer_id, created_by, start_date, due_date, rental_status, notes)
+VALUES
+(1001, 1, 3, '2026-09-20', '2026-09-25', 'PARTIALLY_RETURNED', 'Customer rented power tools'),
+
+(1001, 2, 3, '2026-09-10', '2026-09-15', 'OVERDUE', 'Construction equipment rental'),
+
+(1001, 3, 4, '2026-09-23', '2026-09-28', 'ACTIVE', 'Cleaning equipment rental');
 
 #4. Add equipment to rental
 INSERT INTO rental_item (rental_id, equipment_id, quantity, rate_per_unit, rate_period, deposit_per_unit, line_deposit, item_status, issued_at)
-SELECT 1001, equipment_id, 2, rental_rate, rate_period, refundable_deposit_per_unit, 2 * refundable_deposit_per_unit, 'SELECTED', NULL
-FROM equipment
-WHERE equipment_id = 10 AND company_id = 1001 AND item_status = 'ACTIVE' AND available_quantity >= 2;
+VALUES
+
+# Rental 1
+(1, 1, 2, 1500.00, 'DAY', 5000.00, 10000.00, 'SELECTED', NULL),
+
+(1, 2, 1, 1200.00, 'DAY', 4000.00, 4000.00, 'ISSUED', '2026-09-20 10:00:00'),
+
+# Rental 2
+(2, 3, 1, 5000.00, 'DAY', 15000.00, 15000.00, 'LOST', '2026-09-10 09:00:00'),
+
+# Rental 3
+(3, 4, 1, 2500.00, 'DAY', 8000.00, 8000.00, 'ISSUED', '2026-09-23 14:00:00');
+ 
   
   
 #5. Record rental extension
-INSERT INTO rental_extension (rental_id, old_due_date, new_due_date, extension_charge, approved_by, reason, created_at)
-SELECT rental_id, due_date, '2026-09-30', 5000.00, 5, 'Customer requested rental extension', NOW()
-FROM rental
-WHERE rental_id = 1001 AND company_id = 1001;
+INSERT INTO rental_extension (rental_id, old_due_date, new_due_date, extension_charge, approved_by, reason)
+VALUES (1, '2026-09-25', '2026-09-28', 1500.00, 3, 'Customer requested three additional days');
 
 
 
 #SQL QUERIES
-#1. Search customer by name
+#1. Search customer by name/phone
 SELECT customer_id, customer_name, email, phone, address, customer_type, customer_status, created_at
 FROM customer c
-WHERE company_id = 1001 AND (c.customer_name LIKE '%John%' OR phone = '0771234567')
+WHERE company_id = 1001 AND (c.customer_name LIKE '%Kasun%' OR phone = '0771234567')
 ORDER BY customer_name;
 
 
@@ -267,25 +287,64 @@ SELECT
 FROM customer_document cd
 JOIN sys_user u
     ON cd.checked_by = u.user_id
+JOIN customer c
+    ON cd.customer_id = c.customer_id
 WHERE cd.customer_id = 1
+  AND c.company_id = 1001
 ORDER BY cd.checked_at DESC;
 
 
 #5. Update identification document
-UPDATE customer_document
+UPDATE customer_document cd
+JOIN customer c
+    ON cd.customer_id = c.customer_id
 SET
-    document_type = 'DRIVING_LICENCE',
-    document_number = 'B1234567',
-    document_copy_path = '/documents/customers/1/license.pdf',
-    expiry_date = '2030-08-15',
-    checked_by = 5,
-    checked_at = NOW(),
-    notes = 'Updated identification document'
-WHERE document_id = 10
-  AND customer_id = 1;
+    cd.document_type = 'DRIVING_LICENCE',
+    cd.document_number = 'B1234567',
+    cd.document_copy_path = '/documents/customers/1/license.pdf',
+    cd.expiry_date = '2030-08-15',
+    cd.checked_by = 5,
+    cd.checked_at = NOW(),
+    cd.notes = 'Updated identification document'
+WHERE cd.document_id = 1
+  AND cd.customer_id = 1
+  AND c.company_id = 1001;
   
+  
+#6. View customer's secondary contact
+SELECT
+    s.secondary_contact_id,
+    s.customer_id,
+    s.contact_name,
+    s.relationship,
+    s.phone_number,
+    s.alternate_phone,
+    s.email,
+    s.address,
+    s.notes
+FROM customer_secondary_contact s
+JOIN customer c
+    ON s.customer_id = c.customer_id
+WHERE s.customer_id = 1
+  AND c.company_id = 1001;
 
-#6. View customer's rental history
+
+#7. Update customer's secondary contact
+UPDATE customer_secondary_contact s
+JOIN customer c
+    ON s.customer_id = c.customer_id
+SET
+    s.contact_name = 'Sunil Jayasinghe',
+    s.relationship = 'Father',
+    s.phone_number = '0775551111',
+    s.email = 'sunil.new@email.com',
+    s.address = 'Colombo',
+    s.notes = 'Updated secondary contact'
+WHERE s.customer_id = 1
+  AND c.company_id = 1001;
+
+
+#8. View customer's rental history
 SELECT
     r.rental_id,
     r.rental_date,
@@ -298,7 +357,7 @@ WHERE r.customer_id = 1 AND r.company_id = 1001
 ORDER BY r.rental_date DESC;
 
 
-#7. View customer's rental history with equipment
+#9. View customer's rental history with equipment
 SELECT
     r.rental_id,
     r.start_date,
@@ -315,11 +374,11 @@ JOIN rental_item ri
     ON r.rental_id = ri.rental_id
 JOIN equipment e
     ON ri.equipment_id = e.equipment_id
-WHERE r.customer_id = 1 AND r.company_id = 1001
+WHERE r.customer_id = 1 AND r.company_id = 1001 AND e.company_id = r.company_id
 ORDER BY r.start_date DESC;
 
   
-#8. View customer's current active rentals
+#10. View customer's current active rentals
 SELECT
     r.rental_id,
     r.start_date,
@@ -335,11 +394,12 @@ JOIN equipment e
     ON ri.equipment_id = e.equipment_id
 WHERE r.customer_id = 1
   AND r.company_id = 1001
+  AND e.company_id = r.company_id
   AND r.rental_status IN ('ACTIVE', 'OVERDUE','PARTIALLY_RETURNED')
 ORDER BY r.due_date;
 
   
-#9. View available equipment
+#11. View available equipment
 SELECT
     e.equipment_id,
     e.item_name,
@@ -357,7 +417,7 @@ WHERE e.company_id = 1001 AND e.equ_status = 'ACTIVE' AND e.available_quantity >
 ORDER BY ec.category_name, e.item_name;
 
 
-#10. Search available equipment
+#12. Search available equipment
 SELECT
     e.equipment_id,
     e.item_name,
@@ -375,7 +435,8 @@ WHERE e.company_id = 1001
   AND (e.item_name LIKE '%camera%' OR e.item_code LIKE '%camera%' OR ec.category_name LIKE '%camera%')
 ORDER BY e.item_name;
 
-#11. Validate requested quantity
+#13. Validate requested quantity
+#Example : customer requests 3 units of equipment 10
 SELECT equipment_id, item_name, available_quantity,
     CASE
         WHEN available_quantity >= 3
@@ -386,7 +447,7 @@ FROM equipment
 WHERE equipment_id = 10 AND company_id = 1001 AND equ_status = 'ACTIVE';
   
 
-#12. View rental details
+#14. View rental details
 SELECT
     r.rental_id,
     r.rental_date,
@@ -404,7 +465,7 @@ JOIN customer c
     ON r.customer_id = c.customer_id
 JOIN sys_user u
     ON r.created_by = u.user_id
-WHERE r.rental_id = 1001 AND r.company_id = 1001;
+WHERE r.rental_id = 1 AND r.company_id = 1001 AND c.company_id = r.company_id;
   
 SELECT
     ri.rental_item_id,
@@ -417,46 +478,153 @@ SELECT
     ri.line_deposit,
     ri.item_status
 FROM rental_item ri
+JOIN rental r
+    ON ri.rental_id = r.rental_id
 JOIN equipment e
     ON ri.equipment_id = e.equipment_id
-WHERE ri.rental_id = 1001;
-
-
-#13. Calculate security deposit
+WHERE ri.rental_id = 1
+  AND r.company_id = 1001
+  AND e.company_id = r.company_id;
+  
+  
+#15. Calculate security deposit
+# Module 2 calculates the security (refundable) deposit from rental_items.
+# The deposits table belongs to Module 3, which records the calculated and collected deposit.
 SELECT
     rental_id,
     SUM(line_deposit) AS calculated_deposit
 FROM rental_item
-WHERE rental_id = 1001
+WHERE rental_id = 1
 GROUP BY rental_id;
 
 
-#14. Record equipment issue
-UPDATE rental_item
-SET
-    item_status = 'ISSUED',
-    issued_at = NOW()
-WHERE rental_item_id = 1;
+#16. Record equipment issue
+START TRANSACTION;
 
+# 1. Lock the rental item and obtain the actual issue quantity.
+SELECT
+    ri.rental_item_id,
+    ri.rental_id,
+    ri.equipment_id,
+    ri.quantity,
+    ri.item_status
+FROM rental_item ri
+JOIN rental r
+    ON ri.rental_id = r.rental_id
+WHERE ri.rental_item_id = 1
+  AND r.company_id = 1001
+  AND ri.item_status = 'SELECTED'
+FOR UPDATE;
+
+
+# 2. Check equipment availability before issuing.
+SELECT
+    e.equipment_id,
+    e.item_name,
+    e.available_quantity,
+    ri.quantity AS requested_quantity,
+    CASE
+        WHEN e.available_quantity >= ri.quantity
+            THEN 'AVAILABLE'
+        ELSE 'INSUFFICIENT_QUANTITY'
+    END AS availability_result
+FROM equipment e
+JOIN rental_item ri
+    ON e.equipment_id = ri.equipment_id
+JOIN rental r
+    ON ri.rental_id = r.rental_id
+WHERE ri.rental_item_id = 1
+  AND r.company_id = 1001
+  AND e.company_id = r.company_id
+  AND ri.item_status = 'SELECTED';
+
+
+# 3. Reduce equipment availability using the actual rental quantity.
+UPDATE equipment e
+JOIN rental_item ri
+    ON e.equipment_id = ri.equipment_id
+JOIN rental r
+    ON ri.rental_id = r.rental_id
+SET
+    e.available_quantity = e.available_quantity - ri.quantity
+WHERE ri.rental_item_id = 1
+  AND r.company_id = 1001
+  AND e.company_id = r.company_id
+  AND ri.item_status = 'SELECTED'
+  AND e.equstatus = 'ACTIVE'
+  AND e.available_quantity >= ri.quantity;
+
+
+# 4. Mark the rental item as issued.
+UPDATE rental_item ri
+JOIN rental r
+    ON ri.rental_id = r.rental_id
+SET
+    ri.item_status = 'ISSUED',
+    ri.issued_at = NOW()
+WHERE ri.rental_item_id = 1
+  AND r.company_id = 1001
+  AND ri.item_status = 'SELECTED';
+
+
+# 5. Mark the rental as active.
 UPDATE rental
 SET rental_status = 'ACTIVE'
-WHERE rental_id = 1001 AND company_id = 1001;
-  
+WHERE rental_id = (
+    SELECT rental_id
+    FROM (
+        SELECT rental_id
+        FROM rental_item
+        WHERE rental_item_id = 1
+    ) AS x
+)
+AND company_id = 1001;
 
-#15. Reduce equipment availability
-UPDATE equipment
-SET available_quantity = available_quantity - 2
-WHERE equipment_id = 10 AND company_id = 1001 AND available_quantity >= 2;
-  
-#14 and 15 should be one part in springboot
-  
-#16. Update rental due date
+COMMIT;
+
+#16. Check equipment availability after issue
+SELECT
+    e.equipment_id,
+    e.item_name,
+    e.total_quantity,
+    e.available_quantity,
+    e.equstatus
+FROM equipment e
+WHERE e.equipment_id = 1
+  AND e.company_id = 1001;
+
+#17. Extend rental
+START TRANSACTION;
+
+#Example: extend rental 3 from 2026-09-28 to 2026-09-30.
+#In the application, the new date and charge should come from user input.
+
+INSERT INTO rental_extension
+(rental_id, old_due_date, new_due_date,
+ extension_charge, approved_by, reason)
+SELECT
+    rental_id,
+    due_date,
+    '2026-09-30',
+    1500.00,
+    3,
+    'Customer requested additional days'
+FROM rental
+WHERE rental_id = 3
+  AND company_id = 1001
+  AND '2026-09-30' > due_date;
+
+-- Update the rental's current due date.
 UPDATE rental
 SET due_date = '2026-09-30'
-WHERE rental_id = 1001 AND company_id = 1001;
+WHERE rental_id = 3
+  AND company_id = 1001
+  AND '2026-09-30' > due_date;
+
+COMMIT;
   
   
-#17. View rental extension history
+#18. View rental extension history
 SELECT
     re.extension_id,
     re.rental_id,
@@ -467,13 +635,16 @@ SELECT
     re.created_at,
     u.full_name AS approved_by
 FROM rental_extension re
+JOIN rental r
+    ON re.rental_id = r.rental_id
 JOIN sys_user u
     ON re.approved_by = u.user_id
-WHERE re.rental_id = 1001
+WHERE re.rental_id = 3
+  AND r.company_id = 1001
 ORDER BY re.created_at DESC;
 
 
-#18. View all active rentals
+#19. View all active rentals
 SELECT
     r.rental_id,
     c.customer_name,
@@ -483,7 +654,7 @@ SELECT
 FROM rental r
 JOIN customer c
     ON r.customer_id = c.customer_id
-WHERE r.company_id = 1001
+WHERE r.company_id = 1001 AND (c.company_id = r.company_id)
   AND r.rental_status IN (
       'ACTIVE',
       'PARTIALLY_RETURNED'
@@ -491,7 +662,7 @@ WHERE r.company_id = 1001
 ORDER BY r.due_date;
 
 
-#19. Find overdue rentals
+#20. Find overdue rentals
 SELECT
     r.rental_id,
     c.customer_id,
@@ -504,11 +675,14 @@ SELECT
 FROM rental r
 JOIN customer c
     ON r.customer_id = c.customer_id
-WHERE r.company_id = 1001 AND r.due_date < CURDATE() AND r.rental_status IN ('ACTIVE', 'PARTIALLY_RETURNED', 'OVERDUE')
+WHERE r.company_id = 1001
+	AND c.company_id = r.company_id
+    AND r.due_date < CURDATE()
+    AND r.rental_status IN ('ACTIVE', 'PARTIALLY_RETURNED', 'OVERDUE')
 ORDER BY r.due_date;
 
 
-#20. Rentals due soon
+#21. Rentals due soon
 SELECT
     r.rental_id,
     c.customer_name,
@@ -520,5 +694,6 @@ FROM rental r
 JOIN customer c
     ON r.customer_id = c.customer_id
 WHERE r.company_id = 1001
+  AND c.company_id = r.company_id
   AND r.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY) AND r.rental_status IN ('ACTIVE', 'PARTIALLY_RETURNED')
 ORDER BY r.due_date;
