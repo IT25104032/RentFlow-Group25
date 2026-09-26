@@ -125,4 +125,52 @@ public class CustomerService {
                 })
                 .toList();
     }
+
+    public CustomerResponse updateCustomer(
+            Integer customerId,
+            Integer companyId,
+            CustomerRequest request) {
+
+        Optional<Customer> optionalCustomer =
+                customerRepository.findByCustomerIdAndCompanyId(
+                        customerId,
+                        companyId
+                );
+
+        if (optionalCustomer.isEmpty()) {
+            return null;
+        }
+
+        Customer customer = optionalCustomer.get();
+
+        customer.setCustomerName(request.getCustomerName());
+        customer.setEmail(request.getEmail());
+        customer.setPhone(request.getPhone());
+        customer.setAddress(request.getAddress());
+        customer.setCustomerType(request.getCustomerType());
+        customer.setCustomerStatus(request.getCustomerStatus());
+
+        Customer updatedCustomer =
+                customerRepository.save(customer);
+
+        CustomerResponse response = new CustomerResponse();
+
+        response.setCustomerId(updatedCustomer.getCustomerId());
+        response.setCompanyId(updatedCustomer.getCompanyId());
+        response.setCustomerName(updatedCustomer.getCustomerName());
+        response.setEmail(updatedCustomer.getEmail());
+        response.setPhone(updatedCustomer.getPhone());
+        response.setAddress(updatedCustomer.getAddress());
+        response.setCustomerType(updatedCustomer.getCustomerType());
+        response.setCustomerStatus(updatedCustomer.getCustomerStatus());
+        response.setCreatedBy(updatedCustomer.getCreatedBy());
+
+        if (updatedCustomer.getCreatedAt() != null) {
+            response.setCreatedAt(
+                    updatedCustomer.getCreatedAt().toString()
+            );
+        }
+
+        return response;
+    }
 }
