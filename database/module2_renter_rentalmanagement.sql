@@ -488,8 +488,8 @@ WHERE ri.rental_id = 1
   
   
 #15. Calculate security deposit
-# Module 2 calculates the security (refundable) deposit from rental_items.
-# The deposits table belongs to Module 3, which records the calculated and collected deposit.
+# Module 2 calculates the security deposit from rental_items.
+# The security_deposit table belongs to Module 3, which records the calculated and collected deposit.
 SELECT
     rental_id,
     SUM(line_deposit) AS calculated_deposit
@@ -501,7 +501,7 @@ GROUP BY rental_id;
 #16. Record equipment issue
 START TRANSACTION;
 
-# 1. Lock the rental item and obtain the actual issue quantity.
+# 16.1 Lock the rental item and obtain the actual issue quantity.
 SELECT
     ri.rental_item_id,
     ri.rental_id,
@@ -517,7 +517,7 @@ WHERE ri.rental_item_id = 1
 FOR UPDATE;
 
 
-# 2. Check equipment availability before issuing.
+# 16.2 Check equipment availability before issuing.
 SELECT
     e.equipment_id,
     e.item_name,
@@ -539,7 +539,7 @@ WHERE ri.rental_item_id = 1
   AND ri.item_status = 'SELECTED';
 
 
-# 3. Reduce equipment availability using the actual rental quantity.
+# 16.3 Reduce equipment availability using the actual rental quantity.
 UPDATE equipment e
 JOIN rental_item ri
     ON e.equipment_id = ri.equipment_id
@@ -551,11 +551,11 @@ WHERE ri.rental_item_id = 1
   AND r.company_id = 1001
   AND e.company_id = r.company_id
   AND ri.item_status = 'SELECTED'
-  AND e.equstatus = 'ACTIVE'
+  AND e.equ_status = 'ACTIVE'
   AND e.available_quantity >= ri.quantity;
 
 
-# 4. Mark the rental item as issued.
+# 16.4 Mark the rental item as issued.
 UPDATE rental_item ri
 JOIN rental r
     ON ri.rental_id = r.rental_id
@@ -567,7 +567,7 @@ WHERE ri.rental_item_id = 1
   AND ri.item_status = 'SELECTED';
 
 
-# 5. Mark the rental as active.
+# 16.5 Mark the rental as active.
 UPDATE rental
 SET rental_status = 'ACTIVE'
 WHERE rental_id = (
@@ -582,13 +582,13 @@ AND company_id = 1001;
 
 COMMIT;
 
-#16. Check equipment availability after issue
+#16.6 Check equipment availability after issue
 SELECT
     e.equipment_id,
     e.item_name,
     e.total_quantity,
     e.available_quantity,
-    e.equstatus
+    e.equ_status
 FROM equipment e
 WHERE e.equipment_id = 1
   AND e.company_id = 1001;
