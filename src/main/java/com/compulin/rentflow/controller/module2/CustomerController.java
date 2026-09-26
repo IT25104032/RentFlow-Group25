@@ -25,4 +25,22 @@ public class CustomerController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @GetMapping("/{customerId}")
+    public ResponseEntity<CustomerResponse> getCustomerById(
+            @PathVariable Integer customerId,
+            @RequestParam Integer companyId) {
+
+        CustomerResponse response =
+                customerService.getCustomerById(
+                        customerId,
+                        companyId
+                );
+
+        if (response == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(response);
+    }
 }
