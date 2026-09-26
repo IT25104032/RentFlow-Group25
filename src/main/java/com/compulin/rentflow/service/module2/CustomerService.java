@@ -6,7 +6,9 @@ import com.compulin.rentflow.entity.module2.Customer;
 import com.compulin.rentflow.repository.module2.CustomerRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+
 
 @Service
 public class CustomerService {
@@ -84,5 +86,43 @@ public class CustomerService {
         }
 
         return response;
+    }
+
+    public List<CustomerResponse> searchCustomers(
+            Integer companyId,
+            String name,
+            String phone) {
+
+        List<Customer> customers =
+                customerRepository.searchCustomers(
+                        companyId,
+                        name,
+                        phone
+                );
+
+        return customers.stream()
+                .map(customer -> {
+
+                    CustomerResponse response = new CustomerResponse();
+
+                    response.setCustomerId(customer.getCustomerId());
+                    response.setCompanyId(customer.getCompanyId());
+                    response.setCustomerName(customer.getCustomerName());
+                    response.setEmail(customer.getEmail());
+                    response.setPhone(customer.getPhone());
+                    response.setAddress(customer.getAddress());
+                    response.setCustomerType(customer.getCustomerType());
+                    response.setCustomerStatus(customer.getCustomerStatus());
+                    response.setCreatedBy(customer.getCreatedBy());
+
+                    if (customer.getCreatedAt() != null) {
+                        response.setCreatedAt(
+                                customer.getCreatedAt().toString()
+                        );
+                    }
+
+                    return response;
+                })
+                .toList();
     }
 }
