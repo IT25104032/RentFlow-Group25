@@ -7,6 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+
 @RestController
 @RequestMapping("/api/customers")
 public class CustomerController {
@@ -43,4 +46,21 @@ public class CustomerController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<CustomerResponse>> searchCustomers(
+            @RequestParam Integer companyId,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String phone) {
+
+        List<CustomerResponse> customers =
+                customerService.searchCustomers(
+                        companyId,
+                        name,
+                        phone
+                );
+
+        return ResponseEntity.ok(customers);
+    }
 }
+
