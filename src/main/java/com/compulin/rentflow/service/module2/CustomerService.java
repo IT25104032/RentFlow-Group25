@@ -6,6 +6,8 @@ import com.compulin.rentflow.entity.module2.Customer;
 import com.compulin.rentflow.repository.module2.CustomerRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class CustomerService {
 
@@ -44,6 +46,41 @@ public class CustomerService {
 
         if (savedCustomer.getCreatedAt() != null) {
             response.setCreatedAt(savedCustomer.getCreatedAt().toString());
+        }
+
+        return response;
+    }
+
+    public CustomerResponse getCustomerById(
+            Integer customerId,
+            Integer companyId) {
+
+        Optional<Customer> optionalCustomer =
+                customerRepository.findByCustomerIdAndCompanyId(
+                        customerId,
+                        companyId
+                );
+
+        if (optionalCustomer.isEmpty()) {
+            return null;
+        }
+
+        Customer customer = optionalCustomer.get();
+
+        CustomerResponse response = new CustomerResponse();
+
+        response.setCustomerId(customer.getCustomerId());
+        response.setCompanyId(customer.getCompanyId());
+        response.setCustomerName(customer.getCustomerName());
+        response.setEmail(customer.getEmail());
+        response.setPhone(customer.getPhone());
+        response.setAddress(customer.getAddress());
+        response.setCustomerType(customer.getCustomerType());
+        response.setCustomerStatus(customer.getCustomerStatus());
+        response.setCreatedBy(customer.getCreatedBy());
+
+        if (customer.getCreatedAt() != null) {
+            response.setCreatedAt(customer.getCreatedAt().toString());
         }
 
         return response;
