@@ -136,5 +136,4 @@ public class sys_user {
     public void setCreated_at(LocalDateTime created_at) {
         this.created_at = created_at;
     }
-
 }

@@ -94,5 +94,4 @@ public class equipment_category {
     public void setCat_status(String cat_status) {
         this.cat_status = cat_status;
     }
-
 }
