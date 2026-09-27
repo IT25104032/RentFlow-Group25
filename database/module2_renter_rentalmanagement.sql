@@ -175,64 +175,50 @@ CONSTRAINT check_rental_extensions_charge CHECK (extension_charge >= 0)
 #POPULATING THE DATABASE (using sample data)
 
 #1. Register a new customer
-INSERT INTO customer (company_id, customer_name, email, phone, address, customer_type, customer_status, created_by)
-VALUES
-(1001, 'Kasun Jayasinghe', 'kasun@email.com', '0711234567', 'Colombo', 'INDIVIDUAL', 'ACTIVE', 3),
+INSERT INTO customer (customer_id, company_id, customer_name, email, phone, address, customer_type, customer_status, created_by) VALUES
+(1, 1000, 'Kasun Jayasinghe', 'kasun@email.com', '0771234567', 'Colombo', 'INDIVIDUAL', 'ACTIVE', 3),
+(2, 1000, 'Sunrise Construction Pvt Ltd', 'info@sunrise.lk', '0114567890', 'Kandy', 'BUSINESS', 'ACTIVE', 3),
+(3, 1000, 'Dilshan Perera', 'dilshan@email.com', '0769876543', 'Gampaha', 'INDIVIDUAL', 'ACTIVE', 4);
 
-(1001, 'Sunrise Construction Pvt Ltd', 'info@sunrise.lk', '0114567890', 'Kandy', 'BUSINESS', 'ACTIVE', 3),
+#2. Add customer identification documents
+INSERT INTO customer_document
+(document_id, customer_id, document_type, document_number, document_copy_path, expiry_date, checked_by, checked_at, notes) VALUES
+(1, 1, 'NIC_ID', '200012345678', '/documents/kasun_nic.pdf', NULL, 3, '2026-09-20 09:00:00', 'NIC checked'),
+(2, 2, 'OTHER', 'BR-2025-001', '/documents/sunrise_registration.pdf', NULL, 3, '2026-09-10 08:30:00', 'Business registration checked'),
+(3, 3, 'DRIVING_LICENCE', 'B1234567', '/documents/dilshan_licence.pdf', '2028-05-15', 4, '2026-09-23 13:00:00', 'Licence checked');
 
-(1001, 'Dilshan Perera', 'dilshan@email.com', '0769876543', 'Gampaha', 'INDIVIDUAL', 'ACTIVE', 4);
-
-#2. Add customer identification document
-INSERT INTO customer_document (customer_id, document_type, document_number, document_copy_path, expiry_date, checked_by, notes)
-VALUES
-(1, 'NIC_ID', '200012345678', '/documents/kasun_nic.pdf', NULL, 3, 'NIC checked'),
-
-(2, 'OTHER', 'BR-2025-001', '/documents/sunrise_registration.pdf', NULL, 3, 'Business registration checked'),
-
-(3, 'DRIVING_LICENCE', 'B1234567', '/documents/dilshan_licence.pdf', '2028-05-15', 4, 'Licence checked');
-
-
-#3. Add customer's secondary contact for follow up
-INSERT INTO customer_secondary_contact (customer_id, contact_name, relationship, phone_number, alternate_phone, email, address)
-VALUES
-(1, 'Sunil Jayasinghe', 'Father', '0775551111', NULL, 'sunil@email.com', 'Colombo'),
-
-(2, 'Ruwan Silva', 'Manager', '0775552222', '0715552222', 'ruwan@sunrise.lk', 'Kandy'),
-
-(3, 'Nimal Perera', 'Brother', '0775553333', NULL, 'nimalp@email.com', 'Gampaha');
+#3. Add customers' secondary contacts for follow up
+INSERT INTO customer_secondary_contact
+(secondary_contact_id, customer_id, contact_name, relationship, phone_number, alternate_phone, email, address, notes) VALUES
+(1, 1, 'Sunil Jayasinghe', 'Father', '0775551111', NULL, 'sunil@email.com', 'Colombo', 'Emergency secondary contact'),
+(2, 2, 'Ruwan Silva', 'Manager', '0775552222', '0715552222', 'ruwan@sunrise.lk', 'Kandy', 'Company contact person'),
+(3, 3, 'Nimal Perera', 'Brother', '0775553333', NULL, 'nimalp@email.com', 'Gampaha', 'Emergency secondary contact');
  
- 
-#3. Create rental
-INSERT INTO rental
-(company_id, customer_id, created_by, start_date, due_date, rental_status, notes)
-VALUES
-(1001, 1, 3, '2026-09-20', '2026-09-25', 'PARTIALLY_RETURNED', 'Customer rented power tools'),
-
-(1001, 2, 3, '2026-09-10', '2026-09-15', 'OVERDUE', 'Construction equipment rental'),
-
-(1001, 3, 4, '2026-09-23', '2026-09-28', 'ACTIVE', 'Cleaning equipment rental');
+#3. Create rentals
+INSERT INTO rental (rental_id, company_id, customer_id, created_by, rental_date, start_date, due_date, rental_status, notes) VALUES
+(1, 1000, 1, 3, '2026-09-20', '2026-09-20', '2026-09-25', 'PARTIALLY_RETURNED', 'Customer rented power tools'),
+(2, 1000, 2, 3, '2026-09-10', '2026-09-10', '2026-09-15', 'OVERDUE', 'Construction equipment rental'),
+(3, 1000, 3, 4, '2026-09-23', '2026-09-23', '2026-09-28', 'ACTIVE', 'Cleaning equipment rental'),
+(4, 1000, 1, 4, '2026-09-25', '2026-09-25', '2026-09-27', 'ACTIVE', 'Short camera rental');
 
 #4. Add equipment to rental
-INSERT INTO rental_item (rental_id, equipment_id, quantity, rate_per_unit, rate_period, deposit_per_unit, line_deposit, item_status, issued_at)
-VALUES
-
+INSERT INTO rental_item
+(rental_item_id, rental_id, equipment_id, quantity, rate_per_unit, rate_period, deposit_per_unit, line_deposit, item_status, issued_at) VALUES
 # Rental 1
-(1, 1, 2, 1500.00, 'DAY', 5000.00, 10000.00, 'SELECTED', NULL),
-
-(1, 2, 1, 1200.00, 'DAY', 4000.00, 4000.00, 'ISSUED', '2026-09-20 10:00:00'),
-
+(1, 1, 1, 2, 1500.00, 'DAY', 5000.00, 10000.00, 'SELECTED', NULL),
 # Rental 2
-(2, 3, 1, 5000.00, 'DAY', 15000.00, 15000.00, 'LOST', '2026-09-10 09:00:00'),
-
+(2, 1, 2, 1, 1200.00, 'DAY', 4000.00, 4000.00, 'PARTIALLY_RETURNED','2026-09-20 10:00:00'),
 # Rental 3
-(3, 4, 1, 2500.00, 'DAY', 8000.00, 8000.00, 'ISSUED', '2026-09-23 14:00:00');
- 
-  
+(3, 2, 3, 1, 5000.00, 'DAY', 15000.00, 15000.00, 'LOST', '2026-09-10 09:00:00'),
+# Rental 4
+(4, 3, 4, 1, 2500.00, 'DAY', 8000.00, 8000.00, 'ISSUED', '2026-09-23 14:00:00'),
+# Rental 5
+(5, 4, 10, 1, 2000.00, 'DAY', 6000.00, 6000.00, 'ISSUED', '2026-09-25 11:00:00');
   
 #5. Record rental extension
-INSERT INTO rental_extension (rental_id, old_due_date, new_due_date, extension_charge, approved_by, reason)
-VALUES (1, '2026-09-25', '2026-09-28', 1500.00, 3, 'Customer requested three additional days');
+INSERT INTO rental_extension (extension_id, rental_id, old_due_date, new_due_date, extension_charge, approved_by, reason) VALUES
+(1, 1, '2026-09-25', '2026-09-28', 1500.00, 3, 'Customer requested three additional days'),
+(2, 3, '2026-09-28', '2026-09-30', 1500.00, 3, 'Customer requested additional days');
 
 
 
