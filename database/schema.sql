@@ -1340,6 +1340,16 @@ WHERE invoice_status IN ('UNPAID', 'PARTIALLY_PAID') AND due_date < CURRENT_DATE
 SELECT received_by AS staff_user_id, COUNT(payment_id) AS payments_processed, SUM(amount) AS total_value_collected FROM payment 
 WHERE payment_status = 'COMPLETED' GROUP BY received_by;
 
+#IT25104036
+#16. 
+UPDATE invoice 
+SET invoice_status = CASE
+	WHEN amount_paid = 0 THEN 'UNPAID'
+    WHEN amount_paid > 0 AND amount_paid < total_amount THEN 'PARTIALLY_PAID'
+    WHEN amoud_paid >= total_amount THEN 'PAID'
+    ELSE invoice_status
+END
+WHERE invoice_id = 1;
 
 # =========== MODULE 4 =============
 #IT25104066
