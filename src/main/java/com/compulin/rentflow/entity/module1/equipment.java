@@ -252,4 +252,5 @@ public class equipment {
 
         this.created_at = created_at;
     }
+
 }

@@ -127,4 +127,5 @@ public class company {
     public void setCompany_status(String company_status) {
         this.company_status = company_status;
     }
+
 }
