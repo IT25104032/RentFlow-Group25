@@ -1,0 +1,372 @@
+.module2-page {
+    min-height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+    background: #f6f9fc;
+    padding: 48px 24px;
+    color: #172b4d;
+}
+
+.module2-container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.module2-header {
+    margin-bottom: 32px;
+}
+
+.module2-header h1 {
+    margin: 0 0 8px;
+    color: #1456a0;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.module2-header p {
+    margin: 0;
+    color: #667085;
+    font-size: 16px;
+}
+
+/* Main cards */
+
+.module2-card {
+    background: #ffffff;
+    border: 1px solid #e1eaf3;
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 24px;
+    box-shadow: 0 6px 20px rgba(20, 86, 160, 0.07);
+}
+
+.module2-card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 26px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e8eef5;
+}
+
+.module2-section-number {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    background: #eaf3ff;
+    color: #1456a0;
+    border-radius: 10px;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.module2-card h2 {
+    margin: 0;
+    color: #172b4d;
+    font-size: 20px;
+    font-weight: 650;
+}
+
+.module2-card-description {
+    margin: 4px 0 0;
+    color: #667085;
+    font-size: 14px;
+}
+
+/* Form layout */
+
+.module2-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.module2-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.module2-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.module2-form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.module2-form-group label {
+    color: #344054;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.module2-required {
+    color: #d92d20;
+    margin-left: 3px;
+}
+
+/* Inputs */
+
+.module2-form-group input,
+.module2-form-group select {
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+
+    padding: 10px 13px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+
+    background: #ffffff;
+    color: #172b4d;
+
+    font-family: inherit;
+    font-size: 15px;
+
+    outline: none;
+
+    transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease,
+            background-color 0.2s ease;
+}
+
+.module2-form-group input:hover,
+.module2-form-group select:hover {
+    border-color: #9db7d2;
+}
+
+.module2-form-group input:focus,
+.module2-form-group select:focus {
+    border-color: #2878c8;
+    box-shadow: 0 0 0 3px rgba(40, 120, 200, 0.12);
+}
+
+.module2-form-group input::placeholder {
+    color: #98a2b3;
+}
+
+/* File input */
+
+.module2-form-group input[type="file"] {
+    padding: 8px;
+    cursor: pointer;
+}
+
+/* Dropdown with clear button */
+
+.module2-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.module2-select-wrapper select {
+    flex: 1;
+}
+
+.module2-clear-selection {
+    min-height: 44px;
+    padding: 0 13px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+
+    background: #ffffff;
+    color: #667085;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+            background-color 0.2s ease,
+            border-color 0.2s ease,
+            color 0.2s ease;
+}
+
+.module2-clear-selection:hover {
+    background: #f8fafc;
+    border-color: #2878c8;
+    color: #1456a0;
+}
+
+/* Buttons */
+
+.module2-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 20px;
+    border-top: 1px solid #e8eef5;
+}
+
+.module2-btn {
+    min-height: 44px;
+    padding: 0 20px;
+
+    border-radius: 9px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+            background-color 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.1s ease;
+}
+
+.module2-btn:active {
+    transform: translateY(1px);
+}
+
+.module2-btn-primary {
+    border: 1px solid #1456a0;
+    background: #1456a0;
+    color: #ffffff;
+}
+
+.module2-btn-primary:hover {
+    background: #0f4788;
+}
+
+.module2-btn-secondary {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475467;
+}
+
+.module2-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #98a2b3;
+}
+
+/* Responsive design */
+
+@media (max-width: 768px) {
+    .module2-page {
+        padding: 28px 16px;
+    }
+
+    .module2-header h1 {
+        font-size: 28px;
+    }
+
+    .module2-card {
+        padding: 22px;
+        border-radius: 12px;
+    }
+
+    .module2-form-row {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .module2-form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .module2-btn {
+        width: 100%;
+    }
+
+    .module2-select-wrapper {
+        align-items: stretch;
+    }
+
+    .module2-clear-selection {
+        padding: 0 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .module2-page {
+        padding: 20px 12px;
+    }
+
+    .module2-card {
+        padding: 18px;
+    }
+
+    .module2-card-header {
+        align-items: flex-start;
+    }
+
+    .module2-section-number {
+        width: 34px;
+        height: 34px;
+    }
+}
+
+
+.module2-file-preview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    margin-top: 8px;
+    padding: 10px 12px;
+
+    border: 1px solid #dbe5f0;
+    border-radius: 9px;
+
+    background: #f8fafc;
+}
+
+.module2-file-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: #344054;
+    font-size: 14px;
+}
+
+.module2-file-remove {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #fee4e2;
+    color: #b42318;
+
+    font-size: 20px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+            background-color 0.2s ease,
+            color 0.2s ease;
+}
+
+.module2-file-remove:hover {
+    background: #fecdca;
+    color: #912018;
+}
