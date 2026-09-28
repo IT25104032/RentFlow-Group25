@@ -68,78 +68,97 @@ public class Invoice {
     }
 
     public void setInvoiceId(Integer invoiceId) {
+
         this.invoiceId = invoiceId;
     }
 
     public Integer getRentalId() {
+
         return rentalId;
     }
 
     public void setRentalId(Integer rentalId) {
+
         this.rentalId = rentalId;
     }
 
     public LocalDate getInvoiceDate() {
+
         return invoiceDate;
     }
 
     public void setInvoiceDate(LocalDate invoiceDate) {
+
         this.invoiceDate = invoiceDate;
     }
 
     public LocalDate getDueDate() {
+
         return dueDate;
     }
 
     public void setDueDate(LocalDate dueDate) {
+
         this.dueDate = dueDate;
     }
 
     public BigDecimal getSubtotal() {
+
         return subtotal;
     }
 
     public void setSubtotal(BigDecimal subtotal) {
+
         this.subtotal = subtotal;
     }
 
     public BigDecimal getAdditionalCharges() {
+
         return additionalCharges;
     }
 
     public void setAdditionalCharges(BigDecimal additionalCharges) {
+
         this.additionalCharges = additionalCharges;
     }
 
     public BigDecimal getTotalAmount() {
+
         return totalAmount;
     }
 
     public void setTotalAmount(BigDecimal totalAmount) {
+
         this.totalAmount = totalAmount;
     }
 
     public BigDecimal getAmountPaid() {
+
         return amountPaid;
     }
 
     public void setAmountPaid(BigDecimal amountPaid) {
+
         this.amountPaid = amountPaid;
     }
 
     public BigDecimal getBalanceDue() {
+
         return balanceDue;
     }
 
     public void setBalanceDue(BigDecimal balanceDue) {
+
         this.balanceDue = balanceDue;
     }
 
     public InvoiceStatus getInvoiceStatus() {
+
         return invoiceStatus;
     }
 
     public void setInvoiceStatus(InvoiceStatus invoiceStatus) {
+
         this.invoiceStatus = invoiceStatus;
     }
 }

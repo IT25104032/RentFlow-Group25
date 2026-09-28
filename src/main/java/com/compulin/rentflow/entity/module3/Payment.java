@@ -62,66 +62,82 @@ public class Payment {
 
     // Getters and Setters
     public Integer getPaymentId() {
+
         return paymentId;
     }
 
     public void setPaymentId(Integer paymentId) {
+
         this.paymentId = paymentId;
     }
 
     public Invoice getInvoice() {
+
         return invoice;
     }
 
     public void setInvoice(Invoice invoice) {
+
         this.invoice = invoice;
     }
 
     public BigDecimal getAmount() {
+
         return amount;
     }
 
     public void setAmount(BigDecimal amount) {
+
         this.amount = amount;
     }
 
     public LocalDateTime getPaymentDate() {
+
         return paymentDate;
     }
 
     public void setPaymentDate(LocalDateTime paymentDate) {
+
         this.paymentDate = paymentDate;
     }
 
     public PaymentMethod getPaymentMethod() {
+
         return paymentMethod;
     }
 
     public void setPaymentMethod(PaymentMethod paymentMethod) {
+
         this.paymentMethod = paymentMethod;
     }
 
     public String getReferenceNo() {
+
         return referenceNo;
     }
 
     public void setReferenceNo(String referenceNo) {
+
         this.referenceNo = referenceNo;
     }
 
     public Integer getReceivedBy() {
+
         return receivedBy;
     }
 
     public void setReceivedBy(Integer receivedBy) {
+
         this.receivedBy = receivedBy;
     }
 
     public PaymentStatus getPaymentStatus() {
+
         return paymentStatus;
     }
 
     public void setPaymentStatus(PaymentStatus paymentStatus) {
+
         this.paymentStatus = paymentStatus;
     }
 }
