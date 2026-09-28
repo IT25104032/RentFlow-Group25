@@ -8,7 +8,9 @@ import {
 } from "../../services/module2/customerService";
 
 import {
-    createDocument
+    getDocumentsByCustomerId,
+    createDocument,
+    updateDocument
 } from "../../services/module2/documentService";
 
 import {
@@ -504,14 +506,18 @@ function RegisterRenter() {
     ) {
 
         /*
-         * If the section is collapsed,
-         * it is optional for now.
+         * If the identification section is
+         * collapsed, identification is optional.
          */
         if (!identificationOpen) {
             return;
         }
 
 
+        /*
+         * Validate the required identification
+         * fields before sending data to the backend.
+         */
         if (
             !documentForm.documentType
             || !documentForm.documentNumber
@@ -524,7 +530,11 @@ function RegisterRenter() {
         }
 
 
-        await createDocument({
+        /*
+         * Prepare the data that will be sent
+         * to Spring Boot.
+         */
+        const documentData = {
 
             customerId,
 
@@ -546,7 +556,55 @@ function RegisterRenter() {
             notes:
             documentForm.notes
 
-        });
+        };
+
+
+        /*
+         * First check whether this renter
+         * already has an identification document.
+         */
+        const existingDocuments =
+            await getDocumentsByCustomerId(
+                customerId
+            );
+
+
+        /*
+         * If there is no existing document,
+         * create a new one.
+         */
+        if (
+            !existingDocuments
+            || existingDocuments.length === 0
+        ) {
+
+            await createDocument(
+                documentData
+            );
+
+            return;
+        }
+
+
+        /*
+         * An existing document was found.
+         *
+         * We update the first existing document
+         * instead of creating a duplicate.
+         */
+        const existingDocument =
+            existingDocuments[0];
+
+
+        await updateDocument(
+
+            existingDocument.documentId,
+
+            customerId,
+
+            documentData
+
+        );
     }
 
 
@@ -568,8 +626,8 @@ function RegisterRenter() {
 
 
         if (
-            !secondaryForm.contactName ||
-            !secondaryForm.phoneNumber
+            !secondaryForm.contactName
+            || !secondaryForm.phoneNumber
         ) {
 
             throw new Error(
@@ -578,6 +636,10 @@ function RegisterRenter() {
         }
 
 
+        /*
+         * Prepare the contact information
+         * entered by the staff user.
+         */
         const contactData = {
 
             customerId,
@@ -606,11 +668,13 @@ function RegisterRenter() {
 
 
         /*
-         * Check whether this customer already
-         * has a secondary contact.
+         * First check whether this renter
+         * already has a secondary contact.
          */
         const existingContact =
-            await getSecondaryContact(customerId);
+            await getSecondaryContact(
+                customerId
+            );
 
 
         /*
@@ -629,11 +693,14 @@ function RegisterRenter() {
 
         /*
          * Existing contact:
-         * update the existing record.
+         * update that existing record.
          */
         await updateSecondaryContact(
+
             existingContact.secondaryContactId,
+
             customerId,
+
             contactData
         );
     }

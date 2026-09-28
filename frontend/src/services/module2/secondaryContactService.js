@@ -6,7 +6,9 @@ const API_BASE_URL =
  * Get the existing secondary contact
  * for a customer.
  */
-export async function getSecondaryContact(customerId) {
+export async function getSecondaryContact(
+    customerId
+) {
 
     const response = await fetch(
         `${API_BASE_URL}/customer/${customerId}`
@@ -14,15 +16,17 @@ export async function getSecondaryContact(customerId) {
 
 
     /*
-     * 404 means this customer does not
+     * 404 means the customer does not
      * have a secondary contact yet.
      */
     if (response.status === 404) {
+
         return null;
     }
 
 
     if (!response.ok) {
+
         throw new Error(
             "Failed to get secondary contact"
         );
@@ -49,12 +53,14 @@ export async function createSecondaryContact(
                 "Content-Type": "application/json"
             },
 
-            body: JSON.stringify(contactData)
+            body:
+                JSON.stringify(contactData)
         }
     );
 
 
     if (!response.ok) {
+
         throw new Error(
             "Failed to create secondary contact"
         );
@@ -83,12 +89,14 @@ export async function updateSecondaryContact(
                 "Content-Type": "application/json"
             },
 
-            body: JSON.stringify(contactData)
+            body:
+                JSON.stringify(contactData)
         }
     );
 
 
     if (!response.ok) {
+
         throw new Error(
             "Failed to update secondary contact"
         );
