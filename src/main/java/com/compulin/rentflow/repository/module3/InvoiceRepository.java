@@ -6,11 +6,11 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
+public interface InvoiceRepository extends JpaRepository<Invoice, Integer> {
 
-    // Spring Boot automatically turns this into: SELECT * FROM invoices WHERE status = ?
-    List<Invoice> findByStatus(Invoice.InvoiceStatus status);
+    // Finds invoices by status (UNPAID, PARTIALLY_PAID, PAID, CANCELLED)
+    List<Invoice> findByInvoiceStatus(Invoice.InvoiceStatus invoiceStatus);
 
-    // Spring Boot automatically turns this into: SELECT * FROM invoices WHERE rental_id = ?
-    List<Invoice> findByRental_RentalId(Long rentalId);
+    // Finds all invoices created for a specific rental ID
+    List<Invoice> findByRental_RentalId(Integer rentalId);
 }
