@@ -1,0 +1,468 @@
+/* =========================================
+   CREATE RENTAL PAGE
+========================================= */
+
+.create-rental-page {
+    min-height: 100vh;
+    background: #f7f9fc;
+    color: #123456;
+    font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
+}
+
+
+/* =========================================
+   TOP NAVIGATION
+========================================= */
+
+.create-rental-topbar {
+    height: 66px;
+    background: #214f73;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    box-sizing: border-box;
+    color: white;
+    box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+
+.create-rental-brand {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+}
+
+
+.create-rental-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+.create-rental-user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f4f7fa;
+    color: #214f73;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+
+.create-rental-chevron {
+    margin-left: 4px;
+    font-size: 16px;
+}
+
+
+/* =========================================
+   MAIN CONTENT
+========================================= */
+
+.create-rental-content {
+    width: min(1238px, calc(100% - 48px));
+    margin: 0 auto;
+    padding: 36px 0 50px;
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   PAGE HEADING
+========================================= */
+
+.create-rental-heading {
+    margin-bottom: 26px;
+}
+
+
+.create-rental-heading h1 {
+    margin: 0 0 8px;
+    font-size: 36px;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #102f4b;
+}
+
+
+.create-rental-heading p {
+    margin: 0;
+    font-size: 16px;
+    color: #63809b;
+}
+
+
+/* =========================================
+   CARD
+========================================= */
+
+.create-rental-card {
+    margin-top: 22px;
+    background: #ffffff;
+    border: 1px solid #dce5ed;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow:
+            0 4px 14px rgba(31, 64, 91, 0.08);
+}
+
+
+/* =========================================
+   CARD HEADING
+========================================= */
+
+.create-rental-card-heading {
+    padding: 26px 30px 22px;
+}
+
+
+.create-rental-card-heading h2 {
+    margin: 0 0 7px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #102f4b;
+}
+
+
+.create-rental-card-heading p {
+    margin: 0;
+    font-size: 15px;
+    color: #6a849c;
+}
+
+
+/* =========================================
+   SELECTED RENTER
+========================================= */
+
+.selected-renter {
+    margin: 0 30px 28px;
+    padding: 25px;
+    background: #f8fafc;
+    border: 1px solid #dbe6ef;
+    border-radius: 10px;
+}
+
+
+.renter-summary-row {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 32px;
+}
+
+
+.renter-summary-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+
+.field-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #5e7892;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+
+.field-value {
+    font-size: 17px;
+    font-weight: 700;
+    color: #102f4b;
+    word-break: break-word;
+}
+
+
+.empty-message {
+    margin: 0 30px 28px;
+    padding: 18px;
+    text-align: center;
+    color: #6a849c;
+    background: #f8fafc;
+    border: 1px dashed #c8d5e0;
+    border-radius: 8px;
+}
+
+
+/* =========================================
+   RENTAL FORM
+========================================= */
+
+.rental-form-grid {
+    padding: 0 30px 30px;
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    gap: 22px 28px;
+}
+
+
+.rental-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+
+.rental-form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+
+.rental-form-group label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #163b5c;
+}
+
+
+.rental-form-group input,
+.rental-form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #c9d7e3;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #1f2937;
+    font-family: inherit;
+    font-size: 15px;
+    outline: none;
+    transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+}
+
+
+.rental-form-group input {
+    height: 46px;
+    padding: 0 13px;
+}
+
+
+.rental-form-group textarea {
+    min-height: 115px;
+    padding: 12px 13px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+
+.rental-form-group input:focus,
+.rental-form-group textarea:focus {
+    border-color: #1683e8;
+    box-shadow:
+            0 0 0 3px rgba(22, 131, 232, 0.12);
+}
+
+
+.rental-form-group textarea::placeholder {
+    color: #9aaaba;
+}
+
+
+/* =========================================
+   MESSAGES
+========================================= */
+
+.rental-form-error {
+    margin: 0 30px 20px;
+    padding: 13px 16px;
+    border: 1px solid #f2b8b5;
+    border-radius: 7px;
+    background: #fff4f3;
+    color: #b42318;
+    font-size: 14px;
+}
+
+
+.rental-form-success {
+    margin: 0 30px 20px;
+    padding: 13px 16px;
+    border: 1px solid #b7e0c2;
+    border-radius: 7px;
+    background: #f2fbf4;
+    color: #19733a;
+    font-size: 14px;
+}
+
+
+/* =========================================
+   ACTIONS
+========================================= */
+
+.rental-form-actions {
+    width: min(1238px, calc(100% - 48px));
+    margin: 24px auto 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+
+.rental-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.rental-form-actions button {
+    min-height: 42px;
+    padding: 0 19px;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+            background-color 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.1s ease;
+}
+
+
+.rental-secondary-button {
+    background: #ffffff;
+    border: 1px solid #cbd8e3;
+    color: #244b69;
+}
+
+
+.rental-secondary-button:hover {
+    background: #f5f8fb;
+}
+
+
+.rental-primary-button {
+    background: #1683e8;
+    border: 1px solid #1683e8;
+    color: #ffffff;
+}
+
+
+.rental-primary-button:hover {
+    background: #0876db;
+    border-color: #0876db;
+}
+
+
+.rental-form-actions button:active {
+    transform: translateY(1px);
+}
+
+
+.rental-form-actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .create-rental-content {
+        width: calc(100% - 32px);
+        padding-top: 28px;
+    }
+
+
+    .renter-summary-row {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+
+    .rental-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .rental-form-group.full-width {
+        grid-column: auto;
+    }
+
+
+    .rental-form-actions {
+        width: calc(100% - 32px);
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .create-rental-topbar {
+        padding: 0 18px;
+    }
+
+
+    .create-rental-brand {
+        font-size: 24px;
+    }
+
+
+    .create-rental-user {
+        gap: 7px;
+    }
+
+
+    .create-rental-heading h1 {
+        font-size: 29px;
+    }
+
+
+    .create-rental-card-heading {
+        padding: 22px 20px 18px;
+    }
+
+
+    .selected-renter {
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
+
+    .rental-form-grid {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+
+    .rental-form-actions {
+        width: calc(100% - 32px);
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .rental-right-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .rental-form-actions button {
+        width: 100%;
+    }
+}
