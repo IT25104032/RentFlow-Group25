@@ -6,6 +6,7 @@ import com.compulin.rentflow.repository.module4.RentalReturnRepository;
 import com.compulin.rentflow.repository.module4.ReturnItemRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -32,26 +33,44 @@ public class RentalReturnService {
                         new RuntimeException("Return not found"));
     }
 
+    public List<RentalReturn> getReturnsByRental(Integer rentalId) {
+        return rentalReturnRepository.findByRentalId(rentalId);
+    }
+
     public RentalReturn createReturn(RentalReturn rentalReturn) {
+
+        if (rentalReturn.getReturnDate() == null) {
+            rentalReturn.setReturnDate(LocalDateTime.now());
+        }
+
+        if (rentalReturn.getReturnType() == null ||
+                (!rentalReturn.getReturnType().equals("FULL") &&
+                        !rentalReturn.getReturnType().equals("PARTIAL"))) {
+
+            throw new IllegalArgumentException(
+                    "Return type must be FULL or PARTIAL");
+        }
+
         return rentalReturnRepository.save(rentalReturn);
     }
 
     public List<ReturnItem> getReturnItems(Integer returnId) {
-        return returnItemRepository
-                .findByRentalReturnReturnId(returnId);
+        return returnItemRepository.findByReturnId(returnId);
     }
 
     public ReturnItem addReturnItem(ReturnItem returnItem) {
 
-        if (returnItem.getQuantityReturned() <= 0) {
+        if (returnItem.getQuantityReturned() == null ||
+                returnItem.getQuantityReturned() <= 0) {
+
             throw new IllegalArgumentException(
                     "Returned quantity must be greater than zero");
         }
 
-        return returnItemRepository.save(returnItem);
-    }
+        if (returnItem.getReturnedAt() == null) {
+            returnItem.setReturnedAt(LocalDateTime.now());
+        }
 
-    public void deleteReturn(Integer id) {
-        rentalReturnRepository.deleteById(id);
+        return returnItemRepository.save(returnItem);
     }
 }

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "returns")
+@Table(name = "rental_return")
 public class RentalReturn {
 
     @Id
@@ -12,16 +12,16 @@ public class RentalReturn {
     @Column(name = "return_id")
     private Integer returnId;
 
-    @ManyToOne
+    //@ManyToOne
     @JoinColumn(name = "rental_id", nullable = false)
-    private Rental rentalId;
+    private Integer rentalId;
 
     @Column(name = "return_date", nullable = false)
     private LocalDateTime returnDate;
 
-    @ManyToOne
+    //@ManyToOne
     @JoinColumn(name = "processed_by", nullable = false)
-    private SysUser processedBy;
+    private Integer processedBy;
 
     @Column(name = "return_type", nullable = false, length = 20)
     private String returnType;
@@ -41,11 +41,11 @@ public class RentalReturn {
         this.returnId = returnId;
     }
 
-    public Rental getRentalId() {
+    public Integer getRentalId() {
         return rentalId;
     }
 
-    public void setRental(Rental rentalId) {
+    public void setRental(Integer rentalId) {
         this.rentalId = rentalId;
     }
 
@@ -57,11 +57,11 @@ public class RentalReturn {
         this.returnDate = returnDate;
     }
 
-    public SysUser getProcessedBy() {
+    public Integer getProcessedBy() {
         return processedBy;
     }
 
-    public void setProcessedBy(SysUser processedBy) {
+    public void setProcessedBy(Integer processedBy) {
         this.processedBy = processedBy;
     }
 
