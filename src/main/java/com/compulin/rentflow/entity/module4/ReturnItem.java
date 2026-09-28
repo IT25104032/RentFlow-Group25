@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "return_items")
+@Table(name = "return_item")
 public class ReturnItem {
 
     @Id
@@ -12,13 +12,13 @@ public class ReturnItem {
     @Column(name = "return_item_id")
     private Integer returnItemId;
 
-    @ManyToOne
+    //@ManyToOne
     @JoinColumn(name = "return_id", nullable = false)
-    private RentalReturn rentalReturnId;
+    private Integer returnId;
 
-    @ManyToOne
+    //@ManyToOne
     @JoinColumn(name = "rental_item_id", nullable = false)
-    private RentalItem rentalItemId;
+    private Integer rentalItemId;
 
     @Column(name = "quantity_returned", nullable = false)
     private Integer quantityReturned;
@@ -43,19 +43,19 @@ public class ReturnItem {
         this.returnItemId = returnItemId;
     }
 
-    public RentalReturn getRentalReturnId() {
-        return rentalReturnId;
+    public Integer getRentalReturnId() {
+        return returnId;
     }
 
-    public void setRentalReturnId(RentalReturn rentalReturnId) {
-        this.rentalReturnId = rentalReturnId;
+    public void setRentalReturnId(Integer returnId) {
+        this.returnId = returnId;
     }
 
-    public RentalItem getRentalItemId() {
+    public Integer getRentalItemId() {
         return rentalItemId;
     }
 
-    public void setRentalItemId(RentalItem rentalItemId) {
+    public void setRentalItemId(Integer rentalItemId) {
         this.rentalItemId = rentalItemId;
     }
 

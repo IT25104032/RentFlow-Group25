@@ -8,6 +8,6 @@ import java.util.List;
 public interface RentalReturnRepository
         extends JpaRepository<RentalReturn, Integer> {
 
-    List<RentalReturn> findByRentalRentalId(Integer rentalId);
+    List<RentalReturn> findByRentalId(Integer rentalId);
 }
 

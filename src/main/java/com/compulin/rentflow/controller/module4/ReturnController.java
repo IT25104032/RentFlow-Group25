@@ -2,7 +2,7 @@ package com.compulin.rentflow.controller.module4;
 
 import com.compulin.rentflow.entity.module4.RentalReturn;
 import com.compulin.rentflow.entity.module4.ReturnItem;
-import com.compulin.rentflow.service.RentalReturnService;
+import com.compulin.rentflow.service.module4.RentalReturnService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -53,9 +53,4 @@ public class ReturnController {
         return returnService.addReturnItem(returnItem);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteReturn(@PathVariable Integer id) {
-        returnService.deleteReturn(id);
-    }
 }
