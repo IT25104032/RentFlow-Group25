@@ -1,0 +1,564 @@
+/* =========================================================
+   RENTFLOW - EQUIPMENT SELECTION
+   Module 2 - Renter & Rental Management
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.create-rental-page {
+    min-height: 100vh;
+    background: #f6f9fc;
+    padding: 34px 40px 60px;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.page-header {
+    max-width: 1180px;
+    margin: 0 auto 24px;
+}
+
+.page-header h1 {
+    margin: 0;
+    color: #123b63;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+}
+
+.page-header p {
+    margin: 7px 0 0;
+    color: #6b7c8f;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   MAIN CARDS
+   ========================================================= */
+
+.rental-card {
+    max-width: 1180px;
+    margin: 0 auto 22px;
+    padding: 26px 28px;
+    background: #ffffff;
+    border: 1px solid #e3ebf3;
+    border-radius: 14px;
+    box-shadow: 0 5px 18px rgba(24, 63, 96, 0.055);
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   CARD HEADER
+   ========================================================= */
+
+.card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.card-header h2 {
+    margin: 0;
+    color: #173f64;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+}
+
+.card-header p {
+    margin: 6px 0 0;
+    color: #7a8999;
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   SELECTED RENTER
+   ========================================================= */
+
+.selected-renter {
+    padding: 20px 22px;
+    background: linear-gradient(
+            135deg,
+            #f8fbff 0%,
+            #f3f8fd 100%
+    );
+    border: 1px solid #dce8f3;
+    border-radius: 11px;
+}
+
+.renter-summary-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.25fr;
+    gap: 28px;
+}
+
+.renter-summary-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.field-label {
+    color: #8090a1;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.field-value {
+    color: #173f64;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    color: #294d6d;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    box-sizing: border-box;
+
+    background: #ffffff;
+    border: 1px solid #d5e0eb;
+    border-radius: 9px;
+
+    color: #253b50;
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease,
+            background-color 0.2s ease;
+}
+
+.form-group input::placeholder {
+    color: #a0adba;
+}
+
+.form-group input:hover {
+    border-color: #b9cbdc;
+}
+
+.form-group input:focus {
+    background: #ffffff;
+    border-color: #3b78ad;
+    box-shadow: 0 0 0 3px rgba(59, 120, 173, 0.10);
+}
+
+
+/* =========================================================
+   TABLE CONTAINER
+   ========================================================= */
+
+.equipment-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+
+    border: 1px solid #e2eaf2;
+    border-radius: 11px;
+    background: #ffffff;
+}
+
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.equipment-table {
+    width: 100%;
+    min-width: 880px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+
+/* Table header */
+
+.equipment-table thead {
+    background: #f7fafd;
+}
+
+.equipment-table th {
+    padding: 13px 15px;
+
+    color: #687b8e;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+
+    border-bottom: 1px solid #e2eaf2;
+    white-space: nowrap;
+}
+
+
+/* Table cells */
+
+.equipment-table td {
+    padding: 15px;
+
+    color: #44576a;
+    font-size: 13px;
+
+    border-bottom: 1px solid #edf2f6;
+    vertical-align: middle;
+}
+
+.equipment-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* Row hover */
+
+.equipment-table tbody tr {
+    transition: background-color 0.18s ease;
+}
+
+.equipment-table tbody tr:hover {
+    background: #f9fbfd;
+}
+
+
+/* Equipment name */
+
+.equipment-table td strong {
+    display: inline-block;
+    margin-bottom: 3px;
+
+    color: #173f64;
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.equipment-table td span {
+    color: #8a99a8;
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   AVAILABILITY
+   ========================================================= */
+
+.equipment-table td:nth-child(4) {
+    color: #24734d;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   ADD / REMOVE BUTTONS
+   ========================================================= */
+
+.equipment-table button {
+    min-width: 68px;
+    height: 34px;
+    padding: 0 13px;
+
+    border: 1px solid #3275ad;
+    border-radius: 7px;
+
+    background: #3275ad;
+    color: #ffffff;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+            background-color 0.18s ease,
+            border-color 0.18s ease,
+            transform 0.12s ease;
+}
+
+.equipment-table button:hover {
+    background: #285f91;
+    border-color: #285f91;
+}
+
+.equipment-table button:active {
+    transform: translateY(1px);
+}
+
+
+/* =========================================================
+   QUANTITY INPUT
+   ========================================================= */
+
+.equipment-table input[type="number"] {
+    width: 72px !important;
+    height: 36px;
+
+    padding: 0 8px;
+
+    border: 1px solid #d2deea;
+    border-radius: 7px;
+
+    background: #ffffff;
+    color: #173f64;
+
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+
+    outline: none;
+
+    transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+}
+
+.equipment-table input[type="number"]:focus {
+    border-color: #3275ad;
+    box-shadow: 0 0 0 3px rgba(50, 117, 173, 0.10);
+}
+
+
+/* Remove button */
+
+.equipment-table td button {
+    background: #ffffff;
+    color: #c14d4d;
+    border-color: #e2b5b5;
+}
+
+.equipment-table td button:hover {
+    background: #fff7f7;
+    border-color: #d99898;
+}
+
+
+/* =========================================================
+   EMPTY STATES
+   ========================================================= */
+
+.empty-message {
+    padding: 28px 20px;
+
+    border: 1px dashed #cfdce8;
+    border-radius: 10px;
+
+    background: #f9fbfd;
+
+    color: #7b8b9b;
+    font-size: 13px;
+    text-align: center;
+}
+
+.empty-table-message {
+    padding: 30px !important;
+
+    color: #7b8b9b !important;
+    text-align: center !important;
+}
+
+
+/* =========================================================
+   DEPOSIT SUMMARY
+   ========================================================= */
+
+.deposit-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-top: 18px;
+    padding: 18px 20px;
+
+    background: linear-gradient(
+            135deg,
+            #f3f8fd 0%,
+            #edf5fc 100%
+    );
+
+    border: 1px solid #d5e4f1;
+    border-radius: 10px;
+}
+
+.deposit-summary span {
+    color: #587086;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.deposit-summary strong {
+    color: #123b63;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   ERROR MESSAGE
+   ========================================================= */
+
+.error-message {
+    max-width: 1180px;
+    margin: 0 auto 18px;
+
+    padding: 12px 15px;
+
+    background: #fff7f7;
+    border: 1px solid #efc7c7;
+    border-radius: 8px;
+
+    color: #b23c3c;
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   ACTION BUTTONS
+   ========================================================= */
+
+.form-actions {
+    max-width: 1180px;
+    margin: 8px auto 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+}
+
+.form-actions button {
+    height: 42px;
+    min-width: 118px;
+
+    padding: 0 20px;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+            background-color 0.18s ease,
+            border-color 0.18s ease,
+            transform 0.12s ease;
+}
+
+.form-actions button:active {
+    transform: translateY(1px);
+}
+
+
+/* Back */
+
+.form-actions button:first-child {
+    background: #ffffff;
+    border: 1px solid #c8d5e2;
+    color: #4c647b;
+}
+
+.form-actions button:first-child:hover {
+    background: #f6f9fc;
+    border-color: #aebfd0;
+}
+
+
+/* Continue */
+
+.form-actions button:last-child {
+    background: #3275ad;
+    border: 1px solid #3275ad;
+    color: #ffffff;
+}
+
+.form-actions button:last-child:hover {
+    background: #285f91;
+    border-color: #285f91;
+}
+
+
+/* =========================================================
+   RESPONSIVE DESIGN
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .create-rental-page {
+        padding: 28px 20px 45px;
+    }
+
+    .rental-card {
+        padding: 22px 20px;
+    }
+
+    .renter-summary-row {
+        grid-template-columns: 1fr;
+        gap: 17px;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .create-rental-page {
+        padding: 22px 14px 40px;
+    }
+
+    .page-header h1 {
+        font-size: 26px;
+    }
+
+    .rental-card {
+        padding: 18px 15px;
+        border-radius: 11px;
+    }
+
+    .card-header h2 {
+        font-size: 18px;
+    }
+
+    .deposit-summary {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .form-actions button {
+        width: 100%;
+    }
+}

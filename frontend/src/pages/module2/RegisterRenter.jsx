@@ -882,7 +882,7 @@ function RegisterRenter() {
                     </div>
 
                     <span>
-                        Staff User
+                        Rental Officer
                     </span>
 
                     <span className="register-renter-chevron">
