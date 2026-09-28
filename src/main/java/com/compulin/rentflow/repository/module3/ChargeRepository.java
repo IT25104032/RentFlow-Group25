@@ -8,9 +8,12 @@ import java.util.List;
 @Repository
 public interface ChargeRepository extends JpaRepository<Charge, Integer> {
 
-    // Retrieves all charges associated with a specific invoice
-    List<Charge> findByInvoiceId(Integer invoiceId);
+    // Retrieves all charges associated with a specific rental
+    List<Charge> findByRentalId(Integer rentalId);
 
-    // Finds unbilled charges (where invoice_id IS NULL) for a rental
-    List<Charge> findByRentalIdAndInvoiceIdIsNull(Integer rentalId);
+    // Retrieves all charges associated with a specific invoice ID
+    List<Charge> findByInvoice_InvoiceId(Integer invoiceId);
+
+    // Finds unbilled charges (where invoice IS NULL) for a rental
+    List<Charge> findByRentalIdAndInvoiceIsNull(Integer rentalId);
 }
