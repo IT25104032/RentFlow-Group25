@@ -1,39 +1,62 @@
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import {
+    BrowserRouter,
+    Routes,
+    Route
+} from "react-router-dom";
 
 import RegisterRenter from "../pages/module2/RegisterRenter";
 import CreateRental from "../pages/module2/CreateRental";
+import EquipmentSelection from "../pages/module2/EquipmentSelection";
+import ReviewRental from "../pages/module2/ReviewRental";
+
 
 function AppRoutes() {
 
     return (
-        <Routes>
+        <BrowserRouter>
 
-            {/* Module 2 - Renter Management */}
-            <Route
-                path="/renters"
-                element={<RegisterRenter />}
-            />
+            <Routes>
 
-            {/* Module 2 - Rental Details */}
-            <Route
-                path="/rentals/create"
-                element={<CreateRental />}
-            />
+                <Route
+                    path="/"
+                    element={
+                        <RegisterRenter />
+                    }
+                />
 
-            {/* Default page */}
-            <Route
-                path="/"
-                element={
-                    <Navigate
-                        to="/renters"
-                        replace
-                    />
-                }
-            />
+                <Route
+                    path="/renters"
+                    element={
+                        <RegisterRenter />
+                    }
+                />
 
-        </Routes>
+                <Route
+                    path="/rentals/create"
+                    element={
+                        <CreateRental />
+                    }
+                />
+
+                <Route
+                    path="/rentals/equipment"
+                    element={
+                        <EquipmentSelection />
+                    }
+                />
+
+                <Route
+                    path="/rentals/review"
+                    element={
+                        <ReviewRental />
+                    }
+                />
+
+            </Routes>
+
+        </BrowserRouter>
     );
 }
+
 
 export default AppRoutes;
