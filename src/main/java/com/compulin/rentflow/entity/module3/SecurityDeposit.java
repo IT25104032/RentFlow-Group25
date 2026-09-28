@@ -64,82 +64,102 @@ public class SecurityDeposit {
 
     // Getters and Setters
     public Integer getDepositId() {
+
         return depositId;
     }
 
     public void setDepositId(Integer depositId) {
+
         this.depositId = depositId;
     }
 
     public Integer getRentalId() {
+
         return rentalId;
     }
 
     public void setRentalId(Integer rentalId) {
+
         this.rentalId = rentalId;
     }
 
     public BigDecimal getCalculatedDeposit() {
+
         return calculatedDeposit;
     }
 
     public void setCalculatedDeposit(BigDecimal calculatedDeposit) {
+
         this.calculatedDeposit = calculatedDeposit;
     }
 
     public BigDecimal getDepositAmountReceived() {
+
         return depositAmountReceived;
     }
 
     public void setDepositAmountReceived(BigDecimal depositAmountReceived) {
+
         this.depositAmountReceived = depositAmountReceived;
     }
 
     public BigDecimal getAmountDeducted() {
+
         return amountDeducted;
     }
 
     public void setAmountDeducted(BigDecimal amountDeducted) {
+
         this.amountDeducted = amountDeducted;
     }
 
     public BigDecimal getAmountRefunded() {
+
         return amountRefunded;
     }
 
     public void setAmountRefunded(BigDecimal amountRefunded) {
+
         this.amountRefunded = amountRefunded;
     }
 
     public LocalDateTime getReceivedDate() {
+
         return receivedDate;
     }
 
     public void setReceivedDate(LocalDateTime receivedDate) {
+
         this.receivedDate = receivedDate;
     }
 
     public LocalDateTime getRefundDate() {
+
         return refundDate;
     }
 
     public void setRefundDate(LocalDateTime refundDate) {
+
         this.refundDate = refundDate;
     }
 
     public Integer getReceivedBy() {
+
         return receivedBy;
     }
 
     public void setReceivedBy(Integer receivedBy) {
+
         this.receivedBy = receivedBy;
     }
 
     public DepositStatus getDepositStatus() {
+
         return depositStatus;
     }
 
     public void setDepositStatus(DepositStatus depositStatus) {
+
         this.depositStatus = depositStatus;
     }
 }

@@ -60,74 +60,92 @@ public class Charge {
 
     // Getters and Setters
     public Integer getChargeId() {
+
         return chargeId;
     }
 
     public void setChargeId(Integer chargeId) {
+
         this.chargeId = chargeId;
     }
 
     public Integer getRentalId() {
+
         return rentalId;
     }
 
     public void setRentalId(Integer rentalId) {
+
         this.rentalId = rentalId;
     }
 
     public Integer getRentalItemId() {
+
         return rentalItemId;
     }
 
     public void setRentalItemId(Integer rentalItemId) {
+
         this.rentalItemId = rentalItemId;
     }
 
     public Invoice getInvoice() {
+
         return invoice;
     }
 
     public void setInvoice(Invoice invoice) {
+
         this.invoice = invoice;
     }
 
     public ChargeType getChargeType() {
+
         return chargeType;
     }
 
     public void setChargeType(ChargeType chargeType) {
+
         this.chargeType = chargeType;
     }
 
     public String getChargeDescription() {
+
         return chargeDescription;
     }
 
     public void setChargeDescription(String chargeDescription) {
+
         this.chargeDescription = chargeDescription;
     }
 
     public BigDecimal getAmount() {
+
         return amount;
     }
 
     public void setAmount(BigDecimal amount) {
+
         this.amount = amount;
     }
 
     public LocalDateTime getChargeDate() {
+
         return chargeDate;
     }
 
     public void setChargeDate(LocalDateTime chargeDate) {
+
         this.chargeDate = chargeDate;
     }
 
     public Integer getCreatedBy() {
+
         return createdBy;
     }
 
     public void setCreatedBy(Integer createdBy) {
+
         this.createdBy = createdBy;
     }
 }
