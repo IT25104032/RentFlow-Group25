@@ -5,17 +5,16 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "invoices")
+@Table(name = "invoice")
 public class Invoice {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "invoice_id")
-    private Long invoiceId;
+    private Integer invoiceId;
 
-    // Assumes Member 2 has created the Rental entity
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "rental_id", nullable = false)
-    private Rental rental;
+    @Column(name = "rental_id", nullable = false)
+    private Integer rentalId;
 
     @Column(name = "invoice_date", nullable = false)
     private LocalDate invoiceDate;
@@ -39,14 +38,108 @@ public class Invoice {
     private BigDecimal balanceDue;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 25)
-    private InvoiceStatus status;
-
-    // Constructors, Getters, and Setters omitted for brevity.
-    // If you use Lombok, just add @Data, @NoArgsConstructor, and @AllArgsConstructor to the top of the class.
+    @Column(name = "invoice_status", nullable = false, length = 25)
+    private InvoiceStatus invoiceStatus = InvoiceStatus.UNPAID;
 
     public enum InvoiceStatus {
         UNPAID, PARTIALLY_PAID, PAID, CANCELLED
     }
 
+    public Invoice() {
+    }
+
+    public Invoice(Integer rentalId, LocalDate invoiceDate, LocalDate dueDate, BigDecimal subtotal,
+                   BigDecimal additionalCharges, BigDecimal totalAmount, BigDecimal amountPaid,
+                   BigDecimal balanceDue, InvoiceStatus invoiceStatus) {
+        this.rentalId = rentalId;
+        this.invoiceDate = invoiceDate;
+        this.dueDate = dueDate;
+        this.subtotal = subtotal;
+        this.additionalCharges = additionalCharges != null ? additionalCharges : BigDecimal.ZERO;
+        this.totalAmount = totalAmount;
+        this.amountPaid = amountPaid != null ? amountPaid : BigDecimal.ZERO;
+        this.balanceDue = balanceDue;
+        this.invoiceStatus = invoiceStatus;
+    }
+
+    // Getters and Setters
+    public Integer getInvoiceId() {
+        return invoiceId;
+    }
+
+    public void setInvoiceId(Integer invoiceId) {
+        this.invoiceId = invoiceId;
+    }
+
+    public Integer getRentalId() {
+        return rentalId;
+    }
+
+    public void setRentalId(Integer rentalId) {
+        this.rentalId = rentalId;
+    }
+
+    public LocalDate getInvoiceDate() {
+        return invoiceDate;
+    }
+
+    public void setInvoiceDate(LocalDate invoiceDate) {
+        this.invoiceDate = invoiceDate;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public BigDecimal getSubtotal() {
+        return subtotal;
+    }
+
+    public void setSubtotal(BigDecimal subtotal) {
+        this.subtotal = subtotal;
+    }
+
+    public BigDecimal getAdditionalCharges() {
+        return additionalCharges;
+    }
+
+    public void setAdditionalCharges(BigDecimal additionalCharges) {
+        this.additionalCharges = additionalCharges;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public BigDecimal getAmountPaid() {
+        return amountPaid;
+    }
+
+    public void setAmountPaid(BigDecimal amountPaid) {
+        this.amountPaid = amountPaid;
+    }
+
+    public BigDecimal getBalanceDue() {
+        return balanceDue;
+    }
+
+    public void setBalanceDue(BigDecimal balanceDue) {
+        this.balanceDue = balanceDue;
+    }
+
+    public InvoiceStatus getInvoiceStatus() {
+        return invoiceStatus;
+    }
+
+    public void setInvoiceStatus(InvoiceStatus invoiceStatus) {
+        this.invoiceStatus = invoiceStatus;
+    }
 }

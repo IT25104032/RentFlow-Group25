@@ -6,12 +6,11 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ChargeRepository extends JpaRepository<Charge, Long> {
+public interface ChargeRepository extends JpaRepository<Charge, Integer> {
 
-    // Retrieves all itemized charges that belong to a specific invoice
-    List<Charge> findByInvoice_InvoiceId(Long invoiceId);
+    // Retrieves all charges associated with a specific invoice
+    List<Charge> findByInvoiceId(Integer invoiceId);
 
-    // CRITICAL FOR MODULE 3: Finds all unbilled penalties from Module 4
-    // (like damage or late fees) so you can attach them to a new invoice.
-    List<Charge> findByRental_RentalIdAndInvoiceIsNull(Long rentalId);
+    // Finds unbilled charges (where invoice_id IS NULL) for a rental
+    List<Charge> findByRentalIdAndInvoiceIdIsNull(Integer rentalId);
 }
