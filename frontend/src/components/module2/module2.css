@@ -370,3 +370,48 @@
     background: #fecdca;
     color: #912018;
 }
+
+.module2-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.module2-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+}
+
+.module2-table th,
+.module2-table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.module2-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.module2-table td {
+    color: #475569;
+}
+
+.module2-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.module2-btn-small {
+    padding: 8px 14px;
+    font-size: 14px;
+}
+
+.module2-empty-state {
+    padding: 30px;
+    text-align: center;
+    color: #64748b;
+    background: #f8fafc;
+    border-radius: 10px;
+}
