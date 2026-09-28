@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { createSecondaryContact } from "../../services/module2/secondaryContactService";
 
-function SecondaryContactForm() {
+function SecondaryContactForm({ customerId }) {
+
     const [contactData, setContactData] = useState({
         contactName: "",
         relationship: "",
@@ -32,6 +34,57 @@ function SecondaryContactForm() {
         });
     }
 
+    async function handleSubmit(event) {
+        event.preventDefault();
+
+        if (!customerId) {
+            alert("Please register the renter first.");
+            return;
+        }
+
+        if (!contactData.contactName || !contactData.phoneNumber) {
+            alert("Contact name and phone number are required.");
+            return;
+        }
+
+        try {
+            const contactRequest = {
+                customerId: customerId,
+                contactName: contactData.contactName,
+                relationship: contactData.relationship,
+                phoneNumber: contactData.phoneNumber,
+                alternatePhone: contactData.alternatePhone,
+                email: contactData.email,
+                address: contactData.address,
+                notes: contactData.notes
+            };
+
+            const response =
+                await createSecondaryContact(contactRequest);
+
+            console.log(
+                "Secondary contact saved:",
+                response
+            );
+
+            alert(
+                "Secondary contact saved successfully!"
+            );
+
+            clearForm();
+
+        } catch (error) {
+            console.error(
+                "Failed to save secondary contact:",
+                error
+            );
+
+            alert(
+                "Failed to save secondary contact."
+            );
+        }
+    }
+
     return (
         <div>
             <div className="module2-card-header">
@@ -45,8 +98,13 @@ function SecondaryContactForm() {
                 </div>
             </div>
 
-            <div className="module2-form">
+            <form
+                className="module2-form"
+                onSubmit={handleSubmit}
+            >
+
                 <div className="module2-form-row">
+
                     <div className="module2-form-group">
                         <label>Contact Name</label>
 
@@ -70,9 +128,11 @@ function SecondaryContactForm() {
                             placeholder="e.g. Brother, Manager"
                         />
                     </div>
+
                 </div>
 
                 <div className="module2-form-row">
+
                     <div className="module2-form-group">
                         <label>Phone Number</label>
 
@@ -96,9 +156,11 @@ function SecondaryContactForm() {
                             placeholder="Optional alternate number"
                         />
                     </div>
+
                 </div>
 
                 <div className="module2-form-row">
+
                     <div className="module2-form-group">
                         <label>Email</label>
 
@@ -122,6 +184,7 @@ function SecondaryContactForm() {
                             placeholder="Enter address"
                         />
                     </div>
+
                 </div>
 
                 <div className="module2-form-group">
@@ -137,6 +200,7 @@ function SecondaryContactForm() {
                 </div>
 
                 <div className="module2-form-actions">
+
                     <button
                         type="button"
                         className="module2-btn module2-btn-secondary"
@@ -144,8 +208,18 @@ function SecondaryContactForm() {
                     >
                         Clear Form
                     </button>
+
+                    <button
+                        type="submit"
+                        className="module2-btn module2-btn-primary"
+                        disabled={!customerId}
+                    >
+                        Save Secondary Contact
+                    </button>
+
                 </div>
-            </div>
+
+            </form>
         </div>
     );
 }

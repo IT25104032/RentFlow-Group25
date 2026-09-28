@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createCustomer } from "../../services/module2/customerService";
 
-function CustomerForm() {
+function CustomerForm({ onCustomerCreated}) {
     const [formData, setFormData] = useState({
         customerName: "",
         email: "",
@@ -42,14 +42,18 @@ function CustomerForm() {
         try {
             const customerData = {
                 ...formData,
-                companyId: 1001,
+                companyId: 1000,
                 customerStatus: "ACTIVE",
-                createdBy: 1
+                createdBy: 3
             };
 
             const response = await createCustomer(customerData);
 
             console.log("Renter registered:", response);
+
+            if (onCustomerCreated) {
+                onCustomerCreated(response.customerId);
+            }
 
             alert("Renter registered successfully!");
 
@@ -60,6 +64,7 @@ function CustomerForm() {
             alert("Failed to register renter.");
         }
     }
+
 
     return (
         <form className="module2-form" onSubmit={handleSubmit}>

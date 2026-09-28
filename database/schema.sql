@@ -1506,4 +1506,3 @@ UPDATE lost_item SET lost_status = 'RECOVERED' WHERE lost_item_id = 1;
 #IT25104066
 #22.Check all lost items with lost_item_id = 1
 SELECT * FROM lost_item WHERE lost_item_id = 1;
-
