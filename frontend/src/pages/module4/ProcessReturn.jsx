@@ -374,6 +374,8 @@ function ProcessReturn() {
                     (item) => item.selected
                 );
 
+            const savedReturnItems = [];
+
 
             for (const item of selectedItems) {
 
@@ -398,8 +400,33 @@ function ProcessReturn() {
                 };
 
 
-                await createReturnItem(
+                const savedItem = await createReturnItem(
                     returnItemData
+                );
+                savedReturnItems.push(savedItem);
+            }
+
+            const damagedItems =
+                savedReturnItems.filter(
+                    (item) =>
+                        item.conditionStatus === "DAMAGED"
+                );
+
+            if (damagedItems.length > 0) {
+
+                navigate(
+                    `/returns/${savedReturn.returnId}/damages`,
+                    {
+                        state: {
+                            damagedItems: damagedItems
+                        }
+                    }
+                );
+
+            } else {
+
+                navigate(
+                    `/returns/${savedReturn.returnId}`
                 );
             }
 
@@ -409,11 +436,11 @@ function ProcessReturn() {
             );
 
 
-            setTimeout(() => {
+            /**setTimeout(() => {
 
                 navigate("/returns");
 
-            }, 1500);
+            }, 1500);**/
 
 
         } catch (err) {
@@ -828,11 +855,11 @@ function ProcessReturn() {
                                                             Damaged
                                                         </option>
 
-                                                        <option value="MISSING_PARTS">
+                                                        <option value="MISSING PARTS">
                                                             Missing Parts
                                                         </option>
 
-                                                        <option value="NEEDS_MAINTENANCE">
+                                                        <option value="NEEDS MAINTENANCE">
                                                             Needs Maintenance
                                                         </option>
 

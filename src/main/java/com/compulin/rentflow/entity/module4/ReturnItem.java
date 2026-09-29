@@ -13,14 +13,16 @@ public class ReturnItem {
     private Integer returnItemId;
 
     //@ManyToOne
-    @JoinColumn(name = "return_id", nullable = false)
+    //@JoinColumn(name = "return_id", nullable = false)
+    @Column(name = "return_id", nullable = false)
     private Integer returnId;
 
     //@ManyToOne
-    @JoinColumn(name = "rental_item_id", nullable = false)
+    //@JoinColumn(name = "rental_item_id", nullable = false)
+    @Column(name = "rental_item_id", nullable = false)
     private Integer rentalItemId;
 
-    @Column(name = "quantity_returned", nullable = false)
+    @Column(name = "qty_returned", nullable = false)
     private Integer quantityReturned;
 
     @Column(name = "condition_status", nullable = false, length = 30)
@@ -43,11 +45,11 @@ public class ReturnItem {
         this.returnItemId = returnItemId;
     }
 
-    public Integer getRentalReturnId() {
+    public Integer getReturnId() {
         return returnId;
     }
 
-    public void setRentalReturnId(Integer returnId) {
+    public void setReturnId(Integer returnId) {
         this.returnId = returnId;
     }
 
