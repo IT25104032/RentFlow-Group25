@@ -1,4 +1,5 @@
 const RETURNS_URL = "http://localhost:8081/api/returns";
+const DAMAGES_URL = "http://localhost:8081/api/damages";
 
 export async function getAllReturns() {
 
@@ -73,6 +74,34 @@ export async function getReturnItems(returnId) {
 
     if (!response.ok) {
         throw new Error("Failed to load return items");
+    }
+
+    return response.json();
+}
+
+export async function createDamageRecord(damageData) {
+
+    const response = await fetch(DAMAGES_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(damageData)
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to create damage record");
+    }
+
+    return response.json();
+}
+
+export async function getAllDamages() {
+
+    const response = await fetch(DAMAGES_URL);
+
+    if (!response.ok) {
+        throw new Error("Failed to load damage records");
     }
 
     return response.json();
