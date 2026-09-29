@@ -18,12 +18,22 @@ function CreateRental({ onBack }) {
         location.state?.selectedRenter || null;
 
 
+    const previousRentalDetails =
+        location.state?.rentalDetails || null;
     /*
      * Rental details entered on this page.
      */
-    const [startDate, setStartDate] = useState("");
-    const [dueDate, setDueDate] = useState("");
-    const [notes, setNotes] = useState("");
+    const [startDate, setStartDate] = useState(
+        previousRentalDetails?.startDate || ""
+    );
+
+    const [dueDate, setDueDate] = useState(
+        previousRentalDetails?.dueDate || ""
+    );
+
+    const [notes, setNotes] = useState(
+        previousRentalDetails?.notes || ""
+    );
 
 
     /*
@@ -84,67 +94,30 @@ function CreateRental({ onBack }) {
         setError("");
         setSuccess("");
 
-
         if (!selectedRenter) {
-
-            setError(
-                "Please select a renter first."
-            );
-
+            setError("Please select a renter first.");
             return;
         }
-
 
         if (!validateDates()) {
             return;
         }
 
-
-        /*
-         * Temporary rental information.
-         *
-         * This object stays in the frontend
-         * while the user continues through
-         * the rental workflow.
-         */
         const rentalDetails = {
-
             companyId: 1000,
-
-            customerId:
-            selectedRenter.customerId,
-
+            customerId: selectedRenter.customerId,
             createdBy: 3,
-
-            startDate:
-            startDate,
-
-            dueDate:
-            dueDate,
-
-            rentalStatus:
-                "DRAFT",
-
-            notes:
-                notes.trim() || null
+            startDate: startDate,
+            dueDate: dueDate,
+            rentalStatus: "DRAFT",
+            notes: notes.trim() || null
         };
 
-
-        /*
-         * Move to Step 3.
-         *
-         * Pass both the selected renter
-         * and the rental details forward.
-         */
         navigate(
             "/rentals/equipment",
             {
                 state: {
-
-                    selectedRenter:
                     selectedRenter,
-
-                    rentalDetails:
                     rentalDetails
                 }
             }

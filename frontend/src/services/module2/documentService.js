@@ -4,7 +4,7 @@ const API_BASE_URL =
 
 /*
  * Get all identification documents
- * belonging to a customer.
+ * belonging to a renter.
  */
 export async function getDocumentsByCustomerId(
     customerId
@@ -14,7 +14,6 @@ export async function getDocumentsByCustomerId(
         `${API_BASE_URL}/customer/${customerId}`
     );
 
-
     if (!response.ok) {
 
         throw new Error(
@@ -22,29 +21,79 @@ export async function getDocumentsByCustomerId(
         );
     }
 
-
     return await response.json();
 }
 
 
 /*
  * Create a new identification document.
+ *
+ * Sends the actual file using FormData.
  */
 export async function createDocument(
     documentData
 ) {
 
+    const formData =
+        new FormData();
+
+
+    formData.append(
+        "customerId",
+        documentData.customerId
+    );
+
+    formData.append(
+        "documentType",
+        documentData.documentType
+    );
+
+    formData.append(
+        "documentNumber",
+        documentData.documentNumber
+    );
+
+    formData.append(
+        "checkedBy",
+        documentData.checkedBy
+    );
+
+
+    if (documentData.expiryDate) {
+
+        formData.append(
+            "expiryDate",
+            documentData.expiryDate
+        );
+    }
+
+
+    if (documentData.notes) {
+
+        formData.append(
+            "notes",
+            documentData.notes
+        );
+    }
+
+
+    /*
+     * Add the actual browser File.
+     */
+    if (documentData.documentFile) {
+
+        formData.append(
+            "documentFile",
+            documentData.documentFile
+        );
+    }
+
+
     const response = await fetch(
         API_BASE_URL,
         {
             method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body:
-                JSON.stringify(documentData)
+            body: formData
         }
     );
 
@@ -52,10 +101,9 @@ export async function createDocument(
     if (!response.ok) {
 
         throw new Error(
-            "Failed to create identification document"
+            "Failed to save identification document"
         );
     }
-
 
     return await response.json();
 }
@@ -63,6 +111,12 @@ export async function createDocument(
 
 /*
  * Update an existing identification document.
+ *
+ * If a new file is selected, the new file is
+ * uploaded and document_copy_path is replaced.
+ *
+ * If no new file is selected, the existing
+ * server-side document is kept.
  */
 export async function updateDocument(
     documentId,
@@ -70,17 +124,67 @@ export async function updateDocument(
     documentData
 ) {
 
+    const formData =
+        new FormData();
+
+
+    formData.append(
+        "customerId",
+        customerId
+    );
+
+    formData.append(
+        "documentType",
+        documentData.documentType
+    );
+
+    formData.append(
+        "documentNumber",
+        documentData.documentNumber
+    );
+
+    formData.append(
+        "checkedBy",
+        documentData.checkedBy
+    );
+
+
+    if (documentData.expiryDate) {
+
+        formData.append(
+            "expiryDate",
+            documentData.expiryDate
+        );
+    }
+
+
+    if (documentData.notes) {
+
+        formData.append(
+            "notes",
+            documentData.notes
+        );
+    }
+
+
+    /*
+     * Only send a file when the user selected
+     * a new identification document.
+     */
+    if (documentData.documentFile) {
+
+        formData.append(
+            "documentFile",
+            documentData.documentFile
+        );
+    }
+
+
     const response = await fetch(
-        `${API_BASE_URL}/${documentId}?customerId=${customerId}`,
+        `${API_BASE_URL}/${documentId}`,
         {
             method: "PUT",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body:
-                JSON.stringify(documentData)
+            body: formData
         }
     );
 
@@ -91,7 +195,6 @@ export async function updateDocument(
             "Failed to update identification document"
         );
     }
-
 
     return await response.json();
 }

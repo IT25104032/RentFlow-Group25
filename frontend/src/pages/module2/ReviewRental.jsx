@@ -237,8 +237,12 @@ function ReviewRental() {
              * Show the generated rental ID.
              */
             setSuccess(
-                `Rental #${result.rental.rentalId} confirmed successfully.`
+                `Rental ${result.rental.rentalId} confirmed successfully.`
             );
+
+            setTimeout(() => {
+                navigate("/renters");
+            }, 2500);
 
         } catch (error) {
 

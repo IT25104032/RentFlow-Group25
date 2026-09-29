@@ -4,6 +4,8 @@ import {
     Route
 } from "react-router-dom";
 
+import Module2Layout from "../layouts/Module2Layout";
+
 import RegisterRenter from "../pages/module2/RegisterRenter";
 import CreateRental from "../pages/module2/CreateRental";
 import EquipmentSelection from "../pages/module2/EquipmentSelection";
@@ -17,40 +19,44 @@ function AppRoutes() {
 
             <Routes>
 
-                <Route
-                    path="/"
-                    element={
-                        <RegisterRenter />
-                    }
-                />
+                <Route element={<Module2Layout />}>
 
-                <Route
-                    path="/renters"
-                    element={
-                        <RegisterRenter />
-                    }
-                />
+                    <Route
+                        path="/"
+                        element={
+                            <RegisterRenter />
+                        }
+                    />
 
-                <Route
-                    path="/rentals/create"
-                    element={
-                        <CreateRental />
-                    }
-                />
+                    <Route
+                        path="/renters"
+                        element={
+                            <RegisterRenter />
+                        }
+                    />
 
-                <Route
-                    path="/rentals/equipment"
-                    element={
-                        <EquipmentSelection />
-                    }
-                />
+                    <Route
+                        path="/rentals/create"
+                        element={
+                            <CreateRental />
+                        }
+                    />
 
-                <Route
-                    path="/rentals/review"
-                    element={
-                        <ReviewRental />
-                    }
-                />
+                    <Route
+                        path="/rentals/equipment"
+                        element={
+                            <EquipmentSelection />
+                        }
+                    />
+
+                    <Route
+                        path="/rentals/review"
+                        element={
+                            <ReviewRental />
+                        }
+                    />
+
+                </Route>
 
             </Routes>
 
