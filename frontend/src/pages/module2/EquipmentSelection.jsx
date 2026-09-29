@@ -92,7 +92,9 @@ function EquipmentSelection({ onBack }) {
      * this rental.
      */
     const [selectedEquipment, setSelectedEquipment] =
-        useState([]);
+        useState(
+            location.state?.selectedEquipment || []
+        );
 
 
     const [error, setError] =
@@ -855,7 +857,13 @@ function EquipmentSelection({ onBack }) {
                                 {
                                     state: {
                                         selectedRenter:
-                                        selectedRenter
+                                        selectedRenter,
+
+                                        rentalDetails:
+                                        rentalDetails,
+
+                                        selectedEquipment:
+                                        selectedEquipment
                                     }
                                 }
                             )
@@ -863,6 +871,7 @@ function EquipmentSelection({ onBack }) {
                 >
                     Back
                 </button>
+
 
 
                 <button

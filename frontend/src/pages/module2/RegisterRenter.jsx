@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -35,6 +35,8 @@ function RegisterRenter() {
     /*
      * Search state
      */
+
+    const documentFileInputRef = useRef(null);
 
     const [searchType, setSearchType] =
         useState("name");
@@ -476,6 +478,23 @@ function RegisterRenter() {
 
 
     /*
+    * Remove the currently selected identification file.
+    */
+    function handleRemoveDocumentFile() {
+
+        setDocumentForm(
+            previous => ({
+                ...previous,
+                documentCopy: null
+            })
+        );
+
+        if (documentFileInputRef.current) {
+            documentFileInputRef.current.value = "";
+        }
+    }
+
+    /*
      * Change secondary contact fields.
      */
     function handleSecondaryChange(event) {
@@ -544,8 +563,8 @@ function RegisterRenter() {
             documentNumber:
             documentForm.documentNumber,
 
-            documentCopyPath:
-            documentForm.documentCopy.name,
+            documentFile:
+            documentForm.documentCopy,
 
             expiryDate:
                 documentForm.expiryDate || null,
@@ -1578,14 +1597,46 @@ function RegisterRenter() {
                                                 </label>
 
                                                 <input
+                                                    id="document-file-input"
+                                                    ref={documentFileInputRef}
                                                     type="file"
+                                                    accept=".jpg,.jpeg,.png,.pdf"
                                                     onChange={
                                                         handleDocumentFileChange
                                                     }
                                                 />
 
-                                            </div>
+                                                {documentForm.documentCopy && (
 
+                                                    <div className="selected-file">
+
+                                                        <span className="selected-file-name">
+
+                                                            📄{" "}
+                                                            {documentForm.documentCopy.name}
+
+                                                        </span>
+
+                                                        <button
+                                                            type="button"
+                                                            className="remove-file-button"
+                                                            onClick={
+                                                                handleRemoveDocumentFile
+                                                            }
+                                                            aria-label="Remove selected document"
+                                                        >
+                                                            ×
+                                                        </button>
+
+                                                    </div>
+
+                                                )}
+
+                                                <small className="file-help-text">
+                                                    Supported: JPG, JPEG, PNG, PDF
+                                                </small>
+
+                                            </div>
 
                                             <div className="field">
 
