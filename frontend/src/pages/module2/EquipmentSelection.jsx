@@ -685,7 +685,7 @@ function EquipmentSelection({ onBack }) {
                                 </th>
 
                                 <th>
-                                    Line Deposit
+                                    Security Deposit
                                 </th>
 
                                 <th>
