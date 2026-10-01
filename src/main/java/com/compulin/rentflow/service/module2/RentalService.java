@@ -1,12 +1,16 @@
 package com.compulin.rentflow.service.module2;
 
-
+import com.compulin.rentflow.dto.module2.RentalHistoryResponse;
+import com.compulin.rentflow.dto.module2.RentalItemResponse;
+import com.compulin.rentflow.repository.module2.RentalItemRepository;
 import com.compulin.rentflow.dto.module2.RentalRequest;
 import com.compulin.rentflow.dto.module2.RentalResponse;
 import com.compulin.rentflow.entity.module2.Rental;
+import com.compulin.rentflow.entity.module2.RentalItem;
 import com.compulin.rentflow.repository.module2.RentalRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,8 +19,14 @@ public class RentalService {
 
     private final RentalRepository rentalRepository;
 
-    public RentalService(RentalRepository rentalRepository) {
+    private final RentalItemRepository rentalItemRepository;
+
+    public RentalService(
+            RentalRepository rentalRepository,
+            RentalItemRepository rentalItemRepository
+    ) {
         this.rentalRepository = rentalRepository;
+        this.rentalItemRepository = rentalItemRepository;
     }
 
     public RentalResponse createRental(RentalRequest request) {
@@ -71,14 +81,83 @@ public class RentalService {
         return convertToResponse(optionalRental.get());
     }
 
-    public List<RentalResponse> getCustomerRentalHistory(
+    public List<RentalHistoryResponse> getCustomerRentalHistory(
             Integer customerId,
-            Integer companyId) {
+            Integer companyId
+    ) {
 
         List<Rental> rentals =
                 rentalRepository.findByCustomerIdAndCompanyId(
                         customerId,
                         companyId
+                );
+
+        return rentals.stream()
+                .map(rental -> {
+
+                    RentalHistoryResponse history =
+                            new RentalHistoryResponse();
+
+                    history.setRental(
+                            convertToResponse(rental)
+                    );
+
+                    List<RentalItemResponse> rentalItems =
+                            rentalItemRepository
+                                    .findByRentalId(
+                                            rental.getRentalId()
+                                    )
+                                    .stream()
+                                    .map(this::convertRentalItemToResponse)
+                                    .toList();
+
+                    history.setRentalItems(rentalItems);
+
+                    return history;
+                })
+                .toList();
+    }
+
+    public List<RentalResponse> getActiveRentals(
+            Integer companyId) {
+
+        List<Rental> rentals =
+                rentalRepository.findActiveRentals(
+                        companyId
+                );
+
+        return rentals.stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
+
+
+    public List<RentalResponse> getOverdueRentals(
+            Integer companyId) {
+
+        List<Rental> rentals =
+                rentalRepository.findOverdueRentals(
+                        companyId
+                );
+
+        return rentals.stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
+
+    public List<RentalResponse> getRentalsDueSoon(
+            Integer companyId) {
+
+        LocalDate today = LocalDate.now();
+
+        LocalDate dueSoonDate =
+                today.plusDays(3);
+
+        List<Rental> rentals =
+                rentalRepository.findRentalsDueSoon(
+                        companyId,
+                        today,
+                        dueSoonDate
                 );
 
         return rentals.stream()
@@ -100,6 +179,56 @@ public class RentalService {
         response.setRentalStatus(rental.getRentalStatus());
         response.setNotes(rental.getNotes());
         response.setCreatedAt(rental.getCreatedAt());
+
+        return response;
+    }
+
+    private RentalItemResponse convertRentalItemToResponse(
+            RentalItem rentalItem
+    ) {
+
+        RentalItemResponse response =
+                new RentalItemResponse();
+
+        response.setRentalItemId(
+                rentalItem.getRentalItemId()
+        );
+
+        response.setRentalId(
+                rentalItem.getRentalId()
+        );
+
+        response.setEquipmentId(
+                rentalItem.getEquipmentId()
+        );
+
+        response.setQuantity(
+                rentalItem.getQuantity()
+        );
+
+        response.setRatePerUnit(
+                rentalItem.getRatePerUnit()
+        );
+
+        response.setRatePeriod(
+                rentalItem.getRatePeriod()
+        );
+
+        response.setDepositPerUnit(
+                rentalItem.getDepositPerUnit()
+        );
+
+        response.setLineDeposit(
+                rentalItem.getLineDeposit()
+        );
+
+        response.setItemStatus(
+                rentalItem.getItemStatus()
+        );
+
+        response.setIssuedAt(
+                rentalItem.getIssuedAt()
+        );
 
         return response;
     }
