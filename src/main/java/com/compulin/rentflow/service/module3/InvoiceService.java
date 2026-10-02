@@ -84,6 +84,7 @@ public class InvoiceService {
     // Retrieves all invoices
 
     public List<Invoice> getAllInvoices() {
+
         return invoiceRepository.findAll();
     }
 

@@ -12,7 +12,7 @@ public class GenerateInvoiceRequest {
     private Integer createdBy;
     private List<ChargeItemDTO> charges;
 
-    // --- Nested DTO for the itemized charges ---
+    //Nested DTO for the itemized charges
     public static class ChargeItemDTO {
         private Integer rentalItemId;
         private ChargeType chargeType;

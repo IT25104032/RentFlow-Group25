@@ -12,6 +12,5 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Integer> {
 
     List<Invoice> findByInvoiceStatus(Invoice.InvoiceStatus invoiceStatus);
 
-    // Change List<Invoice> to Optional<Invoice>
     Optional<Invoice> findByRentalId(Integer rentalId);
 }

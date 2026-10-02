@@ -21,60 +21,54 @@ public class InvoiceController {
         this.invoiceService = invoiceService;
     }
 
-    /**
-     * Generates a new invoice for a given rental ID by collecting rental items and charges
-     * POST /api/v1/invoices/generate/{rentalId}
-     */
+
+     // Generates a new invoice for a given rental ID by collecting rental items and charges
+
     @PostMapping("/generate/{rentalId}")
     public ResponseEntity<Invoice> generateInvoice(@PathVariable Integer rentalId) {
         Invoice createdInvoice = invoiceService.generateInvoiceForRental(rentalId);
         return new ResponseEntity<>(createdInvoice, HttpStatus.CREATED);
     }
 
-    /**
-     * Retrieves an invoice by its primary key ID
-     * GET /api/v1/invoices/{id}
-     */
+
+     //Retrieves an invoice by its primary key ID
+
     @GetMapping("/{id}")
     public ResponseEntity<Invoice> getInvoiceById(@PathVariable Integer id) {
         Invoice invoice = invoiceService.getInvoiceById(id);
         return ResponseEntity.ok(invoice);
     }
 
-    /**
-     * Retrieves the invoice associated with a specific rental ID
-     * GET /api/v1/invoices/rental/{rentalId}
-     */
+
+     //Retrieves the invoice associated with a specific rental ID
+
     @GetMapping("/rental/{rentalId}")
     public ResponseEntity<Invoice> getInvoiceByRentalId(@PathVariable Integer rentalId) {
         Invoice invoice = invoiceService.getInvoiceByRentalId(rentalId);
         return ResponseEntity.ok(invoice);
     }
 
-    /**
-     * Retrieves all invoices in the system
-     * GET /api/v1/invoices
-     */
+
+     //Retrieves all invoices in the system
+
     @GetMapping
     public ResponseEntity<List<Invoice>> getAllInvoices() {
         List<Invoice> invoices = invoiceService.getAllInvoices();
         return ResponseEntity.ok(invoices);
     }
 
-    /**
-     * Recalculates invoice totals when late fees or damages are added
-     * POST /api/v1/invoices/{id}/recalculate
-     */
+
+     //Recalculates invoice totals when late fees or damages are added
+
     @PostMapping("/{id}/recalculate")
     public ResponseEntity<Invoice> recalculateInvoice(@PathVariable Integer id) {
         Invoice updatedInvoice = invoiceService.recalculateInvoiceTotals(id);
         return ResponseEntity.ok(updatedInvoice);
     }
 
-    /**
-     * Cancels an invoice
-     * PUT /api/v1/invoices/{id}/cancel
-     */
+
+     //Cancels an invoice
+
     @PutMapping("/{id}/cancel")
     public ResponseEntity<Invoice> cancelInvoice(@PathVariable Integer id) {
         Invoice cancelledInvoice = invoiceService.cancelInvoice(id);
