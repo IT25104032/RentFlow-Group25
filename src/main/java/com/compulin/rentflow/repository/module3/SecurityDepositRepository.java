@@ -10,10 +10,10 @@ import java.util.Optional;
 @Repository
 public interface SecurityDepositRepository extends JpaRepository<SecurityDeposit, Integer> {
 
-    // Finds the deposit associated with a specific rental (rental_id is unique)
+    // Finds the deposit associated with a specific rental
     Optional<SecurityDeposit> findByRentalId(Integer rentalId);
 
-    // Finds deposits filtered by status (e.g., PENDING, HELD, REFUNDED)
+    // Finds deposits filtered by status
     List<SecurityDeposit> findByDepositStatus(SecurityDeposit.DepositStatus depositStatus);
 
     // Finds deposits collected by a specific staff member
