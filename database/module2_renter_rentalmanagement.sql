@@ -226,7 +226,7 @@ INSERT INTO rental_extension (extension_id, rental_id, old_due_date, new_due_dat
 #1. Search customer by name/phone
 SELECT customer_id, customer_name, email, phone, address, customer_type, customer_status, created_at
 FROM customer c
-WHERE company_id = 1001 AND (c.customer_name LIKE '%Kasun%' OR phone = '0771234567')
+WHERE company_id = 1000 AND (c.customer_name LIKE '%Kasun%' OR phone = '0771234567')
 ORDER BY customer_name;
 
 
@@ -245,7 +245,7 @@ FROM customer c
 LEFT JOIN sys_user u
     ON c.created_by = u.user_id
 WHERE c.customer_id = 1
-  AND c.company_id = 1001;
+  AND c.company_id = 1000;
 
 
 #3. Update Customer
@@ -256,7 +256,7 @@ SET
     phone = '0779999999',
     address = '50 Main Street, Colombo',
     customer_type = 'INDIVIDUAL'
-WHERE customer_id = 1 AND company_id = 1001;
+WHERE customer_id = 1 AND company_id = 1000;
   
   
 #4. View customer identification documents
@@ -276,7 +276,7 @@ JOIN sys_user u
 JOIN customer c
     ON cd.customer_id = c.customer_id
 WHERE cd.customer_id = 1
-  AND c.company_id = 1001
+  AND c.company_id = 1000
 ORDER BY cd.checked_at DESC;
 
 
@@ -294,7 +294,7 @@ SET
     cd.notes = 'Updated identification document'
 WHERE cd.document_id = 1
   AND cd.customer_id = 1
-  AND c.company_id = 1001;
+  AND c.company_id = 1000;
   
   
 #6. View customer's secondary contact
@@ -312,7 +312,7 @@ FROM customer_secondary_contact s
 JOIN customer c
     ON s.customer_id = c.customer_id
 WHERE s.customer_id = 1
-  AND c.company_id = 1001;
+  AND c.company_id = 1000;
 
 
 #7. Update customer's secondary contact
@@ -327,7 +327,7 @@ SET
     s.address = 'Colombo',
     s.notes = 'Updated secondary contact'
 WHERE s.customer_id = 1
-  AND c.company_id = 1001;
+  AND c.company_id = 1000;
 
 
 #8. View customer's rental history
@@ -339,7 +339,7 @@ SELECT
     r.rental_status,
     r.notes
 FROM rental r
-WHERE r.customer_id = 1 AND r.company_id = 1001
+WHERE r.customer_id = 1 AND r.company_id = 1000
 ORDER BY r.rental_date DESC;
 
 
@@ -360,7 +360,7 @@ JOIN rental_item ri
     ON r.rental_id = ri.rental_id
 JOIN equipment e
     ON ri.equipment_id = e.equipment_id
-WHERE r.customer_id = 1 AND r.company_id = 1001 AND e.company_id = r.company_id
+WHERE r.customer_id = 1 AND r.company_id = 1000 AND e.company_id = r.company_id
 ORDER BY r.start_date DESC;
 
   
@@ -379,7 +379,7 @@ JOIN rental_item ri
 JOIN equipment e
     ON ri.equipment_id = e.equipment_id
 WHERE r.customer_id = 1
-  AND r.company_id = 1001
+  AND r.company_id = 1000
   AND e.company_id = r.company_id
   AND r.rental_status IN ('ACTIVE', 'OVERDUE','PARTIALLY_RETURNED')
 ORDER BY r.due_date;
@@ -399,7 +399,7 @@ SELECT
 FROM equipment e
 JOIN equipment_category ec
     ON e.category_id = ec.category_id
-WHERE e.company_id = 1001 AND e.equ_status = 'ACTIVE' AND e.available_quantity > 0
+WHERE e.company_id = 1000 AND e.equ_status = 'ACTIVE' AND e.available_quantity > 0
 ORDER BY ec.category_name, e.item_name;
 
 
@@ -415,7 +415,7 @@ SELECT
 FROM equipment e
 JOIN equipment_category ec
     ON e.category_id = ec.category_id
-WHERE e.company_id = 1001
+WHERE e.company_id = 1000
   AND e.equ_status = 'ACTIVE'
   AND e.available_quantity > 0
   AND (e.item_name LIKE '%camera%' OR e.item_code LIKE '%camera%' OR ec.category_name LIKE '%camera%')
@@ -430,7 +430,7 @@ SELECT equipment_id, item_name, available_quantity,
         ELSE 'INSUFFICIENT_QUANTITY'
     END AS availability_result
 FROM equipment
-WHERE equipment_id = 10 AND company_id = 1001 AND equ_status = 'ACTIVE';
+WHERE equipment_id = 10 AND company_id = 1000 AND equ_status = 'ACTIVE';
   
 
 #14. View rental details
@@ -451,7 +451,7 @@ JOIN customer c
     ON r.customer_id = c.customer_id
 JOIN sys_user u
     ON r.created_by = u.user_id
-WHERE r.rental_id = 1 AND r.company_id = 1001 AND c.company_id = r.company_id;
+WHERE r.rental_id = 1 AND r.company_id = 1000 AND c.company_id = r.company_id;
   
 SELECT
     ri.rental_item_id,
@@ -469,7 +469,7 @@ JOIN rental r
 JOIN equipment e
     ON ri.equipment_id = e.equipment_id
 WHERE ri.rental_id = 1
-  AND r.company_id = 1001
+  AND r.company_id = 1000
   AND e.company_id = r.company_id;
   
   
@@ -498,7 +498,7 @@ FROM rental_item ri
 JOIN rental r
     ON ri.rental_id = r.rental_id
 WHERE ri.rental_item_id = 1
-  AND r.company_id = 1001
+  AND r.company_id = 1000
   AND ri.item_status = 'SELECTED'
 FOR UPDATE;
 
@@ -520,7 +520,7 @@ JOIN rental_item ri
 JOIN rental r
     ON ri.rental_id = r.rental_id
 WHERE ri.rental_item_id = 1
-  AND r.company_id = 1001
+  AND r.company_id = 1000
   AND e.company_id = r.company_id
   AND ri.item_status = 'SELECTED';
 
@@ -534,7 +534,7 @@ JOIN rental r
 SET
     e.available_quantity = e.available_quantity - ri.quantity
 WHERE ri.rental_item_id = 1
-  AND r.company_id = 1001
+  AND r.company_id = 1000
   AND e.company_id = r.company_id
   AND ri.item_status = 'SELECTED'
   AND e.equ_status = 'ACTIVE'
@@ -549,7 +549,7 @@ SET
     ri.item_status = 'ISSUED',
     ri.issued_at = NOW()
 WHERE ri.rental_item_id = 1
-  AND r.company_id = 1001
+  AND r.company_id = 1000
   AND ri.item_status = 'SELECTED';
 
 
@@ -564,7 +564,7 @@ WHERE rental_id = (
         WHERE rental_item_id = 1
     ) AS x
 )
-AND company_id = 1001;
+AND company_id = 1000;
 
 COMMIT;
 
@@ -577,7 +577,7 @@ SELECT
     e.equ_status
 FROM equipment e
 WHERE e.equipment_id = 1
-  AND e.company_id = 1001;
+  AND e.company_id = 1000;
 
 #17. Extend rental
 START TRANSACTION;
@@ -597,14 +597,14 @@ SELECT
     'Customer requested additional days'
 FROM rental
 WHERE rental_id = 3
-  AND company_id = 1001
+  AND company_id = 1000
   AND '2026-09-30' > due_date;
 
 -- Update the rental's current due date.
 UPDATE rental
 SET due_date = '2026-09-30'
 WHERE rental_id = 3
-  AND company_id = 1001
+  AND company_id = 1000
   AND '2026-09-30' > due_date;
 
 COMMIT;
@@ -626,7 +626,7 @@ JOIN rental r
 JOIN sys_user u
     ON re.approved_by = u.user_id
 WHERE re.rental_id = 3
-  AND r.company_id = 1001
+  AND r.company_id = 1000
 ORDER BY re.created_at DESC;
 
 
@@ -640,7 +640,7 @@ SELECT
 FROM rental r
 JOIN customer c
     ON r.customer_id = c.customer_id
-WHERE r.company_id = 1001 AND (c.company_id = r.company_id)
+WHERE r.company_id = 1000 AND (c.company_id = r.company_id)
   AND r.rental_status IN (
       'ACTIVE',
       'PARTIALLY_RETURNED'
@@ -661,7 +661,7 @@ SELECT
 FROM rental r
 JOIN customer c
     ON r.customer_id = c.customer_id
-WHERE r.company_id = 1001
+WHERE r.company_id = 1000
 	AND c.company_id = r.company_id
     AND r.due_date < CURDATE()
     AND r.rental_status IN ('ACTIVE', 'PARTIALLY_RETURNED', 'OVERDUE')
@@ -679,7 +679,7 @@ SELECT
 FROM rental r
 JOIN customer c
     ON r.customer_id = c.customer_id
-WHERE r.company_id = 1001
+WHERE r.company_id = 1000
   AND c.company_id = r.company_id
   AND r.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY) AND r.rental_status IN ('ACTIVE', 'PARTIALLY_RETURNED')
 ORDER BY r.due_date;
