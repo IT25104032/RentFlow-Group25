@@ -15,6 +15,10 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
             Integer companyId
     );
 
+    List<Customer> findByCompanyIdOrderByCreatedAtDesc(
+            Integer companyId
+    );
+
     @Query("""
         SELECT c FROM Customer c
         WHERE c.companyId = :companyId

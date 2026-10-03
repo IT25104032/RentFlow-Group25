@@ -1,6 +1,7 @@
 CREATE DATABASE IF NOT EXISTS rentflow_db;
 USE rentflow_db;
 
+
 # ============== MODULE 1 TABLES ================
 
 #IT25104048
@@ -584,6 +585,7 @@ INSERT INTO rental_item
 # Rental 5
 (5, 4, 10, 1, 2000.00, 'DAY', 6000.00, 6000.00, 'ISSUED', '2026-09-25 11:00:00');
 
+
 # 11. CREATE RENTAL EXTENSIONS (IT25104032)
 INSERT INTO rental_extension (extension_id, rental_id, old_due_date, new_due_date, extension_charge, approved_by, reason) VALUES
 (1, 1, '2026-09-25', '2026-09-28', 1500.00, 3, 'Customer requested three additional days'),
@@ -773,7 +775,7 @@ WHERE category_id = 1;
 #1. Search customer by name/phone
 SELECT customer_id, customer_name, email, phone, address, customer_type, customer_status, created_at
 FROM customer c
-WHERE company_id = 1000 AND (c.customer_name LIKE '%Kasun%' OR phone = '0771234567')
+WHERE company_id = 1000 AND (c.customer_name LIKE '%John%' OR phone = '0771234567')
 ORDER BY customer_name;
 
 
@@ -1151,6 +1153,9 @@ START TRANSACTION;
 #In the application, the new date and charge should come from user input.
 
 #IT25104032
+INSERT INTO rental_extension
+(rental_id, old_due_date, new_due_date,
+ extension_charge, approved_by, reason)
 SELECT
     rental_id,
     due_date,
@@ -1171,7 +1176,6 @@ WHERE rental_id = 3
   AND company_id = 1000
   AND '2026-09-30' > due_date;
 
-#IT25104032
 COMMIT;
   
 #IT25104032  
@@ -1340,7 +1344,9 @@ WHERE invoice_status IN ('UNPAID', 'PARTIALLY_PAID') AND due_date < CURRENT_DATE
 SELECT received_by AS staff_user_id, COUNT(payment_id) AS payments_processed, SUM(amount) AS total_value_collected FROM payment 
 WHERE payment_status = 'COMPLETED' GROUP BY received_by;
 
-UPDATE invoice
+#IT25104036
+#16. 
+UPDATE invoice 
 SET invoice_status = CASE
 	WHEN amount_paid = 0 THEN 'UNPAID'
     WHEN amount_paid > 0 AND amount_paid < total_amount THEN 'PARTIALLY_PAID'
@@ -1366,8 +1372,7 @@ FROM return_item WHERE condition_status = 'DAMAGED';
 
 #IT25104066
 #4. Damage record details screen
-SELECT * FROM return_item
-JOIN damage_record ON return_item.return_item_id = damage_record.return_item_id;
+
 
 #IT25104066
 #5. Total damage charges
@@ -1502,5 +1507,6 @@ JOIN security_deposit sd ON s.rental_id = sd.rental_id;
 UPDATE lost_item SET lost_status = 'RECOVERED' WHERE lost_item_id = 1;
 
 #IT25104066
-#22.Check all lost items with lost_item_id = 1
+#22. Check all lost items with lost_item_id = 1
 SELECT * FROM lost_item WHERE lost_item_id = 1;
+

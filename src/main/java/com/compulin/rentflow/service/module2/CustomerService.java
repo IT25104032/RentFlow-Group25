@@ -173,4 +173,66 @@ public class CustomerService {
 
         return response;
     }
+
+    public List<CustomerResponse> getAllCustomers(
+            Integer companyId
+    ) {
+
+        List<Customer> customers =
+                customerRepository.findByCompanyIdOrderByCreatedAtDesc(
+                        companyId
+                );
+
+        return customers.stream()
+                .map(customer -> {
+
+                    CustomerResponse response =
+                            new CustomerResponse();
+
+                    response.setCustomerId(
+                            customer.getCustomerId()
+                    );
+
+                    response.setCompanyId(
+                            customer.getCompanyId()
+                    );
+
+                    response.setCustomerName(
+                            customer.getCustomerName()
+                    );
+
+                    response.setEmail(
+                            customer.getEmail()
+                    );
+
+                    response.setPhone(
+                            customer.getPhone()
+                    );
+
+                    response.setAddress(
+                            customer.getAddress()
+                    );
+
+                    response.setCustomerType(
+                            customer.getCustomerType()
+                    );
+
+                    response.setCustomerStatus(
+                            customer.getCustomerStatus()
+                    );
+
+                    response.setCreatedBy(
+                            customer.getCreatedBy()
+                    );
+
+                    if (customer.getCreatedAt() != null) {
+                        response.setCreatedAt(
+                                customer.getCreatedAt().toString()
+                        );
+                    }
+
+                    return response;
+                })
+                .toList();
+    }
 }

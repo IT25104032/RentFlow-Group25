@@ -29,6 +29,18 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping
+    public ResponseEntity<List<CustomerResponse>> getAllCustomers(
+            @RequestParam Integer companyId) {
+
+        List<CustomerResponse> customers =
+                customerService.getAllCustomers(
+                        companyId
+                );
+
+        return ResponseEntity.ok(customers);
+    }
+
     @GetMapping("/{customerId}")
     public ResponseEntity<CustomerResponse> getCustomerById(
             @PathVariable Integer customerId,
