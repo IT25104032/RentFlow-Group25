@@ -36,13 +36,13 @@ export default function PaymentModal({ invoice, onClose, onSuccess }) {
         <div className="modal-overlay">
             <div className="modal-content">
                 <h3>Record Payment for Invoice #{invoice.invoiceId}</h3>
-                <p>Balance Due: <strong>${Number(invoice.balanceDue).toFixed(2)}</strong></p>
+                <p>Balance Due: <strong>Rs. {Number(invoice.balanceDue).toFixed(2)}</strong></p>
 
                 {error && <div className="error-banner">{error}</div>}
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Amount ($):</label>
+                        <label>Amount (Rs.):</label>
                         <input type="number" step="0.01" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} required />
                     </div>
                     <div className="form-group">
