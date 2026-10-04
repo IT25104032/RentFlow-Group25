@@ -106,3 +106,49 @@ export async function getAllDamages() {
 
     return response.json();
 }
+
+export async function processReturn(returnData) {
+
+    const response = await fetch(
+        `${RETURNS_URL}/process`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(returnData)
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to process return");
+    }
+
+    return response.json();
+}
+
+export async function searchRentals(search) {
+
+    const response = await fetch(
+        `${RETURNS_URL}/search?search=${encodeURIComponent(search)}`
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to search rentals");
+    }
+
+    return response.json();
+}
+
+export async function getRentalForReturn(rentalId) {
+
+    const response = await fetch(
+        `${RETURNS_URL}/rental/${rentalId}`
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to load rental");
+    }
+
+    return response.json();
+}
