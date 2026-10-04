@@ -15,6 +15,9 @@ function Module2Layout() {
     const isRentalHistory =
         location.pathname === "/rental-history";
 
+    const isRentalExtension =
+        location.pathname === "/rental-extension";
+
     const isCreateRental =
         location.pathname === "/"
         || location.pathname === "/renters"
@@ -112,16 +115,14 @@ function Module2Layout() {
                     </div>
 
 
-                    <div className="module2-sidebar-item">
-
-                        <span className="module2-sidebar-icon">
-                            📅
-                        </span>
-
-                        <span>
-                            Extend Rental
-                        </span>
-
+                    <div
+                        className={`module2-sidebar-item ${
+                            isRentalExtension ? "active" : ""
+                        }`}
+                        onClick={() => navigate("/rental-extension")}
+                    >
+                        <span className="module2-sidebar-icon">📅</span>
+                        <span>Extend Rental</span>
                     </div>
 
                 </nav>
