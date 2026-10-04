@@ -49,11 +49,11 @@ textarea {
     border: 1px solid #777;
     border-radius: 5px;
     font-size: 14px;
+    box-sizing: border-box;
 }
 
 textarea {
     width: 100%;
-    box-sizing: border-box;
 }
 
 .primary-btn,
@@ -103,7 +103,10 @@ button:disabled {
 .details-grid {
     display: grid;
     grid-template-columns:
-        repeat(auto-fit, minmax(180px, 1fr));
+        repeat(
+            auto-fit,
+            minmax(180px, 1fr)
+        );
     gap: 20px;
 }
 
@@ -133,6 +136,7 @@ button:disabled {
     border: 1px solid #555;
     padding: 12px;
     text-align: left;
+    vertical-align: top;
 }
 
 .return-table th {
@@ -140,29 +144,23 @@ button:disabled {
 }
 
 .quantity-input {
-    width: 65px;
+    width: 70px;
 }
 
 .section-heading {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 15px;
 }
 
 .type-badge {
     display: inline-block;
     padding: 6px 12px;
+    border: 1px solid currentColor;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 700;
-}
-
-.type-badge.full {
-    border: 1px solid currentColor;
-}
-
-.type-badge.partial {
-    border: 1px solid currentColor;
 }
 
 .action-row {
@@ -193,4 +191,45 @@ button:disabled {
 .notes-block span {
     font-size: 13px;
     opacity: 0.65;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 18px;
+}
+
+.form-group label {
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+}
+
+@media (max-width: 800px) {
+
+    .module-page {
+        padding: 18px;
+    }
+
+    .page-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .search-row {
+        flex-direction: column;
+    }
+
+    .action-row {
+        flex-direction: column;
+    }
+
+    .action-row button {
+        width: 100%;
+    }
 }

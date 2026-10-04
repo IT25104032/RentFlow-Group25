@@ -3,7 +3,9 @@ package com.compulin.rentflow.service.module4;
 import com.compulin.rentflow.dto.module4.*;
 import com.compulin.rentflow.entity.module4.RentalReturn;
 import com.compulin.rentflow.entity.module4.ReturnItem;
-import com.compulin.rentflow.repository.module4.*;
+import com.compulin.rentflow.repository.module4.RentalLookupRepository;
+import com.compulin.rentflow.repository.module4.RentalReturnRepository;
+import com.compulin.rentflow.repository.module4.ReturnItemRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -16,69 +18,49 @@ import java.util.List;
 @Service
 public class RentalReturnService {
 
-    private final RentalReturnRepository
-            rentalReturnRepository;
-
-    private final ReturnItemRepository
-            returnItemRepository;
-
-    private final RentalLookupRepository
-            rentalLookupRepository;
+    private final RentalReturnRepository rentalReturnRepository;
+    private final ReturnItemRepository returnItemRepository;
+    private final RentalLookupRepository rentalLookupRepository;
 
     public RentalReturnService(
             RentalReturnRepository rentalReturnRepository,
             ReturnItemRepository returnItemRepository,
             RentalLookupRepository rentalLookupRepository) {
 
-        this.rentalReturnRepository =
-                rentalReturnRepository;
-
-        this.returnItemRepository =
-                returnItemRepository;
-
-        this.rentalLookupRepository =
-                rentalLookupRepository;
-
-
+        this.rentalReturnRepository = rentalReturnRepository;
+        this.returnItemRepository = returnItemRepository;
+        this.rentalLookupRepository = rentalLookupRepository;
     }
 
     public List<RentalSearchResultDTO> searchRentals(
             String search) {
 
-        return rentalLookupRepository
-                .searchRentals(search);
+        return rentalLookupRepository.searchRentals(search);
     }
 
     public RentalReturnDetailsDTO getRentalForReturn(
             Integer rentalId) {
 
-        return rentalLookupRepository
-                .getRental(rentalId);
+        return rentalLookupRepository.getRental(rentalId);
     }
 
     @Transactional
     public ProcessReturnResponse processReturn(
             ProcessReturnRequest request) {
 
-        if (request.getItems() == null ||
-                request.getItems().isEmpty()) {
+        validateRequest(request);
 
-            throw new RuntimeException(
-                    "At least one returned item must be selected."
-            );
-        }
+        for (ReturnItemRequest item : request.getItems()) {
 
-        /*
-         * First validate quantities BEFORE saving.
-         */
-        for (ReturnItemRequest item :
-                request.getItems()) {
+            Integer itemRentalId =
+                    rentalLookupRepository
+                            .getRentalIdForItem(
+                                    item.getRentalItemId()
+                            );
 
-            if (item.getQuantityReturned() == null ||
-                    item.getQuantityReturned() <= 0) {
-
+            if (!request.getRentalId().equals(itemRentalId)) {
                 throw new RuntimeException(
-                        "Return quantity must be greater than zero."
+                        "A selected item does not belong to this rental."
                 );
             }
 
@@ -89,18 +71,14 @@ public class RentalReturnService {
                             );
 
             if (remainingQuantity == null) {
-
                 throw new RuntimeException(
                         "Rental item not found."
                 );
             }
 
-            if (item.getQuantityReturned()
-                    > remainingQuantity) {
-
+            if (item.getQuantityReturned() > remainingQuantity) {
                 throw new RuntimeException(
-                        "Returned quantity cannot exceed " +
-                                "the outstanding quantity."
+                        "Returned quantity cannot exceed the outstanding quantity."
                 );
             }
 
@@ -109,40 +87,35 @@ public class RentalReturnService {
             );
         }
 
-        /*
-         * Create the overall return record.
-         */
         RentalReturn rentalReturn =
                 new RentalReturn();
 
         rentalReturn.setRentalId(
-                request.getRentalId());
+                request.getRentalId()
+        );
 
         rentalReturn.setProcessedBy(
-                request.getProcessedBy());
+                request.getProcessedBy()
+        );
 
         rentalReturn.setReturnDate(
-                LocalDateTime.now());
+                LocalDateTime.now()
+        );
 
         rentalReturn.setNotes(
-                request.getNotes());
+                request.getNotes()
+        );
 
-        /*
-         * Temporarily set PARTIAL.
-         * We calculate the final value after saving items.
-         */
         rentalReturn.setReturnType("PARTIAL");
 
         rentalReturn =
                 rentalReturnRepository.save(
-                        rentalReturn);
+                        rentalReturn
+                );
 
         List<Integer> damagedReturnItemIds =
                 new ArrayList<>();
 
-        /*
-         * Save every selected returned item.
-         */
         for (ReturnItemRequest itemRequest :
                 request.getItems()) {
 
@@ -150,31 +123,35 @@ public class RentalReturnService {
                     new ReturnItem();
 
             returnItem.setRentalReturn(
-                    rentalReturn);
+                    rentalReturn
+            );
 
             returnItem.setRentalItemId(
-                    itemRequest.getRentalItemId());
+                    itemRequest.getRentalItemId()
+            );
 
             returnItem.setQuantityReturned(
-                    itemRequest.getQuantityReturned());
+                    itemRequest.getQuantityReturned()
+            );
 
             returnItem.setConditionStatus(
-                    itemRequest.getConditionStatus());
+                    itemRequest.getConditionStatus()
+                            .toUpperCase()
+            );
 
             returnItem.setInspectionNotes(
-                    itemRequest.getInspectionNotes());
+                    itemRequest.getInspectionNotes()
+            );
 
             returnItem.setReturnedAt(
-                    LocalDateTime.now());
+                    LocalDateTime.now()
+            );
 
             ReturnItem savedItem =
                     returnItemRepository.save(
-                            returnItem);
+                            returnItem
+                    );
 
-            /*
-             * If damaged, remember it.
-             * React can then redirect to Damage Assessment.
-             */
             if ("DAMAGED".equalsIgnoreCase(
                     itemRequest.getConditionStatus())) {
 
@@ -184,15 +161,10 @@ public class RentalReturnService {
             }
         }
 
-        /*
-         * Now reload ALL rental items and calculate
-         * remaining quantities after this return.
-         */
         RentalReturnDetailsDTO updatedRental =
-                rentalLookupRepository
-                        .getRental(
-                                request.getRentalId()
-                        );
+                rentalLookupRepository.getRental(
+                        request.getRentalId()
+                );
 
         boolean everythingReturned = true;
 
@@ -221,12 +193,6 @@ public class RentalReturnService {
             } else {
 
                 everythingReturned = false;
-
-                rentalLookupRepository
-                        .updateRentalItemStatus(
-                                item.getRentalItemId(),
-                                "ISSUED"
-                        );
             }
         }
 
@@ -241,21 +207,15 @@ public class RentalReturnService {
         } else {
 
             returnType = "PARTIAL";
-            rentalStatus =
-                    "PARTIALLY_RETURNED";
+            rentalStatus = "PARTIALLY_RETURNED";
         }
 
-        /*
-         * Update return header.
-         */
         rentalReturn.setReturnType(returnType);
 
         rentalReturnRepository.save(
-                rentalReturn);
+                rentalReturn
+        );
 
-        /*
-         * Update original rental.
-         */
         rentalLookupRepository
                 .updateRentalStatus(
                         request.getRentalId(),
@@ -269,6 +229,54 @@ public class RentalReturnService {
                 rentalStatus,
                 damagedReturnItemIds
         );
+    }
+
+    private void validateRequest(
+            ProcessReturnRequest request) {
+
+        if (request == null) {
+            throw new RuntimeException(
+                    "Return request is required."
+            );
+        }
+
+        if (request.getRentalId() == null) {
+            throw new RuntimeException(
+                    "Rental ID is required."
+            );
+        }
+
+        if (request.getProcessedBy() == null) {
+            throw new RuntimeException(
+                    "Processed by user is required."
+            );
+        }
+
+        if (request.getItems() == null ||
+                request.getItems().isEmpty()) {
+
+            throw new RuntimeException(
+                    "At least one returned item must be selected."
+            );
+        }
+
+        for (ReturnItemRequest item :
+                request.getItems()) {
+
+            if (item.getRentalItemId() == null) {
+                throw new RuntimeException(
+                        "Rental item ID is required."
+                );
+            }
+
+            if (item.getQuantityReturned() == null ||
+                    item.getQuantityReturned() <= 0) {
+
+                throw new RuntimeException(
+                        "Return quantity must be greater than zero."
+                );
+            }
+        }
     }
 
     private void validateCondition(
@@ -301,23 +309,17 @@ public class RentalReturnService {
         return rentalReturnRepository.findAll();
     }
 
-    public RentalReturn getReturnById(Integer id) {
+    public RentalReturn getReturnById(
+            Integer returnId) {
 
         return rentalReturnRepository
-                .findById(id)
+                .findById(returnId)
                 .orElseThrow(() ->
                         new RuntimeException(
-                                "Return not found with ID: " + id
+                                "Return not found with ID: " +
+                                        returnId
                         )
                 );
-    }
-
-    public RentalReturn createReturn(
-            RentalReturn rentalReturn) {
-
-        return rentalReturnRepository.save(
-                rentalReturn
-        );
     }
 
     public List<ReturnItem> getReturnItems(
@@ -327,13 +329,5 @@ public class RentalReturnService {
                 .findByRentalReturn_ReturnId(
                         returnId
                 );
-    }
-
-    public ReturnItem addReturnItem(
-            ReturnItem returnItem) {
-
-        return returnItemRepository.save(
-                returnItem
-        );
     }
 }

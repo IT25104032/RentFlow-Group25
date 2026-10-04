@@ -63,7 +63,9 @@ public class ProcessReturnResponse {
         return damagedReturnItemIds;
     }
 
-    public void setDamagedReturnItemIds(List<Integer> damagedReturnItemIds) {
+    public void setDamagedReturnItemIds(
+            List<Integer> damagedReturnItemIds) {
+
         this.damagedReturnItemIds = damagedReturnItemIds;
     }
 }

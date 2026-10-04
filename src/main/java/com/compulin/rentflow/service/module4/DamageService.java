@@ -2,9 +2,11 @@ package com.compulin.rentflow.service.module4;
 
 import com.compulin.rentflow.entity.module4.DamageRecord;
 import com.compulin.rentflow.repository.module4.DamageRecordRepository;
+
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -22,55 +24,114 @@ public class DamageService {
         return damageRecordRepository.findAll();
     }
 
-    public DamageRecord getDamageRecord(Integer id) {
-        return damageRecordRepository.findById(id)
+    public DamageRecord getDamageRecord(
+            Integer id) {
+
+        return damageRecordRepository
+                .findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Damage record not found"));
+                        new RuntimeException(
+                                "Damage record not found"
+                        )
+                );
     }
 
     public DamageRecord createDamageRecord(
             DamageRecord damageRecord) {
 
-        if (damageRecord.getDamagedQuantity() <= 0) {
+        if (damageRecord.getReturnItem() == null ||
+                damageRecord.getReturnItem()
+                        .getReturnItemId() == null) {
+
             throw new IllegalArgumentException(
-                    "Damaged quantity must be greater than zero");
+                    "Return item is required."
+            );
+        }
+
+        if (damageRecord.getDamagedQuantity() == null ||
+                damageRecord.getDamagedQuantity() <= 0) {
+
+            throw new IllegalArgumentException(
+                    "Damaged quantity must be greater than zero."
+            );
+        }
+
+        if (damageRecord.getDamageDescription() == null ||
+                damageRecord.getDamageDescription().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Damage description is required."
+            );
+        }
+
+        if (damageRecord.getDamageLevel() == null) {
+            throw new IllegalArgumentException(
+                    "Damage level is required."
+            );
         }
 
         if (damageRecord.getEstimatedCost() == null) {
-            damageRecord.setEstimatedCost(BigDecimal.ZERO);
+            damageRecord.setEstimatedCost(
+                    BigDecimal.ZERO
+            );
         }
 
         if (damageRecord.getFinalCharge() == null) {
-            damageRecord.setFinalCharge(BigDecimal.ZERO);
+            damageRecord.setFinalCharge(
+                    BigDecimal.ZERO
+            );
         }
 
-        return damageRecordRepository.save(damageRecord);
+        if (damageRecord.getAssessmentDate() == null) {
+            damageRecord.setAssessmentDate(
+                    LocalDateTime.now()
+            );
+        }
+
+        if (damageRecord.getStatus() == null ||
+                damageRecord.getStatus().isBlank()) {
+
+            damageRecord.setStatus("ASSESSED");
+        }
+
+        return damageRecordRepository.save(
+                damageRecord
+        );
     }
 
     public DamageRecord updateDamageRecord(
             Integer id,
             DamageRecord newRecord) {
 
-        DamageRecord record = getDamageRecord(id);
+        DamageRecord record =
+                getDamageRecord(id);
 
         record.setDamagedQuantity(
-                newRecord.getDamagedQuantity());
+                newRecord.getDamagedQuantity()
+        );
 
         record.setDamageDescription(
-                newRecord.getDamageDescription());
+                newRecord.getDamageDescription()
+        );
 
         record.setDamageLevel(
-                newRecord.getDamageLevel());
+                newRecord.getDamageLevel()
+        );
 
         record.setEstimatedCost(
-                newRecord.getEstimatedCost());
+                newRecord.getEstimatedCost()
+        );
 
         record.setFinalCharge(
-                newRecord.getFinalCharge());
+                newRecord.getFinalCharge()
+        );
 
         record.setStatus(
-                newRecord.getStatus());
+                newRecord.getStatus()
+        );
 
-        return damageRecordRepository.save(record);
+        return damageRecordRepository.save(
+                record
+        );
     }
 }

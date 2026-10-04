@@ -4,6 +4,7 @@ public class RentalSearchResultDTO {
 
     private Integer rentalId;
     private Integer customerId;
+    private String companyName;
     private String customerName;
     private String startDate;
     private String dueDate;
@@ -15,6 +16,7 @@ public class RentalSearchResultDTO {
     public RentalSearchResultDTO(
             Integer rentalId,
             Integer customerId,
+            String companyName,
             String customerName,
             String startDate,
             String dueDate,
@@ -22,6 +24,7 @@ public class RentalSearchResultDTO {
 
         this.rentalId = rentalId;
         this.customerId = customerId;
+        this.companyName = companyName;
         this.customerName = customerName;
         this.startDate = startDate;
         this.dueDate = dueDate;
@@ -42,6 +45,14 @@ public class RentalSearchResultDTO {
 
     public void setCustomerId(Integer customerId) {
         this.customerId = customerId;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
     }
 
     public String getCustomerName() {

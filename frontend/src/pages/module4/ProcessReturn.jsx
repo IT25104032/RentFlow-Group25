@@ -15,56 +15,48 @@ function ProcessReturn() {
 
     const navigate = useNavigate();
 
+    const [searchTerm, setSearchTerm] =
+        useState("");
 
-    // -------------------------------------------------
-    // STATE
-    // -------------------------------------------------
+    const [searchResults, setSearchResults] =
+        useState([]);
 
-    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedRental, setSelectedRental] =
+        useState(null);
 
-    const [searchResults, setSearchResults] = useState([]);
+    const [returnItems, setReturnItems] =
+        useState([]);
 
-    const [selectedRental, setSelectedRental] = useState(null);
+    const [generalNotes, setGeneralNotes] =
+        useState("");
 
-    const [returnItems, setReturnItems] = useState([]);
+    const [error, setError] =
+        useState("");
 
-    const [generalNotes, setGeneralNotes] = useState("");
+    const [searching, setSearching] =
+        useState(false);
 
-    const [error, setError] = useState("");
+    const [loadingRental, setLoadingRental] =
+        useState(false);
 
-    const [saving, setSaving] = useState(false);
+    const [saving, setSaving] =
+        useState(false);
 
-    const [searching, setSearching] = useState(false);
-
-    const [loadingRental, setLoadingRental] = useState(false);
-
-
-    // TEMPORARY
-    // Replace this later with the logged-in user's ID
+    // Temporary until authentication is connected.
     const CURRENT_USER_ID = 3;
 
-
-
-    // -------------------------------------------------
-    // SEARCH RENTALS
-    // -------------------------------------------------
 
     async function handleSearch() {
 
         setError("");
-
         setSelectedRental(null);
-
         setReturnItems([]);
-
 
         if (!searchTerm.trim()) {
 
             setSearchResults([]);
-
             return;
         }
-
 
         try {
 
@@ -76,7 +68,6 @@ function ProcessReturn() {
                 );
 
             setSearchResults(results);
-
 
             if (results.length === 0) {
 
@@ -92,7 +83,8 @@ function ProcessReturn() {
             setSearchResults([]);
 
             setError(
-                "Unable to search rentals. Please check the backend."
+                err.message ||
+                "Unable to search rentals."
             );
 
         } finally {
@@ -102,12 +94,9 @@ function ProcessReturn() {
     }
 
 
-
-    // -------------------------------------------------
-    // SELECT RENTAL
-    // -------------------------------------------------
-
-    async function handleSelectRental(rental) {
+    async function handleSelectRental(
+        rental
+    ) {
 
         setError("");
 
@@ -115,50 +104,39 @@ function ProcessReturn() {
 
             setLoadingRental(true);
 
-
             const rentalDetails =
                 await getRentalForReturn(
                     rental.rentalId
                 );
 
-
             setSelectedRental(
                 rentalDetails
             );
 
-
             const preparedItems =
                 rentalDetails.items.map(
                     (item) => ({
-
                         ...item,
-
                         selected: false,
-
                         quantityToReturn: 0,
-
                         conditionStatus: "GOOD",
-
                         inspectionNotes: ""
-
                     })
                 );
-
 
             setReturnItems(
                 preparedItems
             );
 
             setSearchResults([]);
-
             setGeneralNotes("");
-
 
         } catch (err) {
 
             console.error(err);
 
             setError(
+                err.message ||
                 "Unable to load rental details."
             );
 
@@ -169,225 +147,163 @@ function ProcessReturn() {
     }
 
 
-
-    // -------------------------------------------------
-    // GET OUTSTANDING QUANTITY
-    // -------------------------------------------------
-
-    function getOutstandingQuantity(item) {
+    function getOutstandingQuantity(
+        item
+    ) {
 
         return item.remainingQuantity;
     }
 
 
+    function handleItemSelection(
+        rentalItemId
+    ) {
 
-    // -------------------------------------------------
-    // SELECT / UNSELECT RETURN ITEM
-    // -------------------------------------------------
+        setReturnItems(
+            (previousItems) =>
+                previousItems.map(
+                    (item) => {
 
-    function handleItemSelection(rentalItemId) {
+                        if (
+                            item.rentalItemId ===
+                            rentalItemId
+                        ) {
 
-        setReturnItems((previousItems) =>
+                            const selected =
+                                !item.selected;
 
-            previousItems.map((item) => {
+                            return {
+                                ...item,
+                                selected,
+                                quantityToReturn:
+                                    selected
+                                        ? getOutstandingQuantity(
+                                            item
+                                        )
+                                        : 0,
+                                conditionStatus:
+                                    selected
+                                        ? item.conditionStatus
+                                        : "GOOD",
+                                inspectionNotes:
+                                    selected
+                                        ? item.inspectionNotes
+                                        : ""
+                            };
+                        }
 
-                if (
-                    item.rentalItemId ===
-                    rentalItemId
-                ) {
-
-                    const willBeSelected =
-                        !item.selected;
-
-
-                    return {
-
-                        ...item,
-
-                        selected:
-                        willBeSelected,
-
-                        quantityToReturn:
-                            willBeSelected
-                                ? getOutstandingQuantity(item)
-                                : 0,
-
-                        conditionStatus:
-                            willBeSelected
-                                ? item.conditionStatus
-                                : "GOOD",
-
-                        inspectionNotes:
-                            willBeSelected
-                                ? item.inspectionNotes
-                                : ""
-                    };
-                }
-
-                return item;
-            })
+                        return item;
+                    }
+                )
         );
     }
 
-
-
-    // -------------------------------------------------
-    // UPDATE RETURN QUANTITY
-    // -------------------------------------------------
 
     function handleQuantityChange(
         rentalItemId,
         quantity
     ) {
 
-        setReturnItems((previousItems) =>
-
-            previousItems.map((item) => {
-
-                if (
-                    item.rentalItemId ===
-                    rentalItemId
-                ) {
-
-                    return {
-
-                        ...item,
-
-                        quantityToReturn:
-                            Number(quantity)
-                    };
-                }
-
-                return item;
-            })
+        setReturnItems(
+            (previousItems) =>
+                previousItems.map(
+                    (item) =>
+                        item.rentalItemId ===
+                        rentalItemId
+                            ? {
+                                ...item,
+                                quantityToReturn:
+                                    Number(quantity)
+                            }
+                            : item
+                )
         );
     }
 
-
-
-    // -------------------------------------------------
-    // UPDATE ITEM CONDITION
-    // -------------------------------------------------
 
     function handleConditionChange(
         rentalItemId,
         condition
     ) {
 
-        setReturnItems((previousItems) =>
-
-            previousItems.map((item) => {
-
-                if (
-                    item.rentalItemId ===
-                    rentalItemId
-                ) {
-
-                    return {
-
-                        ...item,
-
-                        conditionStatus:
-                        condition
-                    };
-                }
-
-                return item;
-            })
+        setReturnItems(
+            (previousItems) =>
+                previousItems.map(
+                    (item) =>
+                        item.rentalItemId ===
+                        rentalItemId
+                            ? {
+                                ...item,
+                                conditionStatus:
+                                condition
+                            }
+                            : item
+                )
         );
     }
 
-
-
-    // -------------------------------------------------
-    // UPDATE INSPECTION NOTES
-    // -------------------------------------------------
 
     function handleInspectionNotes(
         rentalItemId,
         notes
     ) {
 
-        setReturnItems((previousItems) =>
-
-            previousItems.map((item) => {
-
-                if (
-                    item.rentalItemId ===
-                    rentalItemId
-                ) {
-
-                    return {
-
-                        ...item,
-
-                        inspectionNotes:
-                        notes
-                    };
-                }
-
-                return item;
-            })
+        setReturnItems(
+            (previousItems) =>
+                previousItems.map(
+                    (item) =>
+                        item.rentalItemId ===
+                        rentalItemId
+                            ? {
+                                ...item,
+                                inspectionNotes:
+                                notes
+                            }
+                            : item
+                )
         );
     }
 
 
-
-    // -------------------------------------------------
-    // CALCULATE RETURN TYPE FOR UI DISPLAY
-    // -------------------------------------------------
-
     function calculateReturnType() {
 
         if (!selectedRental) {
-
             return "";
         }
 
+        let totalOutstanding = 0;
+        let totalReturning = 0;
 
-        let totalOutstandingBeforeReturn = 0;
+        returnItems.forEach(
+            (item) => {
 
-        let totalReturningNow = 0;
-
-
-        returnItems.forEach((item) => {
-
-            const outstanding =
-                getOutstandingQuantity(item);
-
-
-            totalOutstandingBeforeReturn +=
-                outstanding;
-
-
-            if (item.selected) {
-
-                totalReturningNow +=
-                    Number(
-                        item.quantityToReturn
+                totalOutstanding +=
+                    getOutstandingQuantity(
+                        item
                     );
-            }
-        });
 
+                if (item.selected) {
+
+                    totalReturning +=
+                        Number(
+                            item.quantityToReturn
+                        );
+                }
+            }
+        );
 
         if (
-            totalReturningNow > 0 &&
-            totalReturningNow ===
-            totalOutstandingBeforeReturn
+            totalReturning > 0 &&
+            totalReturning ===
+            totalOutstanding
         ) {
 
             return "FULL";
         }
 
-
         return "PARTIAL";
     }
 
-
-
-    // -------------------------------------------------
-    // VALIDATE RETURN
-    // -------------------------------------------------
 
     function validateReturn() {
 
@@ -396,10 +312,7 @@ function ProcessReturn() {
                 (item) => item.selected
             );
 
-
-        if (
-            selectedItems.length === 0
-        ) {
+        if (selectedItems.length === 0) {
 
             setError(
                 "Please select at least one item."
@@ -408,14 +321,12 @@ function ProcessReturn() {
             return false;
         }
 
-
-        for (
-            const item of selectedItems
-            ) {
+        for (const item of selectedItems) {
 
             const outstanding =
-                getOutstandingQuantity(item);
-
+                getOutstandingQuantity(
+                    item
+                );
 
             if (
                 item.quantityToReturn <= 0
@@ -428,7 +339,6 @@ function ProcessReturn() {
                 return false;
             }
 
-
             if (
                 item.quantityToReturn >
                 outstanding
@@ -440,51 +350,28 @@ function ProcessReturn() {
 
                 return false;
             }
-
-
-            if (
-                !item.conditionStatus
-            ) {
-
-                setError(
-                    `Please select a condition for ${item.equipmentName}.`
-                );
-
-                return false;
-            }
         }
-
 
         return true;
     }
 
 
-
-    // -------------------------------------------------
-    // PROCESS RETURN
-    // -------------------------------------------------
-
     async function handleProcessReturn() {
 
         setError("");
 
-
         if (!validateReturn()) {
-
             return;
         }
-
 
         try {
 
             setSaving(true);
 
-
             const selectedItems =
                 returnItems.filter(
                     (item) => item.selected
                 );
-
 
             const requestData = {
 
@@ -500,59 +387,52 @@ function ProcessReturn() {
                 items:
                     selectedItems.map(
                         (item) => ({
-
                             rentalItemId:
                             item.rentalItemId,
-
                             quantityReturned:
                                 Number(
                                     item.quantityToReturn
                                 ),
-
                             conditionStatus:
                             item.conditionStatus,
-
                             inspectionNotes:
                             item.inspectionNotes
                         })
                     )
             };
 
-
             const result =
                 await processReturn(
                     requestData
                 );
 
+            const returnId =
+                result.returnId;
 
-            // -------------------------------------------------
-            // IF THERE ARE DAMAGED ITEMS
-            // -------------------------------------------------
+            const damagedReturnItemIds =
+                result.damagedReturnItemIds ||
+                [];
 
             if (
-                result.damagedReturnItemIds &&
-                result.damagedReturnItemIds.length > 0
+                damagedReturnItemIds.length > 0
             ) {
 
                 const savedItems =
                     await getReturnItems(
-                        result.returnId
+                        returnId
                     );
-
 
                 const damagedItems =
                     savedItems.filter(
                         (item) =>
-                            result
-                                .damagedReturnItemIds
+                            damagedReturnItemIds
                                 .includes(
                                     item.returnItemId
                                 )
                     );
 
-
                 navigate(
-                    `/returns/${result.returnId}/damages`,
+                    `/returns/${returnId}/damages`,
                     {
                         state: {
                             damagedItems
@@ -562,21 +442,18 @@ function ProcessReturn() {
 
             } else {
 
-                // No damaged items
-                // Go directly to return details
-
                 navigate(
-                    `/returns/${result.returnId}`
+                    `/returns/${returnId}`
                 );
             }
-
 
         } catch (err) {
 
             console.error(err);
 
             setError(
-                "Unable to process return. Please check the backend."
+                err.message ||
+                "Unable to process return."
             );
 
         } finally {
@@ -586,17 +463,9 @@ function ProcessReturn() {
     }
 
 
-
-    // -------------------------------------------------
-    // UI
-    // -------------------------------------------------
-
     return (
 
         <div className="module-page">
-
-
-            {/* PAGE HEADER */}
 
             <div className="page-header">
 
@@ -607,12 +476,11 @@ function ProcessReturn() {
                     </h1>
 
                     <p>
-                        Search for a rental and record
-                        the items being returned.
+                        Search for an active rental
+                        and record the returned items.
                     </p>
 
                 </div>
-
 
                 <button
                     className="secondary-btn"
@@ -626,61 +494,53 @@ function ProcessReturn() {
             </div>
 
 
-
-            {/* SEARCH SECTION */}
-
             <div className="card">
 
-                <h2>
-                    Find Rental
-                </h2>
-
+                <h2>Find Rental</h2>
 
                 <div className="search-row">
 
                     <input
                         type="text"
-                        placeholder="Search by Rental ID or Customer Name"
+                        placeholder="Search by Rental ID, Company Name or Customer Name"
                         value={searchTerm}
-                        onChange={(e) =>
+                        onChange={(event) =>
                             setSearchTerm(
-                                e.target.value
+                                event.target.value
                             )
                         }
-                        onKeyDown={(e) => {
+                        onKeyDown={(event) => {
 
                             if (
-                                e.key === "Enter"
+                                event.key ===
+                                "Enter"
                             ) {
 
-                                handleSearch();
+                                void handleSearch();
                             }
                         }}
                     />
 
-
                     <button
                         className="primary-btn"
-                        onClick={handleSearch}
                         disabled={searching}
+                        onClick={() => {
+                            void handleSearch();
+                        }}
                     >
-
                         {
                             searching
                                 ? "Searching..."
                                 : "Search"
                         }
-
                     </button>
 
                 </div>
 
 
-
-                {/* SEARCH RESULTS */}
-
                 {
-                    searchResults.length > 0 && (
+                    searchResults.length >
+                    0 && (
 
                         <div className="search-results">
 
@@ -698,61 +558,50 @@ function ProcessReturn() {
                                             <div>
 
                                                 <strong>
-
                                                     Rental #
-
                                                     {
                                                         rental.rentalId
                                                     }
-
                                                 </strong>
 
-
                                                 <p>
-
+                                                    {
+                                                        rental.companyName
+                                                    }
+                                                    {" — "}
                                                     {
                                                         rental.customerName
                                                     }
-
-                                                    {" — "}
-
-                                                    {
-                                                        rental.rentalStatus
-                                                    }
-
                                                 </p>
 
                                                 <p>
-
                                                     {
                                                         rental.startDate
                                                     }
-
                                                     {" to "}
-
                                                     {
                                                         rental.dueDate
                                                     }
-
+                                                    {" — "}
+                                                    {
+                                                        rental.rentalStatus
+                                                    }
                                                 </p>
 
                                             </div>
-
 
                                             <button
                                                 className="small-btn"
                                                 disabled={
                                                     loadingRental
                                                 }
-                                                onClick={() =>
-                                                    handleSelectRental(
+                                                onClick={() => {
+                                                    void handleSelectRental(
                                                         rental
-                                                    )
-                                                }
+                                                    );
+                                                }}
                                             >
-
                                                 Select
-
                                             </button>
 
                                         </div>
@@ -767,29 +616,20 @@ function ProcessReturn() {
             </div>
 
 
-
-            {/* ERROR MESSAGE */}
-
             {
                 error && (
 
                     <div className="error-message">
-
                         {error}
-
                     </div>
                 )
             }
 
 
-
-            {/* RENTAL DETAILS */}
-
             {
                 selectedRental && (
 
                     <>
-
 
                         <div className="card">
 
@@ -797,122 +637,97 @@ function ProcessReturn() {
                                 Rental Details
                             </h2>
 
-
                             <div className="details-grid">
 
-
                                 <div>
-
                                     <span>
                                         Rental ID
                                     </span>
-
                                     <strong>
                                         {
                                             selectedRental.rentalId
                                         }
                                     </strong>
-
                                 </div>
 
-
+                                <div>
+                                    <span>
+                                        Company
+                                    </span>
+                                    <strong>
+                                        {
+                                            selectedRental.companyName
+                                        }
+                                    </strong>
+                                </div>
 
                                 <div>
-
                                     <span>
                                         Customer
                                     </span>
-
                                     <strong>
                                         {
                                             selectedRental.customerName
                                         }
                                     </strong>
-
                                 </div>
 
-
-
                                 <div>
-
                                     <span>
                                         Phone
                                     </span>
-
                                     <strong>
                                         {
                                             selectedRental.customerPhone
                                         }
                                     </strong>
-
                                 </div>
 
-
-
                                 <div>
-
                                     <span>
                                         Start Date
                                     </span>
-
                                     <strong>
                                         {
                                             selectedRental.startDate
                                         }
                                     </strong>
-
                                 </div>
 
-
-
                                 <div>
-
                                     <span>
                                         Due Date
                                     </span>
-
                                     <strong>
                                         {
                                             selectedRental.dueDate
                                         }
                                     </strong>
-
                                 </div>
 
-
-
                                 <div>
-
                                     <span>
                                         Status
                                     </span>
-
                                     <strong>
                                         {
                                             selectedRental.rentalStatus
                                         }
                                     </strong>
-
                                 </div>
-
 
                             </div>
 
                         </div>
 
 
-
-                        {/* RETURNED ITEMS */}
-
                         <div className="card">
-
 
                             <div className="section-heading">
 
                                 <h2>
                                     Returned Items
                                 </h2>
-
 
                                 <div
                                     className={
@@ -922,63 +737,41 @@ function ProcessReturn() {
                                             : "type-badge partial"
                                     }
                                 >
-
                                     {
                                         calculateReturnType()
                                     } RETURN
-
                                 </div>
 
                             </div>
-
 
 
                             <div className="table-wrapper">
 
                                 <table className="return-table">
 
-
                                     <thead>
 
                                     <tr>
-
-                                        <th>
-                                            Select
-                                        </th>
-
-                                        <th>
-                                            Equipment
-                                        </th>
-
-                                        <th>
-                                            Issued
-                                        </th>
-
+                                        <th>Select</th>
+                                        <th>Equipment</th>
+                                        <th>Code</th>
+                                        <th>Issued</th>
                                         <th>
                                             Previously Returned
                                         </th>
-
                                         <th>
                                             Outstanding
                                         </th>
-
                                         <th>
                                             Returning Now
                                         </th>
-
-                                        <th>
-                                            Condition
-                                        </th>
-
+                                        <th>Condition</th>
                                         <th>
                                             Inspection Notes
                                         </th>
-
                                     </tr>
 
                                     </thead>
-
-
 
                                     <tbody>
 
@@ -991,7 +784,6 @@ function ProcessReturn() {
                                                         item
                                                     );
 
-
                                                 return (
 
                                                     <tr
@@ -999,9 +791,6 @@ function ProcessReturn() {
                                                             item.rentalItemId
                                                         }
                                                     >
-
-
-                                                        {/* SELECT */}
 
                                                         <td>
 
@@ -1023,57 +812,35 @@ function ProcessReturn() {
 
                                                         </td>
 
-
-
-                                                        {/* EQUIPMENT */}
-
                                                         <td>
-
                                                             {
                                                                 item.equipmentName
                                                             }
-
                                                         </td>
 
-
-
-                                                        {/* ISSUED QUANTITY */}
+                                                        <td>
+                                                            {
+                                                                item.itemCode
+                                                            }
+                                                        </td>
 
                                                         <td>
-
                                                             {
                                                                 item.issuedQuantity
                                                             }
-
                                                         </td>
 
-
-
-                                                        {/* ALREADY RETURNED */}
-
                                                         <td>
-
                                                             {
                                                                 item.alreadyReturnedQuantity
                                                             }
-
                                                         </td>
 
-
-
-                                                        {/* OUTSTANDING */}
-
                                                         <td>
-
                                                             {
                                                                 outstanding
                                                             }
-
                                                         </td>
-
-
-
-                                                        {/* RETURNING NOW */}
 
                                                         <td>
 
@@ -1090,19 +857,15 @@ function ProcessReturn() {
                                                                 value={
                                                                     item.quantityToReturn
                                                                 }
-                                                                onChange={(e) =>
+                                                                onChange={(event) =>
                                                                     handleQuantityChange(
                                                                         item.rentalItemId,
-                                                                        e.target.value
+                                                                        event.target.value
                                                                     )
                                                                 }
                                                             />
 
                                                         </td>
-
-
-
-                                                        {/* CONDITION */}
 
                                                         <td>
 
@@ -1113,10 +876,10 @@ function ProcessReturn() {
                                                                 value={
                                                                     item.conditionStatus
                                                                 }
-                                                                onChange={(e) =>
+                                                                onChange={(event) =>
                                                                     handleConditionChange(
                                                                         item.rentalItemId,
-                                                                        e.target.value
+                                                                        event.target.value
                                                                     )
                                                                 }
                                                             >
@@ -1141,10 +904,6 @@ function ProcessReturn() {
 
                                                         </td>
 
-
-
-                                                        {/* INSPECTION NOTES */}
-
                                                         <td>
 
                                                             <input
@@ -1156,16 +915,15 @@ function ProcessReturn() {
                                                                 value={
                                                                     item.inspectionNotes
                                                                 }
-                                                                onChange={(e) =>
+                                                                onChange={(event) =>
                                                                     handleInspectionNotes(
                                                                         item.rentalItemId,
-                                                                        e.target.value
+                                                                        event.target.value
                                                                     )
                                                                 }
                                                             />
 
                                                         </td>
-
 
                                                     </tr>
                                                 );
@@ -1182,23 +940,19 @@ function ProcessReturn() {
                         </div>
 
 
-
-                        {/* GENERAL RETURN NOTES */}
-
                         <div className="card">
 
                             <h2>
                                 Return Notes
                             </h2>
 
-
                             <textarea
                                 rows="4"
                                 placeholder="Enter any additional notes about this return..."
                                 value={generalNotes}
-                                onChange={(e) =>
+                                onChange={(event) =>
                                     setGeneralNotes(
-                                        e.target.value
+                                        event.target.value
                                     )
                                 }
                             />
@@ -1206,11 +960,7 @@ function ProcessReturn() {
                         </div>
 
 
-
-                        {/* ACTION BUTTONS */}
-
                         <div className="action-row">
-
 
                             <button
                                 className="secondary-btn"
@@ -1222,36 +972,28 @@ function ProcessReturn() {
                                 Cancel
                             </button>
 
-
-
                             <button
                                 className="primary-btn"
                                 disabled={saving}
-                                onClick={
-                                    handleProcessReturn
-                                }
+                                onClick={() => {
+                                    void handleProcessReturn();
+                                }}
                             >
-
                                 {
                                     saving
                                         ? "Processing..."
                                         : "Process Return"
                                 }
-
                             </button>
 
-
                         </div>
-
 
                     </>
                 )
             }
 
-
         </div>
     );
 }
-
 
 export default ProcessReturn;
