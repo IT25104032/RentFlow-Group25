@@ -1,9 +1,26 @@
-import { Outlet } from "react-router-dom";
+import {
+    Outlet,
+    useLocation,
+    useNavigate
+} from "react-router-dom";
 
 import "./Module2Layout.css";
 
 
 function Module2Layout() {
+
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const isRentalHistory =
+        location.pathname === "/rental-history";
+
+    const isCreateRental =
+        location.pathname === "/"
+        || location.pathname === "/renters"
+        || location.pathname === "/rentals/create"
+        || location.pathname === "/rentals/equipment"
+        || location.pathname === "/rentals/review";
 
     return (
         <div className="module2-layout">
@@ -33,7 +50,16 @@ function Module2Layout() {
                     </div>
 
 
-                    <div className="module2-sidebar-item active">
+                    <div
+                        className={
+                            `module2-sidebar-item ${
+                                isCreateRental ? "active" : ""
+                            }`
+                        }
+                        onClick={() =>
+                            navigate("/renters")
+                        }
+                    >
 
                         <span className="module2-sidebar-icon">
                             📋
@@ -46,7 +72,16 @@ function Module2Layout() {
                     </div>
 
 
-                    <div className="module2-sidebar-item">
+                    <div
+                        className={
+                            `module2-sidebar-item ${
+                                isRentalHistory ? "active" : ""
+                            }`
+                        }
+                        onClick={() =>
+                            navigate("/rental-history")
+                        }
+                    >
 
                         <span className="module2-sidebar-icon">
                             📄
