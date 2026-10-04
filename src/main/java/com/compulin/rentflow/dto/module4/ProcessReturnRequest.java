@@ -7,7 +7,6 @@ public class ProcessReturnRequest {
     private Integer rentalId;
     private Integer processedBy;
     private String notes;
-
     private List<ReturnItemRequest> items;
 
     public ProcessReturnRequest() {

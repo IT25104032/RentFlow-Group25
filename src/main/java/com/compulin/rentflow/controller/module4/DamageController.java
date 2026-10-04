@@ -20,32 +20,33 @@ public class DamageController {
     }
 
     @GetMapping
-    public List<DamageRecord> getAll() {
+    public List<DamageRecord> getAllDamageRecords() {
         return damageService.getAllDamageRecords();
     }
 
-    @GetMapping("/{id}")
-    public DamageRecord getOne(
-            @PathVariable Integer id) {
+    @GetMapping("/{damageId}")
+    public DamageRecord getDamageRecord(
+            @PathVariable Integer damageId) {
 
-        return damageService.getDamageRecord(id);
+        return damageService.getDamageRecord(damageId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public DamageRecord create(
+    public DamageRecord createDamageRecord(
             @RequestBody DamageRecord damageRecord) {
 
         return damageService.createDamageRecord(damageRecord);
     }
 
-    @PutMapping("/{id}")
-    public DamageRecord update(
-            @PathVariable Integer id,
+    @PutMapping("/{damageId}")
+    public DamageRecord updateDamageRecord(
+            @PathVariable Integer damageId,
             @RequestBody DamageRecord damageRecord) {
 
         return damageService.updateDamageRecord(
-                id,
-                damageRecord);
+                damageId,
+                damageRecord
+        );
     }
 }

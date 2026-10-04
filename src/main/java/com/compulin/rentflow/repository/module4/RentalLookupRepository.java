@@ -24,6 +24,7 @@ public class RentalLookupRepository {
                 SELECT
                     r.rental_id,
                     r.customer_id,
+                    co.company_name,
                     c.customer_name,
                     r.start_date,
                     r.due_date,
@@ -31,9 +32,19 @@ public class RentalLookupRepository {
                 FROM rental r
                 JOIN customer c
                     ON r.customer_id = c.customer_id
+                JOIN company co
+                    ON r.company_id = co.company_id
                 WHERE
-                    CAST(r.rental_id AS CHAR) = ?
-                    OR LOWER(c.customer_name) LIKE LOWER(?)
+                    r.rental_status IN (
+                        'ACTIVE',
+                        'OVERDUE',
+                        'PARTIALLY_RETURNED'
+                    )
+                    AND (
+                        CAST(r.rental_id AS CHAR) = ?
+                        OR LOWER(c.customer_name) LIKE LOWER(?)
+                        OR LOWER(co.company_name) LIKE LOWER(?)
+                    )
                 ORDER BY r.rental_id DESC
                 """;
 
@@ -45,12 +56,14 @@ public class RentalLookupRepository {
                         new RentalSearchResultDTO(
                                 rs.getInt("rental_id"),
                                 rs.getInt("customer_id"),
+                                rs.getString("company_name"),
                                 rs.getString("customer_name"),
                                 rs.getString("start_date"),
                                 rs.getString("due_date"),
                                 rs.getString("rental_status")
                         ),
                 search,
+                nameSearch,
                 nameSearch
         );
     }
@@ -60,6 +73,7 @@ public class RentalLookupRepository {
         String rentalSql = """
                 SELECT
                     r.rental_id,
+                    co.company_name,
                     c.customer_name,
                     c.phone,
                     r.start_date,
@@ -68,6 +82,8 @@ public class RentalLookupRepository {
                 FROM rental r
                 JOIN customer c
                     ON r.customer_id = c.customer_id
+                JOIN company co
+                    ON r.company_id = co.company_id
                 WHERE r.rental_id = ?
                 """;
 
@@ -81,6 +97,9 @@ public class RentalLookupRepository {
 
                             dto.setRentalId(
                                     rs.getInt("rental_id"));
+
+                            dto.setCompanyName(
+                                    rs.getString("company_name"));
 
                             dto.setCustomerName(
                                     rs.getString("customer_name"));
@@ -102,7 +121,9 @@ public class RentalLookupRepository {
                         rentalId
                 );
 
-        rental.setItems(getRentalItems(rentalId));
+        rental.setItems(
+                getRentalItems(rentalId)
+        );
 
         return rental;
     }
@@ -111,33 +132,36 @@ public class RentalLookupRepository {
             Integer rentalId) {
 
         String sql = """
-        SELECT
-            ri.rental_item_id,
-            ri.equipment_id,
-            e.item_name AS equipment_name,
-            ri.quantity AS issued_quantity,
-            COALESCE(
-                SUM(ret.qty_returned), 0
-            ) AS already_returned,
-            ri.quantity -
-            COALESCE(
-                SUM(ret.qty_returned), 0
-            ) AS remaining_quantity,
-            ri.item_status
-        FROM rental_item ri
-        JOIN equipment e
-            ON ri.equipment_id = e.equipment_id
-        LEFT JOIN return_item ret
-            ON ri.rental_item_id = ret.rental_item_id
-        WHERE ri.rental_id = ?
-        GROUP BY
-            ri.rental_item_id,
-            ri.equipment_id,
-            e.item_name,
-            ri.quantity,
-            ri.item_status
-        ORDER BY ri.rental_item_id
-        """;
+                SELECT
+                    ri.rental_item_id,
+                    ri.equipment_id,
+                    e.item_name AS equipment_name,
+                    e.item_code,
+                    ri.quantity AS issued_quantity,
+                    COALESCE(
+                        SUM(ret.qty_returned), 0
+                    ) AS already_returned,
+                    ri.quantity -
+                    COALESCE(
+                        SUM(ret.qty_returned), 0
+                    ) AS remaining_quantity,
+                    ri.item_status
+                FROM rental_item ri
+                JOIN equipment e
+                    ON ri.equipment_id = e.equipment_id
+                LEFT JOIN return_item ret
+                    ON ri.rental_item_id =
+                       ret.rental_item_id
+                WHERE ri.rental_id = ?
+                GROUP BY
+                    ri.rental_item_id,
+                    ri.equipment_id,
+                    e.item_name,
+                    e.item_code,
+                    ri.quantity,
+                    ri.item_status
+                ORDER BY ri.rental_item_id
+                """;
 
         return jdbcTemplate.query(
                 sql,
@@ -154,6 +178,9 @@ public class RentalLookupRepository {
 
                     dto.setEquipmentName(
                             rs.getString("equipment_name"));
+
+                    dto.setItemCode(
+                            rs.getString("item_code"));
 
                     dto.setIssuedQuantity(
                             rs.getInt("issued_quantity"));
@@ -180,7 +207,7 @@ public class RentalLookupRepository {
                 SELECT
                     ri.quantity -
                     COALESCE(
-                        SUM(ret.quantity_returned), 0
+                        SUM(ret.qty_returned), 0
                     )
                 FROM rental_item ri
                 LEFT JOIN return_item ret
@@ -190,6 +217,22 @@ public class RentalLookupRepository {
                 GROUP BY
                     ri.rental_item_id,
                     ri.quantity
+                """;
+
+        return jdbcTemplate.queryForObject(
+                sql,
+                Integer.class,
+                rentalItemId
+        );
+    }
+
+    public Integer getRentalIdForItem(
+            Integer rentalItemId) {
+
+        String sql = """
+                SELECT rental_id
+                FROM rental_item
+                WHERE rental_item_id = ?
                 """;
 
         return jdbcTemplate.queryForObject(

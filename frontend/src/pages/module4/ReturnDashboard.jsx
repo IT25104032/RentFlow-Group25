@@ -1,14 +1,23 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+    useEffect,
+    useState
+} from "react";
 
-import { getAllReturns } from "../../services/module4/module4Api.js";
+import {
+    useNavigate
+} from "react-router-dom";
+
+import {
+    getAllReturns
+} from "../../services/module4/module4Api.js";
 
 import "../../styles/module4/module4.css";
 
 
 function ReturnDashboard() {
 
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
     const [returns, setReturns] =
         useState([]);
@@ -22,33 +31,33 @@ function ReturnDashboard() {
 
     useEffect(() => {
 
-        loadReturns();
+        async function loadReturns() {
+
+            try {
+
+                const data =
+                    await getAllReturns();
+
+                setReturns(data);
+
+            } catch (err) {
+
+                console.error(err);
+
+                setError(
+                    err.message ||
+                    "Unable to load return records."
+                );
+
+            } finally {
+
+                setLoading(false);
+            }
+        }
+
+        void loadReturns();
 
     }, []);
-
-
-    async function loadReturns() {
-
-        try {
-
-            const data =
-                await getAllReturns();
-
-            setReturns(data);
-
-        } catch (err) {
-
-            console.error(err);
-
-            setError(
-                "Unable to load return records."
-            );
-
-        } finally {
-
-            setLoading(false);
-        }
-    }
 
 
     return (
@@ -64,12 +73,11 @@ function ReturnDashboard() {
                     </h1>
 
                     <p>
-                        Process and review rental
-                        equipment returns.
+                        Process and review
+                        rental equipment returns.
                     </p>
 
                 </div>
-
 
                 <button
                     className="primary-btn"
@@ -87,144 +95,149 @@ function ReturnDashboard() {
 
             <div className="card">
 
-                <h2>Return History</h2>
+                <h2>
+                    Return History
+                </h2>
 
+                {
+                    loading && (
+                        <p>
+                            Loading returns...
+                        </p>
+                    )
+                }
 
-                {loading && (
-                    <p>
-                        Loading returns...
-                    </p>
-                )}
+                {
+                    error && (
 
+                        <div className="error-message">
+                            {error}
+                        </div>
+                    )
+                }
 
-                {error && (
-                    <div className="error-message">
-                        {error}
-                    </div>
-                )}
-
-
-                {!loading &&
+                {
+                    !loading &&
+                    !error &&
                     returns.length === 0 && (
 
                         <p>
                             No returns have been
                             recorded yet.
                         </p>
+                    )
+                }
 
-                    )}
+                {
+                    returns.length > 0 && (
 
+                        <div className="table-wrapper">
 
-                {returns.length > 0 && (
+                            <table className="return-table">
 
-                    <div className="table-wrapper">
+                                <thead>
 
-                        <table
-                            className="return-table"
-                        >
+                                <tr>
+                                    <th>Return ID</th>
+                                    <th>Rental ID</th>
+                                    <th>Return Date</th>
+                                    <th>Processed By</th>
+                                    <th>Type</th>
+                                    <th>Notes</th>
+                                    <th>Action</th>
+                                </tr>
 
-                            <thead>
+                                </thead>
 
-                            <tr>
+                                <tbody>
 
-                                <th>Return ID</th>
-                                <th>Rental ID</th>
-                                <th>Return Date</th>
-                                <th>Processed By</th>
-                                <th>Type</th>
-                                <th>Notes</th>
-                                <th>Action</th>
+                                {
+                                    returns.map(
+                                        (
+                                            rentalReturn
+                                        ) => (
 
-                            </tr>
-
-                            </thead>
-
-
-                            <tbody>
-
-                            {returns.map(
-                                (rentalReturn) => (
-
-                                    <tr
-                                        key={
-                                            rentalReturn.returnId
-                                        }
-                                    >
-
-                                        <td>
-                                            {
-                                                rentalReturn.returnId
-                                            }
-                                        </td>
-
-                                        <td>
-                                            {
-                                                rentalReturn.rentalId
-                                            }
-                                        </td>
-
-                                        <td>
-                                            {
-                                                rentalReturn.returnDate
-                                            }
-                                        </td>
-
-                                        <td>
-                                            {
-                                                rentalReturn.processedBy
-                                            }
-                                        </td>
-
-                                        <td>
-
-                                            <span
-                                                className={
-                                                    rentalReturn.returnType ===
-                                                    "FULL"
-                                                        ? "type-badge full"
-                                                        : "type-badge partial"
+                                            <tr
+                                                key={
+                                                    rentalReturn.returnId
                                                 }
                                             >
-                                                {
-                                                    rentalReturn.returnType
-                                                }
-                                            </span>
 
-                                        </td>
+                                                <td>
+                                                    {
+                                                        rentalReturn.returnId
+                                                    }
+                                                </td>
 
-                                        <td>
-                                            {
-                                                rentalReturn.notes
-                                            }
-                                        </td>
+                                                <td>
+                                                    {
+                                                        rentalReturn.rentalId
+                                                    }
+                                                </td>
 
-                                        <td>
+                                                <td>
+                                                    {
+                                                        rentalReturn.returnDate
+                                                    }
+                                                </td>
 
-                                            <button
-                                                className="small-btn"
-                                                onClick={() =>
-                                                    navigate(
-                                                        `/returns/${rentalReturn.returnId}`
-                                                    )
-                                                }
-                                            >
-                                                View
-                                            </button>
+                                                <td>
+                                                    {
+                                                        rentalReturn.processedBy
+                                                    }
+                                                </td>
 
-                                        </td>
+                                                <td>
 
-                                    </tr>
+                                                        <span
+                                                            className={
+                                                                rentalReturn.returnType ===
+                                                                "FULL"
+                                                                    ? "type-badge full"
+                                                                    : "type-badge partial"
+                                                            }
+                                                        >
+                                                            {
+                                                                rentalReturn.returnType
+                                                            }
+                                                        </span>
 
-                                )
-                            )}
+                                                </td>
 
-                            </tbody>
+                                                <td>
+                                                    {
+                                                        rentalReturn.notes ||
+                                                        "-"
+                                                    }
+                                                </td>
 
-                        </table>
+                                                <td>
 
-                    </div>
+                                                    <button
+                                                        className="small-btn"
+                                                        onClick={() =>
+                                                            navigate(
+                                                                `/returns/${rentalReturn.returnId}`
+                                                            )
+                                                        }
+                                                    >
+                                                        View
+                                                    </button>
 
-                )}
+                                                </td>
+
+                                            </tr>
+                                        )
+                                    )
+                                }
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+                    )
+                }
 
             </div>
 

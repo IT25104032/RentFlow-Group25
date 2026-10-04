@@ -1,17 +1,23 @@
-import { Link } from "react-router-dom";
+import {
+    Link
+} from "react-router-dom";
+
 
 function Sidebar() {
 
     return (
+
         <div className="sidebar">
 
-            <h2>RentFlow</h2>
+            <h2>
+                RentFlow
+            </h2>
 
             <Link to="/returns">
                 Return Management
             </Link>
 
-            <Link to="/returns/process">
+            <Link to="/returns/new">
                 Process Return
             </Link>
 

@@ -1,4 +1,8 @@
-import { useEffect, useState } from "react";
+import {
+    useEffect,
+    useState
+} from "react";
+
 import {
     useNavigate,
     useParams
@@ -35,47 +39,49 @@ function ReturnDetails() {
 
     useEffect(() => {
 
-        loadReturn();
+        async function loadReturn() {
+
+            try {
+
+                const [
+                    returnData,
+                    itemData
+                ] =
+                    await Promise.all([
+                        getReturnById(
+                            returnId
+                        ),
+                        getReturnItems(
+                            returnId
+                        )
+                    ]);
+
+                setRentalReturn(
+                    returnData
+                );
+
+                setItems(
+                    itemData
+                );
+
+            } catch (err) {
+
+                console.error(err);
+
+                setError(
+                    err.message ||
+                    "Unable to load return details."
+                );
+
+            } finally {
+
+                setLoading(false);
+            }
+        }
+
+        void loadReturn();
 
     }, [returnId]);
-
-
-    async function loadReturn() {
-
-        try {
-
-            const returnData =
-                await getReturnById(
-                    returnId
-                );
-
-            const itemData =
-                await getReturnItems(
-                    returnId
-                );
-
-
-            setRentalReturn(
-                returnData
-            );
-
-            setItems(
-                itemData
-            );
-
-        } catch (err) {
-
-            console.error(err);
-
-            setError(
-                "Unable to load return details."
-            );
-
-        } finally {
-
-            setLoading(false);
-        }
-    }
 
 
     if (loading) {
@@ -88,13 +94,16 @@ function ReturnDetails() {
     }
 
 
-    if (error) {
+    if (error || !rentalReturn) {
 
         return (
             <div className="module-page">
 
                 <div className="error-message">
-                    {error}
+                    {
+                        error ||
+                        "Return not found."
+                    }
                 </div>
 
             </div>
@@ -124,7 +133,6 @@ function ReturnDetails() {
 
                 </div>
 
-
                 <button
                     className="secondary-btn"
                     onClick={() =>
@@ -139,12 +147,16 @@ function ReturnDetails() {
 
             <div className="card">
 
-                <h2>Return Information</h2>
+                <h2>
+                    Return Information
+                </h2>
 
                 <div className="details-grid">
 
                     <div>
-                        <span>Rental ID</span>
+                        <span>
+                            Rental ID
+                        </span>
                         <strong>
                             {
                                 rentalReturn.rentalId
@@ -152,9 +164,10 @@ function ReturnDetails() {
                         </strong>
                     </div>
 
-
                     <div>
-                        <span>Return Date</span>
+                        <span>
+                            Return Date
+                        </span>
                         <strong>
                             {
                                 rentalReturn.returnDate
@@ -162,9 +175,10 @@ function ReturnDetails() {
                         </strong>
                     </div>
 
-
                     <div>
-                        <span>Processed By</span>
+                        <span>
+                            Processed By
+                        </span>
                         <strong>
                             {
                                 rentalReturn.processedBy
@@ -172,16 +186,15 @@ function ReturnDetails() {
                         </strong>
                     </div>
 
-
                     <div>
-                        <span>Return Type</span>
-
+                        <span>
+                            Return Type
+                        </span>
                         <strong>
                             {
                                 rentalReturn.returnType
                             }
                         </strong>
-
                     </div>
 
                 </div>
@@ -189,7 +202,9 @@ function ReturnDetails() {
 
                 <div className="notes-block">
 
-                    <span>Notes</span>
+                    <span>
+                        Notes
+                    </span>
 
                     <p>
                         {
@@ -205,81 +220,92 @@ function ReturnDetails() {
 
             <div className="card">
 
-                <h2>Returned Items</h2>
+                <h2>
+                    Returned Items
+                </h2>
 
                 <div className="table-wrapper">
 
-                    <table
-                        className="return-table"
-                    >
+                    <table className="return-table">
 
                         <thead>
 
                         <tr>
-
-                            <th>Return Item ID</th>
-                            <th>Rental Item ID</th>
-                            <th>Quantity</th>
-                            <th>Condition</th>
-                            <th>Inspection Notes</th>
-                            <th>Returned At</th>
-
+                            <th>
+                                Return Item ID
+                            </th>
+                            <th>
+                                Rental Item ID
+                            </th>
+                            <th>
+                                Quantity
+                            </th>
+                            <th>
+                                Condition
+                            </th>
+                            <th>
+                                Inspection Notes
+                            </th>
+                            <th>
+                                Returned At
+                            </th>
                         </tr>
 
                         </thead>
 
-
                         <tbody>
 
-                        {items.map(
-                            (item) => (
+                        {
+                            items.map(
+                                (item) => (
 
-                                <tr
-                                    key={
-                                        item.returnItemId
-                                    }
-                                >
-
-                                    <td>
-                                        {
+                                    <tr
+                                        key={
                                             item.returnItemId
                                         }
-                                    </td>
+                                    >
 
-                                    <td>
-                                        {
-                                            item.rentalItemId
-                                        }
-                                    </td>
+                                        <td>
+                                            {
+                                                item.returnItemId
+                                            }
+                                        </td>
 
-                                    <td>
-                                        {
-                                            item.quantityReturned
-                                        }
-                                    </td>
+                                        <td>
+                                            {
+                                                item.rentalItemId
+                                            }
+                                        </td>
 
-                                    <td>
-                                        {
-                                            item.conditionStatus
-                                        }
-                                    </td>
+                                        <td>
+                                            {
+                                                item.quantityReturned
+                                            }
+                                        </td>
 
-                                    <td>
-                                        {
-                                            item.inspectionNotes
-                                        }
-                                    </td>
+                                        <td>
+                                            {
+                                                item.conditionStatus
+                                            }
+                                        </td>
 
-                                    <td>
-                                        {
-                                            item.returnedAt
-                                        }
-                                    </td>
+                                        <td>
+                                            {
+                                                item.inspectionNotes ||
+                                                "-"
+                                            }
+                                        </td>
 
-                                </tr>
+                                        <td>
+                                            {
+                                                item.returnedAt
+                                            }
+                                        </td>
 
+                                    </tr>
+                                )
                             )
-                        )}
+                        }
 
                         </tbody>
 
