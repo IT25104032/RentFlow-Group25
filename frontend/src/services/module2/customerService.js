@@ -28,6 +28,18 @@ export async function createCustomer(customerData) {
     return await response.json();
 }
 
+/* Get all customers */
+export async function getAllCustomers(companyId) {
+    const response = await fetch(
+        `${API_BASE_URL}?companyId=${companyId}`
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to load renters.");
+    }
+
+    return await response.json();
+}
 
 /*
  * Search for existing renters.
