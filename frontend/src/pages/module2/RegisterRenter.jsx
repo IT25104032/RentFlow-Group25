@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
     createCustomer,
+    getAllCustomers,
     searchCustomers,
     updateCustomer
 } from "../../services/module2/customerService";
@@ -38,21 +39,98 @@ function RegisterRenter() {
 
     const documentFileInputRef = useRef(null);
 
-    const [searchType, setSearchType] =
-        useState("name");
+    const [searchType, setSearchType] = useState("name");
 
-    const [searchName, setSearchName] =
-        useState("");
+    const [searchName, setSearchName] = useState("");
 
-    const [searchPhone, setSearchPhone] =
-        useState("");
+    const [searchPhone, setSearchPhone] = useState("");
 
-    const [searchResults, setSearchResults] =
-        useState([]);
+    const [searchResults, setSearchResults] = useState([]);
 
-    const [hasSearched, setHasSearched] =
-        useState(false);
+    const [hasSearched, setHasSearched] = useState(false);
 
+    const [allRenters, setAllRenters] = useState([]);
+
+    const [loadingRenters, setLoadingRenters] = useState(false);
+
+    const [renterLoadError, setRenterLoadError] = useState("");
+
+    const [renterSearch, setRenterSearch] = useState("");
+
+    const [renterSort, setRenterSort] = useState("newest");
+
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const rentersPerPage = 5;
+
+    async function loadRenters() {
+        setLoadingRenters(true);
+        setRenterLoadError("");
+
+        try {
+            const renters = await getAllCustomers(1000);
+            setAllRenters(renters);
+        } catch (error) {
+            setRenterLoadError(
+                error.message || "Failed to load renters."
+            );
+        } finally {
+            setLoadingRenters(false);
+        }
+    }
+
+    useEffect(() => {
+        loadRenters();
+    }, []);
+
+    const filteredRenters = allRenters
+        .filter(renter => {
+            const searchValue =
+                renterSearch.trim().toLowerCase();
+
+            if (!searchValue) {
+                return true;
+            }
+
+            const renterName =
+                (renter.customerName || "").toLowerCase();
+
+            const renterPhone =
+                (renter.phone || "").toLowerCase();
+
+            return (
+                renterName.includes(searchValue) ||
+                renterPhone.includes(searchValue)
+            );
+        })
+        .sort((firstRenter, secondRenter) => {
+
+            const firstDate =
+                new Date(firstRenter.createdAt);
+
+            const secondDate =
+                new Date(secondRenter.createdAt);
+
+            if (renterSort === "newest") {
+                return secondDate - firstDate;
+            }
+
+            return firstDate - secondDate;
+        });
+
+    const totalPages =
+        Math.ceil(
+            filteredRenters.length / rentersPerPage
+        );
+
+    const startIndex =
+        (currentPage - 1) * rentersPerPage;
+
+    const paginatedRenters =
+        filteredRenters.slice(
+            startIndex,
+            startIndex + rentersPerPage
+        );
 
     /*
      * Selected renter
@@ -118,6 +196,8 @@ function RegisterRenter() {
 
         });
 
+    const [existingDocumentFile, setExistingDocumentFile] = useState(null);
+    const [existingDocumentId, setExistingDocumentId] = useState(null);
 
     /*
      * Secondary contact
@@ -275,68 +355,106 @@ function RegisterRenter() {
      * The renter information is copied
      * into the editable form.
      */
-    function handleSelectRenter(renter) {
-
+    async function handleSelectRenter(renter) {
         setSelectedRenter(renter);
-
         setShowRenterForm(true);
 
         setRenterForm({
-
-            customerName:
-                renter.customerName || "",
-
-            phone:
-                renter.phone || "",
-
-            email:
-                renter.email || "",
-
-            address:
-                renter.address || "",
-
-            customerType:
-                renter.customerType || "INDIVIDUAL",
-
-            customerStatus:
-                renter.customerStatus || "ACTIVE"
-
+            customerName: renter.customerName || "",
+            phone: renter.phone || "",
+            email: renter.email || "",
+            address: renter.address || "",
+            customerType: renter.customerType || "INDIVIDUAL",
+            customerStatus: renter.customerStatus || "ACTIVE"
         });
-
-
-        /*
-         * Identification and secondary contact
-         * are deliberately empty.
-         */
-        setDocumentForm({
-
-            documentType: "",
-            documentNumber: "",
-            documentCopy: null,
-            expiryDate: "",
-            notes: ""
-
-        });
-
-
-        setSecondaryForm({
-
-            contactName: "",
-            relationship: "",
-            phoneNumber: "",
-            alternatePhone: "",
-            email: "",
-            address: "",
-            notes: ""
-
-        });
-
-
-        setIdentificationOpen(false);
-        setSecondaryOpen(false);
 
         setError("");
         setSuccess("");
+
+        try {
+            const existingDocuments =
+                await getDocumentsByCustomerId(
+                    renter.customerId
+                );
+
+            if (
+                existingDocuments &&
+                existingDocuments.length > 0
+            ) {
+                const document =
+                    existingDocuments[0];
+
+                setDocumentForm({
+                    documentType:
+                        document.documentType || "",
+                    documentNumber:
+                        document.documentNumber || "",
+                    documentCopy: null,
+                    expiryDate:
+                        document.expiryDate || "",
+                    notes:
+                        document.notes || ""
+                });
+
+                setExistingDocumentId(document.documentId || null);
+                setExistingDocumentFile(document.documentCopyPath || null);
+            } else {
+                setDocumentForm({
+                    documentType: "",
+                    documentNumber: "",
+                    documentCopy: null,
+                    expiryDate: "",
+                    notes: ""
+                });
+
+                setExistingDocumentFile(null);
+            }
+
+
+            const existingContact =
+                await getSecondaryContact(
+                    renter.customerId
+                );
+
+            if (existingContact) {
+                setSecondaryForm({
+                    contactName:
+                        existingContact.contactName || "",
+                    relationship:
+                        existingContact.relationship || "",
+                    phoneNumber:
+                        existingContact.phoneNumber || "",
+                    alternatePhone:
+                        existingContact.alternatePhone || "",
+                    email:
+                        existingContact.email || "",
+                    address:
+                        existingContact.address || "",
+                    notes:
+                        existingContact.notes || ""
+                });
+            } else {
+                setSecondaryForm({
+                    contactName: "",
+                    relationship: "",
+                    phoneNumber: "",
+                    alternatePhone: "",
+                    email: "",
+                    address: "",
+                    notes: ""
+                });
+            }
+
+            setIdentificationOpen(false);
+            setSecondaryOpen(false);
+
+        } catch (err) {
+            console.error(err);
+
+            setError(
+                "Unable to load the renter's additional details."
+            );
+        }
     }
 
 
@@ -370,7 +488,8 @@ function RegisterRenter() {
             notes: ""
 
         });
-
+        setExistingDocumentFile(null);
+        setExistingDocumentId(null);
 
         setSecondaryForm({
 
@@ -520,9 +639,7 @@ function RegisterRenter() {
     /*
      * Save identification document.
      */
-    async function saveIdentification(
-        customerId
-    ) {
+    async function saveIdentification(customerId) {
 
         /*
          * If the identification section is
@@ -538,11 +655,9 @@ function RegisterRenter() {
          * fields before sending data to the backend.
          */
         if (
-            !documentForm.documentType
-            || !documentForm.documentNumber
-            || !documentForm.documentCopy
+            !documentForm.documentType ||
+            !documentForm.documentNumber
         ) {
-
             throw new Error(
                 "Please complete the identification document details."
             );
@@ -550,11 +665,24 @@ function RegisterRenter() {
 
 
         /*
-         * Prepare the data that will be sent
-         * to Spring Boot.
+         * If this renter already has an identification
+         * document and the user did not select a new file,
+         * keep the existing document unchanged.
+         */
+        if (
+            selectedRenter &&
+            existingDocumentId &&
+            !documentForm.documentCopy
+        ) {
+            return;
+        }
+
+
+        /*
+         * Prepare the identification data that will
+         * be sent to Spring Boot.
          */
         const documentData = {
-
             customerId,
 
             documentType:
@@ -573,31 +701,22 @@ function RegisterRenter() {
             USER_ID,
 
             notes:
-            documentForm.notes
-
+                documentForm.notes || null
         };
 
 
         /*
-         * First check whether this renter
-         * already has an identification document.
-         */
-        const existingDocuments =
-            await getDocumentsByCustomerId(
-                customerId
-            );
-
-
-        /*
-         * If there is no existing document,
-         * create a new one.
+         * If this renter already has an identification
+         * document, update that existing document.
          */
         if (
-            !existingDocuments
-            || existingDocuments.length === 0
+            selectedRenter &&
+            existingDocumentId
         ) {
 
-            await createDocument(
+            await updateDocument(
+                existingDocumentId,
+                customerId,
                 documentData
             );
 
@@ -606,26 +725,13 @@ function RegisterRenter() {
 
 
         /*
-         * An existing document was found.
-         *
-         * We update the first existing document
-         * instead of creating a duplicate.
+         * If there is no existing identification document,
+         * create a new one.
          */
-        const existingDocument =
-            existingDocuments[0];
-
-
-        await updateDocument(
-
-            existingDocument.documentId,
-
-            customerId,
-
+        await createDocument(
             documentData
-
         );
     }
-
 
     /*
  * Save secondary contact.
@@ -835,6 +941,7 @@ function RegisterRenter() {
                 customer.customerId
             );
 
+            await loadRenters();
 
             /*
              * Keep the renter selected.
@@ -843,9 +950,10 @@ function RegisterRenter() {
             setSavedRenter(customer);
             setShowRenterForm(true);
 
-
             setSuccess(
-                "Renter details saved successfully."
+                selectedRenter
+                    ? "Renter updated successfully."
+                    : "Renter registered successfully."
             );
 
         } catch (err) {
@@ -942,344 +1050,220 @@ function RegisterRenter() {
 
                 <RentalStepper activeStep={1} />
 
-
                 {/* =================================
-                    SEARCH / SELECT RENTER
+                    REGISTERED RENTERS
                 ================================= */}
 
                 {!showRenterForm && (
-
                     <section className="register-renter-card">
 
-
                         <div className="register-renter-card-heading">
+                            <div className="heading-icon">⌕</div>
 
-                            <div className="heading-icon">
-                                ⌕
-                            </div>
-
-                            <h2>
-                                Select Renter
-                            </h2>
-
+                            <h2>Registered Renters</h2>
                         </div>
-
 
                         <div className="register-renter-search-content">
 
-                            <form
-                                onSubmit={handleSearch}
-                            >
+                            <div className="search-controls">
 
-                                <label className="search-label">
-                                    Search by:
-                                </label>
+                                <input
+                                    type="text"
+                                    value={renterSearch}
+                                    onChange={event => {
+                                        setRenterSearch(event.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    placeholder="Search by renter name or phone number"
+                                />
 
-
-                                <div
-                                    className={
-                                        searchType === "both"
-                                            ? "search-controls both"
-                                            : "search-controls"
-                                    }
+                                <select
+                                    value={renterSort}
+                                    onChange={event => {
+                                        setRenterSort(event.target.value);
+                                        setCurrentPage(1);
+                                    }}
                                 >
+                                    <option value="newest">
+                                        Newest
+                                    </option>
 
+                                    <option value="oldest">
+                                        Oldest
+                                    </option>
+                                </select>
 
-                                    <select
-                                        value={searchType}
-                                        onChange={
-                                            handleSearchTypeChange
-                                        }
-                                    >
-
-                                        <option value="name">
-                                            Renter Name
-                                        </option>
-
-                                        <option value="phone">
-                                            Phone Number
-                                        </option>
-
-                                        <option value="both">
-                                            Both
-                                        </option>
-
-                                    </select>
-
-
-                                    {searchType !== "both" && (
-
-                                        <input
-                                            value={
-                                                searchType === "name"
-                                                    ? searchName
-                                                    : searchPhone
-                                            }
-                                            onChange={event => {
-
-                                                if (
-                                                    searchType === "name"
-                                                ) {
-
-                                                    setSearchName(
-                                                        event.target.value
-                                                    );
-
-                                                } else {
-
-                                                    setSearchPhone(
-                                                        event.target.value
-                                                    );
-                                                }
-
-                                            }}
-                                            placeholder={
-                                                searchType === "name"
-                                                    ? "Enter renter name"
-                                                    : "Enter phone number"
-                                            }
-                                        />
-
-                                    )}
-
-
-                                    {searchType === "both" && (
-
-                                        <div className="both-fields">
-
-                                            <input
-                                                value={
-                                                    searchName
-                                                }
-                                                onChange={
-                                                    event =>
-                                                        setSearchName(
-                                                            event.target.value
-                                                        )
-                                                }
-                                                placeholder="Enter renter name"
-                                            />
-
-
-                                            <input
-                                                value={
-                                                    searchPhone
-                                                }
-                                                onChange={
-                                                    event =>
-                                                        setSearchPhone(
-                                                            event.target.value
-                                                        )
-                                                }
-                                                placeholder="Enter phone number"
-                                            />
-
-                                        </div>
-
-                                    )}
-
-
-                                    <button
-                                        type="submit"
-                                        className="primary-button"
-                                        disabled={loading}
-                                    >
-                                        {loading
-                                            ? "Searching..."
-                                            : "Search"}
-                                    </button>
-
-                                </div>
-
-                            </form>
+                            </div>
 
                         </div>
 
-
                         {/* =================================
-                            RESULTS
+                            RENTERS TABLE
                         ================================= */}
 
-                        {hasSearched &&
-                            searchResults.length > 0 && (
+                        <div className="search-results">
 
-                                <div className="search-results">
+                            <div className="results-title">
+                                Registered Renters
+                                <span>({filteredRenters.length})</span>
+                            </div>
 
-                                    <div className="results-title">
-                                        Search Results
-                                        <span>
-                                        ({searchResults.length})
-                                    </span>
-                                    </div>
+                            {loadingRenters && (
+                                <div className="no-results">
+                                    <p>Loading renters...</p>
+                                </div>
+                            )}
 
+                            {renterLoadError && (
+                                <div className="no-results">
+                                    <p>{renterLoadError}</p>
+                                </div>
+                            )}
+
+                            {!loadingRenters &&
+                                !renterLoadError &&
+                                filteredRenters.length > 0 && (
 
                                     <div className="results-table-wrapper">
-
                                         <table>
 
                                             <thead>
-
                                             <tr>
-
-                                                <th>
-                                                    Name
-                                                </th>
-
-                                                <th>
-                                                    Phone
-                                                </th>
-
-                                                <th>
-                                                    Email
-                                                </th>
-
-                                                <th>
-                                                    Status
-                                                </th>
-
-                                                <th>
-                                                    Action
-                                                </th>
-
+                                                <th>Name</th>
+                                                <th>Phone</th>
+                                                <th>Email</th>
+                                                <th>Type</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
                                             </tr>
-
                                             </thead>
 
-
                                             <tbody>
+                                            {paginatedRenters.map(renter => (
+                                                <tr key={renter.customerId}>
 
-                                            {searchResults.map(
-                                                renter => (
+                                                    <td>
+                                                        {renter.customerName}
+                                                    </td>
 
-                                                    <tr
-                                                        key={
-                                                            renter.customerId
-                                                        }
-                                                    >
+                                                    <td>
+                                                        {renter.phone}
+                                                    </td>
 
-                                                        <td>
-                                                            {
-                                                                renter.customerName
-                                                            }
-                                                        </td>
+                                                    <td>
+                                                        {renter.email || "-"}
+                                                    </td>
 
-                                                        <td>
-                                                            {
-                                                                renter.phone
-                                                            }
-                                                        </td>
+                                                    <td>
+                                                        {renter.customerType}
+                                                    </td>
 
-                                                        <td>
-                                                            {
-                                                                renter.email ||
-                                                                "-"
-                                                            }
-                                                        </td>
+                                                    <td>
+                                        <span
+                                            className={
+                                                renter.customerStatus ===
+                                                "ACTIVE"
+                                                    ? "status active"
+                                                    : "status"
+                                            }
+                                        >
+                                            {renter.customerStatus}
+                                        </span>
+                                                    </td>
 
-                                                        <td>
-
-                                                        <span
-                                                            className={
-                                                                renter.customerStatus ===
-                                                                "ACTIVE"
-                                                                    ? "status active"
-                                                                    : "status"
+                                                    <td>
+                                                        <button
+                                                            type="button"
+                                                            className="select-button"
+                                                            onClick={() =>
+                                                                handleSelectRenter(renter)
                                                             }
                                                         >
-                                                            {
-                                                                renter.customerStatus
-                                                            }
-                                                        </span>
+                                                            Edit
+                                                        </button>
+                                                    </td>
 
-                                                        </td>
-
-                                                        <td>
-
-                                                            <button
-                                                                type="button"
-                                                                className="select-button"
-                                                                onClick={() =>
-                                                                    handleSelectRenter(
-                                                                        renter
-                                                                    )
-                                                                }
-                                                            >
-                                                                Select
-                                                            </button>
-
-                                                        </td>
-
-                                                    </tr>
-
-                                                ))}
-
+                                                </tr>
+                                            ))}
                                             </tbody>
 
                                         </table>
+                                        {totalPages > 1 && (
+                                            <div className="pagination">
+
+                                                <button
+                                                    type="button"
+                                                    disabled={currentPage === 1}
+                                                    onClick={() =>
+                                                        setCurrentPage(currentPage - 1)
+                                                    }
+                                                >
+                                                    Previous
+                                                </button>
+
+                                                <span>
+                                                    Page {currentPage} of {totalPages}
+                                                </span>
+
+                                                <button
+                                                    type="button"
+                                                    disabled={currentPage === totalPages}
+                                                    onClick={() =>
+                                                        setCurrentPage(currentPage + 1)
+                                                    }
+                                                >
+                                                    Next
+                                                </button>
+
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                            {!loadingRenters &&
+                                !renterLoadError &&
+                                filteredRenters.length === 0 && (
+
+                                    <div className="no-results">
+
+                                        <div className="no-results-icon">
+                                            ⌕
+                                        </div>
+
+                                        <h3>
+                                            {renterSearch
+                                                ? "No renters found"
+                                                : "No renters registered"}
+                                        </h3>
+
+                                        <p>
+                                            {renterSearch
+                                                ? "No renters match your search."
+                                                : "There are currently no renters registered for this company."}
+                                        </p>
 
                                     </div>
-
-                                </div>
-
-                            )}
-
-
-                        {/* =================================
-                            NO RESULTS
-                        ================================= */}
-
-                        {hasSearched &&
-                            searchResults.length === 0 && (
-
-                                <div className="no-results">
-
-                                    <div className="no-results-icon">
-                                        ⌕
-                                    </div>
-
-                                    <h3>
-                                        No renter found
-                                    </h3>
-
-                                    <p>
-                                        We couldn't find any renter
-                                        matching your search.
-                                    </p>
-
-                                </div>
-
-                            )}
-
-
-                        {/* =================================
-                            ALWAYS AVAILABLE
-                            REGISTER BUTTON
-                        ================================= */}
-
-                        <div className="register-new-area">
-
-                            <button
-                                type="button"
-                                className="primary-button register-new-button"
-                                onClick={
-                                    handleRegisterNewRenter
-                                }
-                            >
-
-                                <span>
-                                    +
-                                </span>
-
-                                Register New Renter
-
-                            </button>
+                                )}
 
                         </div>
 
+                        {/* =================================
+                            REGISTER NEW RENTER
+                        ================================= */}
+
+                        <div className="register-new-area">
+                            <button
+                                type="button"
+                                className="primary-button register-new-button"
+                                onClick={handleRegisterNewRenter}
+                            >
+                                <span>+</span>
+                                Register New Renter
+                            </button>
+                        </div>
+
                     </section>
-
                 )}
-
 
                 {/* =====================================
                     RENTER DETAILS PAGE
@@ -1605,6 +1589,15 @@ function RegisterRenter() {
                                                         handleDocumentFileChange
                                                     }
                                                 />
+
+                                                {existingDocumentFile && !documentForm.documentCopy && (
+                                                    <div className="selected-file">
+                                                        <span className="selected-file-name">
+                                                            📄 Existing document:{" "}
+                                                            {existingDocumentFile.split("/").pop()}
+                                                        </span>
+                                                    </div>
+                                                )}
 
                                                 {documentForm.documentCopy && (
 
