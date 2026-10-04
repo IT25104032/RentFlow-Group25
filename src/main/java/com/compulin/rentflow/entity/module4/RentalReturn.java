@@ -12,24 +12,21 @@ public class RentalReturn {
     @Column(name = "return_id")
     private Integer returnId;
 
-    //@ManyToOne
-    @JoinColumn(name = "rental_id", nullable = false)
+    @Column(name = "rental_id", nullable = false)
     private Integer rentalId;
 
     @Column(name = "return_date", nullable = false)
     private LocalDateTime returnDate;
 
-    //@ManyToOne
-    @JoinColumn(name = "processed_by", nullable = false)
+    @Column(name = "processed_by", nullable = false)
     private Integer processedBy;
 
-    @Column(name = "return_type", nullable = false, length = 20)
+    @Column(name = "return_type", nullable = false)
     private String returnType;
 
-    @Column(length = 500)
+    @Column(name = "notes")
     private String notes;
 
-    //no-argument constructor to create entity objects
     public RentalReturn() {
     }
 
@@ -45,7 +42,7 @@ public class RentalReturn {
         return rentalId;
     }
 
-    public void setRental(Integer rentalId) {
+    public void setRentalId(Integer rentalId) {
         this.rentalId = rentalId;
     }
 

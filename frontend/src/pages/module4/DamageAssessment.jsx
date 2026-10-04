@@ -1,6 +1,11 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 
+import { createDamageRecord }
+    from "../../services/module4/module4Api.js";
+
+const CURRENT_USER_ID = 3;
+
 function DamageAssessment() {
 
     const { returnId } = useParams();
@@ -36,6 +41,55 @@ function DamageAssessment() {
 
             return updated;
         });
+    }
+
+    async function handleSaveDamages() {
+
+        try {
+
+            for (const damage of damageForms) {
+
+                const damageData = {
+
+                    returnItem: {
+                        returnItemId:
+                        damage.returnItemId
+                    },
+
+                    damagedQuantity:
+                        Number(damage.damagedQuantity),
+
+                    damageDescription:
+                    damage.damageDescription,
+
+                    damageLevel:
+                    damage.damageLevel,
+
+                    estimatedCost:
+                        Number(damage.estimatedCost),
+
+                    finalCharge:
+                        Number(damage.finalCharge),
+
+                    assessedBy:
+                    CURRENT_USER_ID,
+
+                    assessmentDate:
+                        new Date().toISOString(),
+
+                    status:
+                    damage.status
+                };
+
+                await createDamageRecord(damageData);
+            }
+
+            navigate(`/returns/${returnId}`);
+
+        } catch (err) {
+
+            console.error(err);
+        }
     }
 
     return (
@@ -165,57 +219,33 @@ function DamageAssessment() {
 
             ))}
 
+            <div className="action-row">
+
+                <button
+                    className="secondary-btn"
+                    onClick={() => navigate("/returns")}
+                >
+                    Cancel
+                </button>
+
+                <button
+                    className="primary-btn"
+                    onClick={handleSaveDamages}
+                >
+                    Save Damage Records
+                </button>
+
+            </div>
+
         </div>
+
+
+
+
+
+
     );
 
-    async function handleSaveDamages() {
-
-        try {
-
-            for (const damage of damageForms) {
-
-                const damageData = {
-
-                    returnItem: {
-                        returnItemId:
-                        damage.returnItemId
-                    },
-
-                    damagedQuantity:
-                        Number(damage.damagedQuantity),
-
-                    damageDescription:
-                    damage.damageDescription,
-
-                    damageLevel:
-                    damage.damageLevel,
-
-                    estimatedCost:
-                        Number(damage.estimatedCost),
-
-                    finalCharge:
-                        Number(damage.finalCharge),
-
-                    assessedBy:
-                    CURRENT_USER_ID,
-
-                    assessmentDate:
-                        new Date().toISOString(),
-
-                    status:
-                    damage.status
-                };
-
-                await createDamageRecord(damageData);
-            }
-
-            navigate(`/returns/${returnId}`);
-
-        } catch (err) {
-
-            console.error(err);
-        }
-    }
 
 }
 

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { mockRentals } from "../../data/mockRentals";
 import {
-    createReturn,
-    createReturnItem
+    searchRentals,
+    getRentalForReturn,
+    processReturn,
+    getReturnItems
 } from "../../services/module4/module4Api.js";
 
 import "../../styles/module4/module4.css";
@@ -14,8 +15,15 @@ function ProcessReturn() {
 
     const navigate = useNavigate();
 
+
+    // -------------------------------------------------
+    // STATE
+    // -------------------------------------------------
+
     const [searchTerm, setSearchTerm] = useState("");
+
     const [searchResults, setSearchResults] = useState([]);
+
     const [selectedRental, setSelectedRental] = useState(null);
 
     const [returnItems, setReturnItems] = useState([]);
@@ -23,96 +31,158 @@ function ProcessReturn() {
     const [generalNotes, setGeneralNotes] = useState("");
 
     const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+
     const [saving, setSaving] = useState(false);
 
+    const [searching, setSearching] = useState(false);
 
-    // TEMPORARY until real login is implemented
+    const [loadingRental, setLoadingRental] = useState(false);
+
+
+    // TEMPORARY
+    // Replace this later with the logged-in user's ID
     const CURRENT_USER_ID = 3;
+
 
 
     // -------------------------------------------------
     // SEARCH RENTALS
     // -------------------------------------------------
 
-    function handleSearch() {
+    async function handleSearch() {
 
         setError("");
 
+        setSelectedRental(null);
+
+        setReturnItems([]);
+
+
         if (!searchTerm.trim()) {
+
             setSearchResults([]);
+
             return;
         }
 
-        const value = searchTerm.toLowerCase();
 
-        const results = mockRentals.filter((rental) =>
+        try {
 
-            rental.rentalId
-                .toString()
-                .includes(value)
+            setSearching(true);
 
-            ||
+            const results =
+                await searchRentals(
+                    searchTerm.trim()
+                );
 
-            rental.companyName
-                .toLowerCase()
-                .includes(value)
+            setSearchResults(results);
 
-            ||
 
-            rental.customerName
-                .toLowerCase()
-                .includes(value)
+            if (results.length === 0) {
 
-        );
+                setError(
+                    "No matching rentals were found."
+                );
+            }
 
-        setSearchResults(results);
+        } catch (err) {
+
+            console.error(err);
+
+            setSearchResults([]);
+
+            setError(
+                "Unable to search rentals. Please check the backend."
+            );
+
+        } finally {
+
+            setSearching(false);
+        }
     }
+
 
 
     // -------------------------------------------------
     // SELECT RENTAL
     // -------------------------------------------------
 
-    function handleSelectRental(rental) {
+    async function handleSelectRental(rental) {
 
-        setSelectedRental(rental);
-
-        const preparedItems = rental.items.map((item) => ({
-            ...item,
-
-            selected: false,
-
-            quantityToReturn: 0,
-
-            conditionStatus: "GOOD",
-
-            inspectionNotes: ""
-        }));
-
-        setReturnItems(preparedItems);
-
-        setSearchResults([]);
         setError("");
-        setSuccess("");
+
+        try {
+
+            setLoadingRental(true);
+
+
+            const rentalDetails =
+                await getRentalForReturn(
+                    rental.rentalId
+                );
+
+
+            setSelectedRental(
+                rentalDetails
+            );
+
+
+            const preparedItems =
+                rentalDetails.items.map(
+                    (item) => ({
+
+                        ...item,
+
+                        selected: false,
+
+                        quantityToReturn: 0,
+
+                        conditionStatus: "GOOD",
+
+                        inspectionNotes: ""
+
+                    })
+                );
+
+
+            setReturnItems(
+                preparedItems
+            );
+
+            setSearchResults([]);
+
+            setGeneralNotes("");
+
+
+        } catch (err) {
+
+            console.error(err);
+
+            setError(
+                "Unable to load rental details."
+            );
+
+        } finally {
+
+            setLoadingRental(false);
+        }
     }
 
 
+
     // -------------------------------------------------
-    // CALCULATE OUTSTANDING QUANTITY
+    // GET OUTSTANDING QUANTITY
     // -------------------------------------------------
 
     function getOutstandingQuantity(item) {
 
-        return (
-            item.quantityRented -
-            item.quantityAlreadyReturned
-        );
+        return item.remainingQuantity;
     }
 
 
+
     // -------------------------------------------------
-    // UPDATE CHECKBOX
+    // SELECT / UNSELECT RETURN ITEM
     // -------------------------------------------------
 
     function handleItemSelection(rentalItemId) {
@@ -121,16 +191,36 @@ function ProcessReturn() {
 
             previousItems.map((item) => {
 
-                if (item.rentalItemId === rentalItemId) {
+                if (
+                    item.rentalItemId ===
+                    rentalItemId
+                ) {
+
+                    const willBeSelected =
+                        !item.selected;
+
 
                     return {
+
                         ...item,
-                        selected: !item.selected,
+
+                        selected:
+                        willBeSelected,
 
                         quantityToReturn:
-                            !item.selected
+                            willBeSelected
                                 ? getOutstandingQuantity(item)
-                                : 0
+                                : 0,
+
+                        conditionStatus:
+                            willBeSelected
+                                ? item.conditionStatus
+                                : "GOOD",
+
+                        inspectionNotes:
+                            willBeSelected
+                                ? item.inspectionNotes
+                                : ""
                     };
                 }
 
@@ -140,8 +230,9 @@ function ProcessReturn() {
     }
 
 
+
     // -------------------------------------------------
-    // UPDATE QUANTITY
+    // UPDATE RETURN QUANTITY
     // -------------------------------------------------
 
     function handleQuantityChange(
@@ -153,11 +244,17 @@ function ProcessReturn() {
 
             previousItems.map((item) => {
 
-                if (item.rentalItemId === rentalItemId) {
+                if (
+                    item.rentalItemId ===
+                    rentalItemId
+                ) {
 
                     return {
+
                         ...item,
-                        quantityToReturn: Number(quantity)
+
+                        quantityToReturn:
+                            Number(quantity)
                     };
                 }
 
@@ -167,8 +264,9 @@ function ProcessReturn() {
     }
 
 
+
     // -------------------------------------------------
-    // UPDATE CONDITION
+    // UPDATE ITEM CONDITION
     // -------------------------------------------------
 
     function handleConditionChange(
@@ -180,11 +278,17 @@ function ProcessReturn() {
 
             previousItems.map((item) => {
 
-                if (item.rentalItemId === rentalItemId) {
+                if (
+                    item.rentalItemId ===
+                    rentalItemId
+                ) {
 
                     return {
+
                         ...item,
-                        conditionStatus: condition
+
+                        conditionStatus:
+                        condition
                     };
                 }
 
@@ -192,6 +296,7 @@ function ProcessReturn() {
             })
         );
     }
+
 
 
     // -------------------------------------------------
@@ -207,11 +312,17 @@ function ProcessReturn() {
 
             previousItems.map((item) => {
 
-                if (item.rentalItemId === rentalItemId) {
+                if (
+                    item.rentalItemId ===
+                    rentalItemId
+                ) {
 
                     return {
+
                         ...item,
-                        inspectionNotes: notes
+
+                        inspectionNotes:
+                        notes
                     };
                 }
 
@@ -221,30 +332,40 @@ function ProcessReturn() {
     }
 
 
+
     // -------------------------------------------------
-    // CALCULATE RETURN TYPE
+    // CALCULATE RETURN TYPE FOR UI DISPLAY
     // -------------------------------------------------
 
     function calculateReturnType() {
 
         if (!selectedRental) {
+
             return "";
         }
 
+
         let totalOutstandingBeforeReturn = 0;
+
         let totalReturningNow = 0;
+
 
         returnItems.forEach((item) => {
 
             const outstanding =
                 getOutstandingQuantity(item);
 
-            totalOutstandingBeforeReturn += outstanding;
+
+            totalOutstandingBeforeReturn +=
+                outstanding;
+
 
             if (item.selected) {
 
                 totalReturningNow +=
-                    Number(item.quantityToReturn);
+                    Number(
+                        item.quantityToReturn
+                    );
             }
         });
 
@@ -254,15 +375,18 @@ function ProcessReturn() {
             totalReturningNow ===
             totalOutstandingBeforeReturn
         ) {
+
             return "FULL";
         }
+
 
         return "PARTIAL";
     }
 
 
+
     // -------------------------------------------------
-    // VALIDATE
+    // VALIDATE RETURN
     // -------------------------------------------------
 
     function validateReturn() {
@@ -273,7 +397,9 @@ function ProcessReturn() {
             );
 
 
-        if (selectedItems.length === 0) {
+        if (
+            selectedItems.length === 0
+        ) {
 
             setError(
                 "Please select at least one item."
@@ -283,13 +409,17 @@ function ProcessReturn() {
         }
 
 
-        for (const item of selectedItems) {
+        for (
+            const item of selectedItems
+            ) {
 
             const outstanding =
                 getOutstandingQuantity(item);
 
 
-            if (item.quantityToReturn <= 0) {
+            if (
+                item.quantityToReturn <= 0
+            ) {
 
                 setError(
                     `Return quantity for ${item.equipmentName} must be greater than zero.`
@@ -310,11 +440,24 @@ function ProcessReturn() {
 
                 return false;
             }
+
+
+            if (
+                !item.conditionStatus
+            ) {
+
+                setError(
+                    `Please select a condition for ${item.equipmentName}.`
+                );
+
+                return false;
+            }
         }
 
 
         return true;
     }
+
 
 
     // -------------------------------------------------
@@ -324,10 +467,10 @@ function ProcessReturn() {
     async function handleProcessReturn() {
 
         setError("");
-        setSuccess("");
 
 
         if (!validateReturn()) {
+
             return;
         }
 
@@ -337,15 +480,13 @@ function ProcessReturn() {
             setSaving(true);
 
 
-            const returnType =
-                calculateReturnType();
+            const selectedItems =
+                returnItems.filter(
+                    (item) => item.selected
+                );
 
 
-            // -----------------------------------------
-            // 1. CREATE RETURN HEADER
-            // -----------------------------------------
-
-            const returnData = {
+            const requestData = {
 
                 rentalId:
                 selectedRental.rentalId,
@@ -353,94 +494,81 @@ function ProcessReturn() {
                 processedBy:
                 CURRENT_USER_ID,
 
-                returnType:
-                returnType,
-
                 notes:
-                generalNotes
+                generalNotes,
+
+                items:
+                    selectedItems.map(
+                        (item) => ({
+
+                            rentalItemId:
+                            item.rentalItemId,
+
+                            quantityReturned:
+                                Number(
+                                    item.quantityToReturn
+                                ),
+
+                            conditionStatus:
+                            item.conditionStatus,
+
+                            inspectionNotes:
+                            item.inspectionNotes
+                        })
+                    )
             };
 
 
-            const savedReturn =
-                await createReturn(returnData);
-
-
-            // -----------------------------------------
-            // 2. CREATE RETURN ITEM RECORDS
-            // -----------------------------------------
-
-            const selectedItems =
-                returnItems.filter(
-                    (item) => item.selected
+            const result =
+                await processReturn(
+                    requestData
                 );
 
-            const savedReturnItems = [];
+
+            // -------------------------------------------------
+            // IF THERE ARE DAMAGED ITEMS
+            // -------------------------------------------------
+
+            if (
+                result.damagedReturnItemIds &&
+                result.damagedReturnItemIds.length > 0
+            ) {
+
+                const savedItems =
+                    await getReturnItems(
+                        result.returnId
+                    );
 
 
-            for (const item of selectedItems) {
+                const damagedItems =
+                    savedItems.filter(
+                        (item) =>
+                            result
+                                .damagedReturnItemIds
+                                .includes(
+                                    item.returnItemId
+                                )
+                    );
 
-                const returnItemData = {
-
-                    returnId:
-                    savedReturn.returnId,
-
-                    rentalItemId:
-                    item.rentalItemId,
-
-                    quantityReturned:
-                        Number(
-                            item.quantityToReturn
-                        ),
-
-                    conditionStatus:
-                    item.conditionStatus,
-
-                    inspectionNotes:
-                    item.inspectionNotes
-                };
-
-
-                const savedItem = await createReturnItem(
-                    returnItemData
-                );
-                savedReturnItems.push(savedItem);
-            }
-
-            const damagedItems =
-                savedReturnItems.filter(
-                    (item) =>
-                        item.conditionStatus === "DAMAGED"
-                );
-
-            if (damagedItems.length > 0) {
 
                 navigate(
-                    `/returns/${savedReturn.returnId}/damages`,
+                    `/returns/${result.returnId}/damages`,
                     {
                         state: {
-                            damagedItems: damagedItems
+                            damagedItems
                         }
                     }
                 );
 
             } else {
 
+                // No damaged items
+                // Go directly to return details
+
                 navigate(
-                    `/returns/${savedReturn.returnId}`
+                    `/returns/${result.returnId}`
                 );
             }
-
-
-            setSuccess(
-                `Return #${savedReturn.returnId} successfully recorded as ${returnType}.`
-            );
-
-
-            /**setTimeout(() => {
-
-                navigate("/returns");
-
-            }, 1500);**/
 
 
         } catch (err) {
@@ -458,6 +586,7 @@ function ProcessReturn() {
     }
 
 
+
     // -------------------------------------------------
     // UI
     // -------------------------------------------------
@@ -466,14 +595,19 @@ function ProcessReturn() {
 
         <div className="module-page">
 
+
+            {/* PAGE HEADER */}
+
             <div className="page-header">
 
                 <div>
 
-                    <h1>Process Rental Return</h1>
+                    <h1>
+                        Process Rental Return
+                    </h1>
 
                     <p>
-                        Search for an active rental and record
+                        Search for a rental and record
                         the items being returned.
                     </p>
 
@@ -492,494 +626,632 @@ function ProcessReturn() {
             </div>
 
 
+
             {/* SEARCH SECTION */}
 
             <div className="card">
 
-                <h2>Find Rental</h2>
+                <h2>
+                    Find Rental
+                </h2>
+
 
                 <div className="search-row">
 
                     <input
                         type="text"
-                        placeholder="Search by Rental ID, Company Name or Customer Name"
+                        placeholder="Search by Rental ID or Customer Name"
                         value={searchTerm}
                         onChange={(e) =>
                             setSearchTerm(
                                 e.target.value
                             )
                         }
+                        onKeyDown={(e) => {
+
+                            if (
+                                e.key === "Enter"
+                            ) {
+
+                                handleSearch();
+                            }
+                        }}
                     />
+
 
                     <button
                         className="primary-btn"
                         onClick={handleSearch}
+                        disabled={searching}
                     >
-                        Search
+
+                        {
+                            searching
+                                ? "Searching..."
+                                : "Search"
+                        }
+
                     </button>
 
                 </div>
 
 
-                {searchResults.length > 0 && (
 
-                    <div className="search-results">
+                {/* SEARCH RESULTS */}
 
-                        {searchResults.map(
-                            (rental) => (
+                {
+                    searchResults.length > 0 && (
 
-                                <div
-                                    className="search-result"
-                                    key={
-                                        rental.rentalId
-                                    }
-                                >
+                        <div className="search-results">
 
-                                    <div>
+                            {
+                                searchResults.map(
+                                    (rental) => (
 
-                                        <strong>
-                                            Rental #
-                                            {
+                                        <div
+                                            className="search-result"
+                                            key={
                                                 rental.rentalId
                                             }
-                                        </strong>
+                                        >
 
-                                        <p>
-                                            {
-                                                rental.companyName
-                                            }
-                                            {" — "}
-                                            {
-                                                rental.customerName
-                                            }
-                                        </p>
+                                            <div>
 
-                                    </div>
+                                                <strong>
+
+                                                    Rental #
+
+                                                    {
+                                                        rental.rentalId
+                                                    }
+
+                                                </strong>
 
 
-                                    <button
-                                        className="small-btn"
-                                        onClick={() =>
-                                            handleSelectRental(
-                                                rental
-                                            )
-                                        }
-                                    >
-                                        Select
-                                    </button>
+                                                <p>
 
-                                </div>
-                            )
-                        )}
+                                                    {
+                                                        rental.customerName
+                                                    }
 
-                    </div>
+                                                    {" — "}
 
-                )}
+                                                    {
+                                                        rental.rentalStatus
+                                                    }
+
+                                                </p>
+
+                                                <p>
+
+                                                    {
+                                                        rental.startDate
+                                                    }
+
+                                                    {" to "}
+
+                                                    {
+                                                        rental.dueDate
+                                                    }
+
+                                                </p>
+
+                                            </div>
+
+
+                                            <button
+                                                className="small-btn"
+                                                disabled={
+                                                    loadingRental
+                                                }
+                                                onClick={() =>
+                                                    handleSelectRental(
+                                                        rental
+                                                    )
+                                                }
+                                            >
+
+                                                Select
+
+                                            </button>
+
+                                        </div>
+                                    )
+                                )
+                            }
+
+                        </div>
+                    )
+                }
 
             </div>
 
 
-            {/* RENTAL DETAILS */}
 
-            {selectedRental && (
+            {/* ERROR MESSAGE */}
 
-                <>
+            {
+                error && (
 
-                    <div className="card">
+                    <div className="error-message">
 
-                        <h2>Rental Details</h2>
-
-                        <div className="details-grid">
-
-                            <div>
-                                <span>Rental ID</span>
-                                <strong>
-                                    {
-                                        selectedRental.rentalId
-                                    }
-                                </strong>
-                            </div>
-
-
-                            <div>
-                                <span>Company</span>
-                                <strong>
-                                    {
-                                        selectedRental.companyName
-                                    }
-                                </strong>
-                            </div>
-
-
-                            <div>
-                                <span>Customer</span>
-                                <strong>
-                                    {
-                                        selectedRental.customerName
-                                    }
-                                </strong>
-                            </div>
-
-
-                            <div>
-                                <span>Phone</span>
-                                <strong>
-                                    {
-                                        selectedRental.customerPhone
-                                    }
-                                </strong>
-                            </div>
-
-
-                            <div>
-                                <span>Start Date</span>
-                                <strong>
-                                    {
-                                        selectedRental.startDate
-                                    }
-                                </strong>
-                            </div>
-
-
-                            <div>
-                                <span>Due Date</span>
-                                <strong>
-                                    {
-                                        selectedRental.dueDate
-                                    }
-                                </strong>
-                            </div>
-
-
-                            <div>
-                                <span>Status</span>
-                                <strong>
-                                    {
-                                        selectedRental.rentalStatus
-                                    }
-                                </strong>
-                            </div>
-
-                        </div>
+                        {error}
 
                     </div>
+                )
+            }
 
 
-                    {/* RETURN ITEMS */}
 
-                    <div className="card">
+            {/* RENTAL DETAILS */}
 
-                        <div className="section-heading">
+            {
+                selectedRental && (
 
-                            <h2>Returned Items</h2>
+                    <>
 
-                            <div
-                                className={
-                                    calculateReturnType() ===
-                                    "FULL"
-                                        ? "type-badge full"
-                                        : "type-badge partial"
-                                }
-                            >
-                                {
-                                    calculateReturnType()
-                                } RETURN
+
+                        <div className="card">
+
+                            <h2>
+                                Rental Details
+                            </h2>
+
+
+                            <div className="details-grid">
+
+
+                                <div>
+
+                                    <span>
+                                        Rental ID
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            selectedRental.rentalId
+                                        }
+                                    </strong>
+
+                                </div>
+
+
+
+                                <div>
+
+                                    <span>
+                                        Customer
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            selectedRental.customerName
+                                        }
+                                    </strong>
+
+                                </div>
+
+
+
+                                <div>
+
+                                    <span>
+                                        Phone
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            selectedRental.customerPhone
+                                        }
+                                    </strong>
+
+                                </div>
+
+
+
+                                <div>
+
+                                    <span>
+                                        Start Date
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            selectedRental.startDate
+                                        }
+                                    </strong>
+
+                                </div>
+
+
+
+                                <div>
+
+                                    <span>
+                                        Due Date
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            selectedRental.dueDate
+                                        }
+                                    </strong>
+
+                                </div>
+
+
+
+                                <div>
+
+                                    <span>
+                                        Status
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            selectedRental.rentalStatus
+                                        }
+                                    </strong>
+
+                                </div>
+
+
                             </div>
 
                         </div>
 
 
-                        <div className="table-wrapper">
 
-                            <table
-                                className="return-table"
-                            >
+                        {/* RETURNED ITEMS */}
 
-                                <thead>
-
-                                <tr>
-
-                                    <th>Select</th>
-                                    <th>Equipment</th>
-                                    <th>Code</th>
-                                    <th>Rented</th>
-                                    <th>
-                                        Previously Returned
-                                    </th>
-                                    <th>
-                                        Outstanding
-                                    </th>
-                                    <th>
-                                        Returning Now
-                                    </th>
-                                    <th>Condition</th>
-                                    <th>
-                                        Inspection Notes
-                                    </th>
-
-                                </tr>
-
-                                </thead>
+                        <div className="card">
 
 
-                                <tbody>
+                            <div className="section-heading">
 
-                                {returnItems.map(
-                                    (item) => {
-
-                                        const outstanding =
-                                            getOutstandingQuantity(
-                                                item
-                                            );
-
-                                        return (
-
-                                            <tr
-                                                key={
-                                                    item.rentalItemId
-                                                }
-                                            >
-
-                                                <td>
-
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={
-                                                            item.selected
-                                                        }
-                                                        disabled={
-                                                            outstanding ===
-                                                            0
-                                                        }
-                                                        onChange={() =>
-                                                            handleItemSelection(
-                                                                item.rentalItemId
-                                                            )
-                                                        }
-                                                    />
-
-                                                </td>
+                                <h2>
+                                    Returned Items
+                                </h2>
 
 
-                                                <td>
-                                                    {
-                                                        item.equipmentName
-                                                    }
-                                                </td>
+                                <div
+                                    className={
+                                        calculateReturnType() ===
+                                        "FULL"
+                                            ? "type-badge full"
+                                            : "type-badge partial"
+                                    }
+                                >
+
+                                    {
+                                        calculateReturnType()
+                                    } RETURN
+
+                                </div>
+
+                            </div>
 
 
-                                                <td>
-                                                    {
-                                                        item.itemCode
-                                                    }
-                                                </td>
+
+                            <div className="table-wrapper">
+
+                                <table className="return-table">
 
 
-                                                <td>
-                                                    {
-                                                        item.quantityRented
-                                                    }
-                                                </td>
+                                    <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            Select
+                                        </th>
+
+                                        <th>
+                                            Equipment
+                                        </th>
+
+                                        <th>
+                                            Issued
+                                        </th>
+
+                                        <th>
+                                            Previously Returned
+                                        </th>
+
+                                        <th>
+                                            Outstanding
+                                        </th>
+
+                                        <th>
+                                            Returning Now
+                                        </th>
+
+                                        <th>
+                                            Condition
+                                        </th>
+
+                                        <th>
+                                            Inspection Notes
+                                        </th>
+
+                                    </tr>
+
+                                    </thead>
 
 
-                                                <td>
-                                                    {
-                                                        item.quantityAlreadyReturned
-                                                    }
-                                                </td>
+
+                                    <tbody>
+
+                                    {
+                                        returnItems.map(
+                                            (item) => {
+
+                                                const outstanding =
+                                                    getOutstandingQuantity(
+                                                        item
+                                                    );
 
 
-                                                <td>
-                                                    {
-                                                        outstanding
-                                                    }
-                                                </td>
+                                                return (
 
-
-                                                <td>
-
-                                                    <input
-                                                        className="quantity-input"
-                                                        type="number"
-                                                        min="1"
-                                                        max={
-                                                            outstanding
-                                                        }
-                                                        disabled={
-                                                            !item.selected
-                                                        }
-                                                        value={
-                                                            item.quantityToReturn
-                                                        }
-                                                        onChange={(
-                                                            e
-                                                        ) =>
-                                                            handleQuantityChange(
-                                                                item.rentalItemId,
-                                                                e
-                                                                    .target
-                                                                    .value
-                                                            )
-                                                        }
-                                                    />
-
-                                                </td>
-
-
-                                                <td>
-
-                                                    <select
-                                                        disabled={
-                                                            !item.selected
-                                                        }
-                                                        value={
-                                                            item.conditionStatus
-                                                        }
-                                                        onChange={(
-                                                            e
-                                                        ) =>
-                                                            handleConditionChange(
-                                                                item.rentalItemId,
-                                                                e
-                                                                    .target
-                                                                    .value
-                                                            )
+                                                    <tr
+                                                        key={
+                                                            item.rentalItemId
                                                         }
                                                     >
 
-                                                        <option value="GOOD">
-                                                            Good
-                                                        </option>
 
-                                                        <option value="DAMAGED">
-                                                            Damaged
-                                                        </option>
+                                                        {/* SELECT */}
 
-                                                        <option value="MISSING PARTS">
-                                                            Missing Parts
-                                                        </option>
+                                                        <td>
 
-                                                        <option value="NEEDS MAINTENANCE">
-                                                            Needs Maintenance
-                                                        </option>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={
+                                                                    item.selected
+                                                                }
+                                                                disabled={
+                                                                    outstanding ===
+                                                                    0
+                                                                }
+                                                                onChange={() =>
+                                                                    handleItemSelection(
+                                                                        item.rentalItemId
+                                                                    )
+                                                                }
+                                                            />
 
-                                                    </select>
-
-                                                </td>
+                                                        </td>
 
 
-                                                <td>
 
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Inspection notes"
-                                                        disabled={
-                                                            !item.selected
-                                                        }
-                                                        value={
-                                                            item.inspectionNotes
-                                                        }
-                                                        onChange={(
-                                                            e
-                                                        ) =>
-                                                            handleInspectionNotes(
-                                                                item.rentalItemId,
-                                                                e
-                                                                    .target
-                                                                    .value
-                                                            )
-                                                        }
-                                                    />
+                                                        {/* EQUIPMENT */}
 
-                                                </td>
+                                                        <td>
 
-                                            </tr>
+                                                            {
+                                                                item.equipmentName
+                                                            }
 
-                                        );
+                                                        </td>
+
+
+
+                                                        {/* ISSUED QUANTITY */}
+
+                                                        <td>
+
+                                                            {
+                                                                item.issuedQuantity
+                                                            }
+
+                                                        </td>
+
+
+
+                                                        {/* ALREADY RETURNED */}
+
+                                                        <td>
+
+                                                            {
+                                                                item.alreadyReturnedQuantity
+                                                            }
+
+                                                        </td>
+
+
+
+                                                        {/* OUTSTANDING */}
+
+                                                        <td>
+
+                                                            {
+                                                                outstanding
+                                                            }
+
+                                                        </td>
+
+
+
+                                                        {/* RETURNING NOW */}
+
+                                                        <td>
+
+                                                            <input
+                                                                className="quantity-input"
+                                                                type="number"
+                                                                min="1"
+                                                                max={
+                                                                    outstanding
+                                                                }
+                                                                disabled={
+                                                                    !item.selected
+                                                                }
+                                                                value={
+                                                                    item.quantityToReturn
+                                                                }
+                                                                onChange={(e) =>
+                                                                    handleQuantityChange(
+                                                                        item.rentalItemId,
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                            />
+
+                                                        </td>
+
+
+
+                                                        {/* CONDITION */}
+
+                                                        <td>
+
+                                                            <select
+                                                                disabled={
+                                                                    !item.selected
+                                                                }
+                                                                value={
+                                                                    item.conditionStatus
+                                                                }
+                                                                onChange={(e) =>
+                                                                    handleConditionChange(
+                                                                        item.rentalItemId,
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                            >
+
+                                                                <option value="GOOD">
+                                                                    Good
+                                                                </option>
+
+                                                                <option value="DAMAGED">
+                                                                    Damaged
+                                                                </option>
+
+                                                                <option value="MISSING PARTS">
+                                                                    Missing Parts
+                                                                </option>
+
+                                                                <option value="NEEDS MAINTENANCE">
+                                                                    Needs Maintenance
+                                                                </option>
+
+                                                            </select>
+
+                                                        </td>
+
+
+
+                                                        {/* INSPECTION NOTES */}
+
+                                                        <td>
+
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Inspection notes"
+                                                                disabled={
+                                                                    !item.selected
+                                                                }
+                                                                value={
+                                                                    item.inspectionNotes
+                                                                }
+                                                                onChange={(e) =>
+                                                                    handleInspectionNotes(
+                                                                        item.rentalItemId,
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                            />
+
+                                                        </td>
+
+
+                                                    </tr>
+                                                );
+                                            }
+                                        )
                                     }
-                                )}
 
-                                </tbody>
+                                    </tbody>
 
-                            </table>
+                                </table>
+
+                            </div>
 
                         </div>
 
-                    </div>
 
 
-                    {/* GENERAL NOTES */}
+                        {/* GENERAL RETURN NOTES */}
 
-                    <div className="card">
+                        <div className="card">
 
-                        <h2>Return Notes</h2>
-
-                        <textarea
-                            rows="4"
-                            placeholder="Enter any additional notes about this return..."
-                            value={generalNotes}
-                            onChange={(e) =>
-                                setGeneralNotes(
-                                    e.target.value
-                                )
-                            }
-                        />
-
-                    </div>
+                            <h2>
+                                Return Notes
+                            </h2>
 
 
-                    {error && (
+                            <textarea
+                                rows="4"
+                                placeholder="Enter any additional notes about this return..."
+                                value={generalNotes}
+                                onChange={(e) =>
+                                    setGeneralNotes(
+                                        e.target.value
+                                    )
+                                }
+                            />
 
-                        <div className="error-message">
-                            {error}
                         </div>
 
-                    )}
 
 
-                    {success && (
+                        {/* ACTION BUTTONS */}
 
-                        <div className="success-message">
-                            {success}
+                        <div className="action-row">
+
+
+                            <button
+                                className="secondary-btn"
+                                disabled={saving}
+                                onClick={() =>
+                                    navigate("/returns")
+                                }
+                            >
+                                Cancel
+                            </button>
+
+
+
+                            <button
+                                className="primary-btn"
+                                disabled={saving}
+                                onClick={
+                                    handleProcessReturn
+                                }
+                            >
+
+                                {
+                                    saving
+                                        ? "Processing..."
+                                        : "Process Return"
+                                }
+
+                            </button>
+
+
                         </div>
 
-                    )}
 
+                    </>
+                )
+            }
 
-                    <div className="action-row">
-
-                        <button
-                            className="secondary-btn"
-                            onClick={() =>
-                                navigate("/returns")
-                            }
-                        >
-                            Cancel
-                        </button>
-
-
-                        <button
-                            className="primary-btn"
-                            disabled={saving}
-                            onClick={
-                                handleProcessReturn
-                            }
-                        >
-
-                            {saving
-                                ? "Processing..."
-                                : "Process Return"}
-
-                        </button>
-
-                    </div>
-
-                </>
-
-            )}
 
         </div>
     );
 }
+
 
 export default ProcessReturn;

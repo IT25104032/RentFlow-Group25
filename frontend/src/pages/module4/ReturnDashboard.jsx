@@ -75,7 +75,7 @@ function ReturnDashboard() {
                     className="primary-btn"
                     onClick={() =>
                         navigate(
-                            "/returns/process"
+                            "/returns/new"
                         )
                     }
                 >
