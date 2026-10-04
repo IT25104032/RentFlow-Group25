@@ -2,21 +2,12 @@ package com.compulin.rentflow.dto.module4;
 
 public class ReturnItemRequest {
 
-    private Integer returnId;
     private Integer rentalItemId;
     private Integer quantityReturned;
     private String conditionStatus;
     private String inspectionNotes;
 
     public ReturnItemRequest() {
-    }
-
-    public Integer getReturnId() {
-        return returnId;
-    }
-
-    public void setReturnId(Integer returnId) {
-        this.returnId = returnId;
     }
 
     public Integer getRentalItemId() {

@@ -1,6 +1,7 @@
 package com.compulin.rentflow.entity.module4;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,23 +13,20 @@ public class ReturnItem {
     @Column(name = "return_item_id")
     private Integer returnItemId;
 
-    //@ManyToOne
-    //@JoinColumn(name = "return_id", nullable = false)
-    @Column(name = "return_id", nullable = false)
-    private Integer returnId;
+    @ManyToOne
+    @JoinColumn(name = "return_id", nullable = false)
+    private RentalReturn rentalReturn;
 
-    //@ManyToOne
-    //@JoinColumn(name = "rental_item_id", nullable = false)
     @Column(name = "rental_item_id", nullable = false)
     private Integer rentalItemId;
 
     @Column(name = "qty_returned", nullable = false)
     private Integer quantityReturned;
 
-    @Column(name = "condition_status", nullable = false, length = 30)
+    @Column(name = "condition_status", nullable = false)
     private String conditionStatus;
 
-    @Column(name = "inspection_notes", length = 500)
+    @Column(name = "inspection_notes")
     private String inspectionNotes;
 
     @Column(name = "returned_at", nullable = false)
@@ -45,12 +43,12 @@ public class ReturnItem {
         this.returnItemId = returnItemId;
     }
 
-    public Integer getReturnId() {
-        return returnId;
+    public RentalReturn getRentalReturn() {
+        return rentalReturn;
     }
 
-    public void setReturnId(Integer returnId) {
-        this.returnId = returnId;
+    public void setRentalReturn(RentalReturn rentalReturn) {
+        this.rentalReturn = rentalReturn;
     }
 
     public Integer getRentalItemId() {

@@ -8,7 +8,7 @@ import java.util.List;
 public interface ReturnItemRepository
         extends JpaRepository<ReturnItem, Integer> {
 
-    List<ReturnItem> findByReturnId(Integer returnId);
-
-    List<ReturnItem> findByRentalItemId(Integer rentalItemId);
+    List<ReturnItem> findByRentalReturn_ReturnId(
+            Integer returnId
+    );
 }

@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "damage_records")
+@Table(name = "damage_record")
 public class DamageRecord {
 
     @Id
@@ -33,13 +33,13 @@ public class DamageRecord {
     private BigDecimal finalCharge;
 
     //@ManyToOne
-    @JoinColumn(name = "assessed_by", nullable = false)
+    @Column(name = "assessed_by", nullable = false)
     private Integer assessedBy;
 
     @Column(name = "assessment_date", nullable = false)
     private LocalDateTime assessmentDate;
 
-    @Column(nullable = false, length = 30)
+    @Column(name = "damage_status", nullable = false, length = 30)
     private String status;
 
     public DamageRecord() {
