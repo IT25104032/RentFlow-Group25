@@ -10,6 +10,7 @@ import RegisterRenter from "../pages/module2/RegisterRenter";
 import CreateRental from "../pages/module2/CreateRental";
 import EquipmentSelection from "../pages/module2/EquipmentSelection";
 import ReviewRental from "../pages/module2/ReviewRental";
+import RentalHistory from "../pages/module2/RentalHistory";
 
 
 function AppRoutes() {
@@ -53,6 +54,13 @@ function AppRoutes() {
                         path="/rentals/review"
                         element={
                             <ReviewRental />
+                        }
+                    />
+
+                    <Route
+                        path="/rental-history"
+                        element={
+                            <RentalHistory />
                         }
                     />
 
