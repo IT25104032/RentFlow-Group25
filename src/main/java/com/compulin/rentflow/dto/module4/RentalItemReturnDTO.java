@@ -5,11 +5,10 @@ public class RentalItemReturnDTO {
     private Integer rentalItemId;
     private Integer equipmentId;
     private String equipmentName;
-
+    private String itemCode;
     private Integer issuedQuantity;
     private Integer alreadyReturnedQuantity;
     private Integer remainingQuantity;
-
     private String itemStatus;
 
     public RentalItemReturnDTO() {
@@ -39,6 +38,14 @@ public class RentalItemReturnDTO {
         this.equipmentName = equipmentName;
     }
 
+    public String getItemCode() {
+        return itemCode;
+    }
+
+    public void setItemCode(String itemCode) {
+        this.itemCode = itemCode;
+    }
+
     public Integer getIssuedQuantity() {
         return issuedQuantity;
     }
@@ -51,7 +58,9 @@ public class RentalItemReturnDTO {
         return alreadyReturnedQuantity;
     }
 
-    public void setAlreadyReturnedQuantity(Integer alreadyReturnedQuantity) {
+    public void setAlreadyReturnedQuantity(
+            Integer alreadyReturnedQuantity) {
+
         this.alreadyReturnedQuantity = alreadyReturnedQuantity;
     }
 

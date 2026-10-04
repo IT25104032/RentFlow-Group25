@@ -5,12 +5,12 @@ import java.util.List;
 public class RentalReturnDetailsDTO {
 
     private Integer rentalId;
+    private String companyName;
     private String customerName;
     private String customerPhone;
     private String startDate;
     private String dueDate;
     private String rentalStatus;
-
     private List<RentalItemReturnDTO> items;
 
     public RentalReturnDetailsDTO() {
@@ -22,6 +22,14 @@ public class RentalReturnDetailsDTO {
 
     public void setRentalId(Integer rentalId) {
         this.rentalId = rentalId;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
     }
 
     public String getCustomerName() {

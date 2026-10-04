@@ -1,154 +1,178 @@
-const RETURNS_URL = "http://localhost:8081/api/returns";
-const DAMAGES_URL = "http://localhost:8081/api/damages";
+const RETURNS_URL =
+    "http://localhost:8081/api/returns";
+
+const DAMAGES_URL =
+    "http://localhost:8081/api/damages";
+
+
+async function readJsonOrThrow(
+    response,
+    fallbackMessage
+) {
+
+    if (!response.ok) {
+
+        let message = fallbackMessage;
+
+        try {
+
+            const data =
+                await response.json();
+
+            if (data?.message) {
+                message = data.message;
+            }
+
+        } catch {
+            // Keep fallback message.
+        }
+
+        throw new Error(message);
+    }
+
+    return response.json();
+}
+
 
 export async function getAllReturns() {
 
-    const response = await fetch(RETURNS_URL);
+    const response =
+        await fetch(RETURNS_URL);
 
-    if (!response.ok) {
-        throw new Error("Failed to load returns");
-    }
-
-    return response.json();
-}
-
-
-export async function getReturnById(returnId) {
-
-    const response = await fetch(
-        `${RETURNS_URL}/${returnId}`
+    return readJsonOrThrow(
+        response,
+        "Failed to load returns."
     );
-
-    if (!response.ok) {
-        throw new Error("Failed to load return");
-    }
-
-    return response.json();
 }
 
 
-export async function createReturn(returnData) {
+export async function getReturnById(
+    returnId
+) {
 
-    const response = await fetch(RETURNS_URL, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(returnData)
-    });
+    const response =
+        await fetch(
+            `${RETURNS_URL}/${returnId}`
+        );
 
-    if (!response.ok) {
-        throw new Error("Failed to create return");
-    }
-
-    return response.json();
-}
-
-
-export async function createReturnItem(returnItemData) {
-
-    const response = await fetch(
-        `${RETURNS_URL}/items`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(returnItemData)
-        }
+    return readJsonOrThrow(
+        response,
+        "Failed to load return."
     );
-
-    if (!response.ok) {
-        throw new Error("Failed to save returned item");
-    }
-
-    return response.json();
 }
 
 
-export async function getReturnItems(returnId) {
+export async function getReturnItems(
+    returnId
+) {
 
-    const response = await fetch(
-        `${RETURNS_URL}/${returnId}/items`
+    const response =
+        await fetch(
+            `${RETURNS_URL}/${returnId}/items`
+        );
+
+    return readJsonOrThrow(
+        response,
+        "Failed to load return items."
     );
-
-    if (!response.ok) {
-        throw new Error("Failed to load return items");
-    }
-
-    return response.json();
 }
 
-export async function createDamageRecord(damageData) {
 
-    const response = await fetch(DAMAGES_URL, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(damageData)
-    });
+export async function searchRentals(
+    search
+) {
 
-    if (!response.ok) {
-        throw new Error("Failed to create damage record");
-    }
+    const response =
+        await fetch(
+            `${RETURNS_URL}/search?search=${encodeURIComponent(search)}`
+        );
 
-    return response.json();
+    return readJsonOrThrow(
+        response,
+        "Failed to search rentals."
+    );
 }
+
+
+export async function getRentalForReturn(
+    rentalId
+) {
+
+    const response =
+        await fetch(
+            `${RETURNS_URL}/rental/${rentalId}`
+        );
+
+    return readJsonOrThrow(
+        response,
+        "Failed to load rental details."
+    );
+}
+
+
+export async function processReturn(
+    returnData
+) {
+
+    const response =
+        await fetch(
+            `${RETURNS_URL}/process`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+                body:
+                    JSON.stringify(
+                        returnData
+                    )
+            }
+        );
+
+    return readJsonOrThrow(
+        response,
+        "Failed to process return."
+    );
+}
+
+
+export async function createDamageRecord(
+    damageData
+) {
+
+    const response =
+        await fetch(
+            DAMAGES_URL,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+                body:
+                    JSON.stringify(
+                        damageData
+                    )
+            }
+        );
+
+    return readJsonOrThrow(
+        response,
+        "Failed to create damage record."
+    );
+}
+
 
 export async function getAllDamages() {
 
-    const response = await fetch(DAMAGES_URL);
+    const response =
+        await fetch(
+            DAMAGES_URL
+        );
 
-    if (!response.ok) {
-        throw new Error("Failed to load damage records");
-    }
-
-    return response.json();
-}
-
-export async function processReturn(returnData) {
-
-    const response = await fetch(
-        `${RETURNS_URL}/process`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(returnData)
-        }
+    return readJsonOrThrow(
+        response,
+        "Failed to load damage records."
     );
-
-    if (!response.ok) {
-        throw new Error("Failed to process return");
-    }
-
-    return response.json();
-}
-
-export async function searchRentals(search) {
-
-    const response = await fetch(
-        `${RETURNS_URL}/search?search=${encodeURIComponent(search)}`
-    );
-
-    if (!response.ok) {
-        throw new Error("Failed to search rentals");
-    }
-
-    return response.json();
-}
-
-export async function getRentalForReturn(rentalId) {
-
-    const response = await fetch(
-        `${RETURNS_URL}/rental/${rentalId}`
-    );
-
-    if (!response.ok) {
-        throw new Error("Failed to load rental");
-    }
-
-    return response.json();
 }

@@ -1,15 +1,13 @@
 package com.compulin.rentflow.controller.module4;
 
+import com.compulin.rentflow.dto.module4.ProcessReturnRequest;
+import com.compulin.rentflow.dto.module4.ProcessReturnResponse;
+import com.compulin.rentflow.dto.module4.RentalReturnDetailsDTO;
+import com.compulin.rentflow.dto.module4.RentalSearchResultDTO;
 import com.compulin.rentflow.entity.module4.RentalReturn;
 import com.compulin.rentflow.entity.module4.ReturnItem;
 import com.compulin.rentflow.service.module4.RentalReturnService;
 
-import com.compulin.rentflow.dto.module4.ProcessReturnRequest;
-import com.compulin.rentflow.dto.module4.ProcessReturnResponse;
-import com.compulin.rentflow.dto.module4.RentalSearchResultDTO;
-import com.compulin.rentflow.dto.module4.RentalReturnDetailsDTO;
-
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,40 +28,18 @@ public class ReturnController {
         return returnService.getAllReturns();
     }
 
-    @GetMapping("/{id}")
-    public RentalReturn getReturn(@PathVariable Integer id) {
-        return returnService.getReturnById(id);
+    @GetMapping("/{returnId}")
+    public RentalReturn getReturnById(
+            @PathVariable Integer returnId) {
+
+        return returnService.getReturnById(returnId);
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public RentalReturn createReturn(
-            @RequestBody RentalReturn rentalReturn) {
-
-        return returnService.createReturn(rentalReturn);
-    }
-
-    @GetMapping("/{id}/items")
+    @GetMapping("/{returnId}/items")
     public List<ReturnItem> getReturnItems(
-            @PathVariable Integer id) {
+            @PathVariable Integer returnId) {
 
-        return returnService.getReturnItems(id);
-    }
-
-    @PostMapping("/items")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ReturnItem addReturnItem(
-            @RequestBody ReturnItem returnItem) {
-
-        return returnService.addReturnItem(returnItem);
-    }
-
-    @PostMapping("/process")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ProcessReturnResponse processReturn(
-            @RequestBody ProcessReturnRequest request) {
-
-        return returnService.processReturn(request);
+        return returnService.getReturnItems(returnId);
     }
 
     @GetMapping("/search")
@@ -80,4 +56,11 @@ public class ReturnController {
         return returnService.getRentalForReturn(rentalId);
     }
 
+    @PostMapping("/process")
+    public ProcessReturnResponse processReturn(
+            @RequestBody ProcessReturnRequest request) {
+
+        return returnService.processReturn(request);
+    }
 }
+

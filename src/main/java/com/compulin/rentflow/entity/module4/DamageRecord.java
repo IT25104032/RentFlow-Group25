@@ -1,6 +1,7 @@
 package com.compulin.rentflow.entity.module4;
 
 import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -32,7 +33,6 @@ public class DamageRecord {
     @Column(name = "final_charge", precision = 12, scale = 2)
     private BigDecimal finalCharge;
 
-    //@ManyToOne
     @Column(name = "assessed_by", nullable = false)
     private Integer assessedBy;
 
@@ -124,5 +124,4 @@ public class DamageRecord {
     public void setStatus(String status) {
         this.status = status;
     }
-
 }
