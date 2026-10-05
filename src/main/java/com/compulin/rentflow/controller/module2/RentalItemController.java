@@ -80,4 +80,31 @@ public class RentalItemController {
 
         return ResponseEntity.ok(response);
     }
+
+    /*
+     * Issue a rental item.
+     */
+    @PostMapping("/{rentalItemId}/issue")
+    public ResponseEntity<RentalItemResponse> issueRentalItem(
+            @PathVariable Integer rentalItemId,
+            @RequestParam Integer rentalId
+    ) {
+
+        try {
+
+            RentalItemResponse response =
+                    rentalItemService.issueRentalItem(
+                            rentalItemId,
+                            rentalId
+                    );
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException exception) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .build();
+        }
+    }
 }

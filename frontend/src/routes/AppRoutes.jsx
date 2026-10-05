@@ -12,6 +12,7 @@ import EquipmentSelection from "../pages/module2/EquipmentSelection";
 import ReviewRental from "../pages/module2/ReviewRental";
 import RentalHistory from "../pages/module2/RentalHistory";
 import RentalExtension from "../pages/module2/RentalExtension";
+import IssueEquipment from "../pages/module2/IssueEquipment";
 
 
 function AppRoutes() {
@@ -71,6 +72,15 @@ function AppRoutes() {
                             <RentalExtension />
                         }
                     />
+
+                    <Route
+                        path="/issue-equipment"
+                        element={
+                            <IssueEquipment />
+                        }
+                    />
+
+
 
                 </Route>
 
