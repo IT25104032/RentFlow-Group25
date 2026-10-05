@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getInvoices } from '../../services/module3/paymentApi';
+import { getInvoices, getChargesByInvoice } from '../../services/module3/paymentApi';
 import PaymentModal from '../../components/module3/PaymentModal';
 import AddChargeModal from '../../components/module3/AddChargeModal';
 import '../../styles/module3/PaymentManagement.css';
@@ -31,9 +31,21 @@ export default function PaymentManagement() {
         return 'badge-unpaid';
     };
 
-    const handlePrint = (inv) => {
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
+    const handlePrint = async (inv) => {
+        try {
+            // Fetch the itemized charges from the backend
+            const charges = await getChargesByInvoice(inv.invoiceId, inv.rentalId);
+
+            // Generate table rows dynamically based on the charges
+            const chargeRows = charges.map(charge => `
+            <tr>
+                <td>${charge.chargeType} ${charge.chargeDescription ? `- ${charge.chargeDescription}` : ''}</td>
+                <td>Rs. ${Number(charge.amount).toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
             <html>
             <head>
                 <title>Invoice #${inv.invoiceId}</title>
@@ -45,12 +57,13 @@ export default function PaymentManagement() {
                     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                     th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
                     th { background-color: #f8f9fa; }
+                    .summary-row td { background-color: #f8f9fa; font-weight: bold; }
                     .status { font-weight: bold; font-size: 18px; margin-top: 20px; text-align: right; }
                 </style>
             </head>
             <body>
                 <div class="header">RentFlow</div>
-                <div class="sub-header">Official Invoice Receipt</div>
+                <div class="sub-header">Official Itemized Receipt</div>
                 
                 <div class="details">
                     <strong>Invoice #:</strong> ${inv.invoiceId}<br>
@@ -60,24 +73,46 @@ export default function PaymentManagement() {
                 </div>
 
                 <table>
-                    <tr><th>Description</th><th>Amount</th></tr>
-                    <tr><td>Subtotal</td><td>Rs. ${Number(inv.subtotal).toFixed(2)}</td></tr>
-                    <tr><td>Additional Charges</td><td>Rs. ${Number(inv.additionalCharges || 0).toFixed(2)}</td></tr>
-                    <tr><td><strong>Total Amount</strong></td><td><strong>Rs. ${Number(inv.totalAmount).toFixed(2)}</strong></td></tr>
-                    <tr><td>Amount Paid</td><td>Rs. ${Number(inv.amountPaid).toFixed(2)}</td></tr>
-                    <tr><td><strong>Balance Due</strong></td><td><strong>Rs. ${Number(inv.balanceDue).toFixed(2)}</strong></td></tr>
+                    <thead>
+                        <tr>
+                            <th>Charge Description</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${chargeRows.length > 0 ? chargeRows : '<tr><td colspan="2">No itemized charges found.</td></tr>'}
+                        
+                        <tr class="summary-row">
+                            <td style="text-align: right;">Total Amount:</td>
+                            <td>Rs. ${Number(inv.totalAmount).toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: right;">Amount Paid:</td>
+                            <td>Rs. ${Number(inv.amountPaid).toFixed(2)}</td>
+                        </tr>
+                        <tr class="summary-row">
+                            <td style="text-align: right;">Balance Due:</td>
+                            <td>Rs. ${Number(inv.balanceDue).toFixed(2)}</td>
+                        </tr>
+                    </tbody>
                 </table>
                 
                 <div class="status">Status: ${inv.invoiceStatus}</div>
                 
                 <script>
-                    window.print();
-                    setTimeout(() => window.close(), 500);
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => window.close(), 500);
+                    };
                 </script>
             </body>
             </html>
         `);
-        printWindow.document.close();
+            printWindow.document.close();
+        } catch (error) {
+            console.error("Failed to fetch charges for printing:", error);
+            alert("Could not load itemized details for this receipt.");
+        }
     };
 
     return (

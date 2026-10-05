@@ -1,5 +1,7 @@
 package com.compulin.rentflow.entity.module3;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,6 +23,7 @@ public class Charge {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "charges"})
     private Invoice invoice;
 
     @Enumerated(EnumType.STRING)
@@ -33,6 +36,7 @@ public class Charge {
     @Column(name = "amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Column(name = "charge_date", nullable = false)
     private LocalDateTime chargeDate;
 
@@ -43,8 +47,7 @@ public class Charge {
         RENTAL, EXTENSION, LATE, DAMAGE, LOST_ITEM, OTHER
     }
 
-    public Charge() {
-    }
+    public Charge() {}
 
     public Charge(Integer rentalId, Integer rentalItemId, Invoice invoice, ChargeType chargeType,
                   String chargeDescription, BigDecimal amount, LocalDateTime chargeDate, Integer createdBy) {
