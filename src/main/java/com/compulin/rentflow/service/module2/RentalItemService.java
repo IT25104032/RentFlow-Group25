@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 
@@ -147,6 +148,85 @@ public class RentalItemService {
         );
     }
 
+    /*
+     * Issue a rental item.
+     *
+     * The complete requested quantity is issued.
+     */
+    public RentalItemResponse issueRentalItem(
+            Integer rentalItemId,
+            Integer rentalId
+    ) {
+
+        RentalItem rentalItem =
+                rentalItemRepository
+                        .findByRentalItemIdAndRentalId(
+                                rentalItemId,
+                                rentalId
+                        )
+                        .orElseThrow(
+                                () -> new IllegalArgumentException(
+                                        "Rental item not found."
+                                )
+                        );
+
+        /*
+         * Prevent issuing the same item twice.
+         */
+        if ("ISSUED".equalsIgnoreCase(
+                rentalItem.getItemStatus()
+        )) {
+
+            throw new IllegalArgumentException(
+                    "This rental item has already been issued."
+            );
+        }
+
+        /*
+         * Only SELECTED items can be issued.
+         */
+        if (!"SELECTED".equalsIgnoreCase(
+                rentalItem.getItemStatus()
+        )) {
+
+            throw new IllegalArgumentException(
+                    "Only selected rental items can be issued."
+            );
+        }
+
+        /*
+         * Quantity must be valid.
+         */
+        if (
+                rentalItem.getQuantity() == null
+                        ||
+                        rentalItem.getQuantity() <= 0
+        ) {
+
+            throw new IllegalArgumentException(
+                    "Rental item quantity must be greater than zero."
+            );
+        }
+
+        /*
+         * Mark the complete requested quantity
+         * as issued.
+         */
+        rentalItem.setItemStatus("ISSUED");
+
+        rentalItem.setIssuedAt(
+                LocalDateTime.now()
+        );
+
+        RentalItem savedRentalItem =
+                rentalItemRepository.save(
+                        rentalItem
+                );
+
+        return convertToResponse(
+                savedRentalItem
+        );
+    }
 
     /*
      * Validate the request before saving.

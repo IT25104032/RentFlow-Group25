@@ -18,7 +18,6 @@ const EQUIPMENT_DATA = [
         categoryName: "Power Tools",
         rentalRate: 1500,
         ratePeriod: "DAY",
-        securityDepositPerUnit: 5000,
         availableQuantity: 10
     },
     {
@@ -28,7 +27,6 @@ const EQUIPMENT_DATA = [
         categoryName: "Power Tools",
         rentalRate: 1200,
         ratePeriod: "DAY",
-        securityDepositPerUnit: 4000,
         availableQuantity: 7
     },
     {
@@ -38,7 +36,6 @@ const EQUIPMENT_DATA = [
         categoryName: "Construction Equipment",
         rentalRate: 5000,
         ratePeriod: "DAY",
-        securityDepositPerUnit: 15000,
         availableQuantity: 4
     },
     {
@@ -48,7 +45,6 @@ const EQUIPMENT_DATA = [
         categoryName: "Cleaning Equipment",
         rentalRate: 2500,
         ratePeriod: "DAY",
-        securityDepositPerUnit: 8000,
         availableQuantity: 5
     },
     {
@@ -58,7 +54,6 @@ const EQUIPMENT_DATA = [
         categoryName: "Photography Equipment",
         rentalRate: 2000,
         ratePeriod: "DAY",
-        securityDepositPerUnit: 6000,
         availableQuantity: 4
     }
 ];
@@ -160,7 +155,8 @@ function EquipmentSelection({ onBack }) {
             ...selectedEquipment,
             {
                 ...equipment,
-                quantity: 1
+                quantity: 1,
+                securityDepositPerUnit: ""
             }
         ]);
     };
@@ -232,6 +228,38 @@ function EquipmentSelection({ onBack }) {
 
 
     /*
+ * Change the security deposit per unit
+ * for a selected equipment item.
+ */
+    const handleDepositChange = (
+        equipmentId,
+        deposit
+    ) => {
+
+        setError("");
+
+        setSelectedEquipment(
+            selectedEquipment.map(
+                (item) => {
+
+                    if (
+                        item.equipmentId !==
+                        equipmentId
+                    ) {
+                        return item;
+                    }
+
+                    return {
+                        ...item,
+                        securityDepositPerUnit:
+                        deposit
+                    };
+                }
+            )
+        );
+    };
+
+    /*
      * Remove equipment from the rental.
      */
     const handleRemoveEquipment = (
@@ -257,12 +285,19 @@ function EquipmentSelection({ onBack }) {
     const totalDeposit = useMemo(() => {
 
         return selectedEquipment.reduce(
-            (total, item) =>
-                total +
-                (
-                    item.quantity *
-                    item.securityDepositPerUnit
-                ),
+            (total, item) => {
+
+                const depositPerUnit =
+                    Number(
+                        item.securityDepositPerUnit
+                    ) || 0;
+
+                return total +
+                    (
+                        item.quantity *
+                        depositPerUnit
+                    );
+            },
             0
         );
 
@@ -299,12 +334,19 @@ function EquipmentSelection({ onBack }) {
         }
 
 
-        if (
-            selectedEquipment.length === 0
-        ) {
+        const missingDeposit =
+            selectedEquipment.some(
+                (item) =>
+                    item.securityDepositPerUnit === "" ||
+                    item.securityDepositPerUnit === null ||
+                    item.securityDepositPerUnit === undefined ||
+                    Number(item.securityDepositPerUnit) < 0
+            );
+
+        if (missingDeposit) {
 
             setError(
-                "Please select at least one equipment item."
+                "Please enter the security deposit per unit for all selected equipment."
             );
 
             return;
@@ -525,10 +567,6 @@ function EquipmentSelection({ onBack }) {
                             </th>
 
                             <th>
-                                Deposit / Unit
-                            </th>
-
-                            <th>
                                 Action
                             </th>
 
@@ -586,13 +624,6 @@ function EquipmentSelection({ onBack }) {
                                         </td>
 
                                         <td>
-                                            Rs.{" "}
-                                            {
-                                                equipment.securityDepositPerUnit.toLocaleString()
-                                            }
-                                        </td>
-
-                                        <td>
 
                                             <button
                                                 type="button"
@@ -617,7 +648,7 @@ function EquipmentSelection({ onBack }) {
                             <tr>
 
                                 <td
-                                    colSpan="7"
+                                    colSpan="6"
                                     className="empty-table-message"
                                 >
                                     No equipment found.
@@ -770,13 +801,46 @@ function EquipmentSelection({ onBack }) {
                                         </td>
 
                                         <td>
-                                            Rs.{" "}
-                                            {
-                                                (
+                                            <div className="deposit-input-wrapper">
+
+                                                <span className="deposit-currency">
+                                                    Rs.
+                                                </span>
+
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={
+                                                        item.securityDepositPerUnit
+                                                    }
+                                                    onChange={(event) =>
+                                                        handleDepositChange(
+                                                            item.equipmentId,
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    placeholder="Per unit"
+                                                    className="deposit-input"
+                                                />
+
+                                            </div>
+
+                                            <div className="line-deposit">
+
+                                                Line Deposit: Rs.{" "}
+
+                                                {(
                                                     item.quantity *
-                                                    item.securityDepositPerUnit
-                                                ).toLocaleString()
-                                            }
+                                                    (
+                                                        Number(
+                                                            item.securityDepositPerUnit
+                                                        ) || 0
+                                                    )
+                                                ).toLocaleString()}
+
+                                            </div>
+
                                         </td>
 
                                         <td>
