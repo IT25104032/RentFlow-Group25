@@ -10,7 +10,7 @@ public class sys_user {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private Integer user_id;
+    private Integer userId;
 
 
     /*
@@ -26,7 +26,7 @@ public class sys_user {
 
 
     @Column(name = "full_name", nullable = false, length = 120)
-    private String full_name;
+    private String fullName;
 
 
     @Column(name = "email", nullable = false, unique = true, length = 120)
@@ -34,7 +34,7 @@ public class sys_user {
 
 
     @Column(name = "password_hash", nullable = false, length = 255)
-    private String password_hash;
+    private String passwordHash;
 
 
     @Column(name = "phone", length = 25)
@@ -42,15 +42,15 @@ public class sys_user {
 
 
     @Column(name = "user_role", nullable = false, length = 30)
-    private String user_role;
+    private String userRole;
 
 
     @Column(name = "user_status", nullable = false, length = 20)
-    private String user_status;
+    private String userStatus;
 
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
 
     public sys_user() {
@@ -58,11 +58,11 @@ public class sys_user {
 
 
     public Integer getUser_id() {
-        return user_id;
+        return userId;
     }
 
     public void setUser_id(Integer user_id) {
-        this.user_id = user_id;
+        this.userId = user_id;
     }
 
 
@@ -76,11 +76,11 @@ public class sys_user {
 
 
     public String getFull_name() {
-        return full_name;
+        return fullName;
     }
 
     public void setFull_name(String full_name) {
-        this.full_name = full_name;
+        this.fullName = full_name;
     }
 
 
@@ -94,11 +94,11 @@ public class sys_user {
 
 
     public String getPassword_hash() {
-        return password_hash;
+        return passwordHash;
     }
 
     public void setPassword_hash(String password_hash) {
-        this.password_hash = password_hash;
+        this.passwordHash = password_hash;
     }
 
 
@@ -112,28 +112,28 @@ public class sys_user {
 
 
     public String getUser_role() {
-        return user_role;
+        return userRole;
     }
 
     public void setUser_role(String user_role) {
-        this.user_role = user_role;
+        this.userRole = user_role;
     }
 
 
     public String getUser_status() {
-        return user_status;
+        return userStatus;
     }
 
     public void setUser_status(String user_status) {
-        this.user_status = user_status;
+        this.userStatus = user_status;
     }
 
 
     public LocalDateTime getCreated_at() {
-        return created_at;
+        return createdAt;
     }
 
     public void setCreated_at(LocalDateTime created_at) {
-        this.created_at = created_at;
+        this.createdAt = created_at;
     }
 }

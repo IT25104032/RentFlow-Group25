@@ -9,7 +9,7 @@ public class equipment_category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "category_id")
-    private Integer category_id;
+    private Integer categoryId;
 
 
     /*
@@ -19,7 +19,7 @@ public class equipment_category {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
-    private company company;
+    private company companyId;
 
 
     @Column(
@@ -27,14 +27,14 @@ public class equipment_category {
             nullable = false,
             length = 100
     )
-    private String category_name;
+    private String categoryName;
 
 
     @Column(
             name = "cat_description",
             length = 255
     )
-    private String cat_description;
+    private String catDescription;
 
 
     @Column(
@@ -42,7 +42,7 @@ public class equipment_category {
             nullable = false,
             length = 20
     )
-    private String cat_status;
+    private String catStatus;
 
 
     public equipment_category() {
@@ -50,48 +50,51 @@ public class equipment_category {
 
 
     public Integer getCategory_id() {
-        return category_id;
+        return categoryId;
     }
 
     public void setCategory_id(Integer category_id) {
-        this.category_id = category_id;
+        this.categoryId = category_id;
     }
 
 
     public company getCompany() {
-        return company;
+        return companyId;
     }
 
-    public void setCompany(company company) {
-        this.company = company;
-    }
-
-
-    public String getCategory_name() {
-        return category_name;
-    }
-
-    public void setCategory_name(String category_name) {
-        this.category_name = category_name;
+    public void setCompany(company companyId) {
+        this.companyId = companyId;
     }
 
 
-    public String getCat_description() {
-        return cat_description;
+    public String getCategoryName() {
+        return categoryName;
     }
 
-    public void setCat_description(
-            String cat_description) {
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
 
-        this.cat_description = cat_description;
+
+    public String getCatDescription() {
+        return catDescription;
+    }
+
+    public void setCatDescription(
+            String catDescription) {
+
+        this.catDescription = catDescription;
     }
 
 
     public String getCat_status() {
-        return cat_status;
+        return catStatus;
     }
 
     public void setCat_status(String cat_status) {
-        this.cat_status = cat_status;
+        this.catStatus = cat_status;
     }
+
+
+
 }

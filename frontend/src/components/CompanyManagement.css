@@ -1,0 +1,209 @@
+.company-page {
+    width: 100%;
+}
+
+.company-page .section-header {
+    margin-bottom: 25px;
+}
+
+.company-page .section-header h2 {
+    margin: 0;
+    font-size: 28px;
+    color: #172033;
+}
+
+.company-page .section-header p {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 16px;
+}
+
+.company-page .primary-button,
+.company-page .secondary-button,
+.company-page .delete-button {
+    border: none;
+    border-radius: 8px;
+    padding: 11px 18px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.company-page .primary-button {
+    background: #2563eb;
+    color: white;
+}
+
+.company-page .primary-button:hover {
+    background: #1d4ed8;
+}
+
+.company-page .secondary-button {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.company-page .secondary-button:hover {
+    background: #d1d5db;
+}
+
+.company-message {
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 15px;
+}
+
+.company-message.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.company-message.error {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.company-form-card,
+.companies-table-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 30px;
+    margin-bottom: 25px;
+}
+
+.company-form-card h3,
+.companies-table-card h3 {
+    margin: 0 0 25px;
+    font-size: 22px;
+    color: #172033;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #172033;
+}
+
+.form-group label span {
+    color: #dc2626;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 15px;
+    color: #172033;
+    background: white;
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #2563eb;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.form-group small {
+    margin-top: 7px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.table-header h3 {
+    margin: 0;
+}
+
+.table-header span {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.companies-table-card table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.companies-table-card th,
+.companies-table-card td {
+    padding: 14px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.companies-table-card th {
+    background: #f8fafc;
+    color: #334155;
+    font-size: 14px;
+}
+
+.companies-table-card td {
+    color: #334155;
+    font-size: 14px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.company-page .delete-button {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.company-page .delete-button:hover {
+    background: #fecaca;
+}
+
+.empty-row {
+    text-align: center !important;
+    padding: 30px !important;
+    color: #64748b !important;
+}

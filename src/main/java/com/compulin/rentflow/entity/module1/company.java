@@ -10,13 +10,13 @@ public class company {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "company_id")
-    private Integer company_id;
+    private Integer companyId;
 
     @Column(name = "company_name", nullable = false, length = 150)
-    private String company_name;
+    private String companyName;
 
     @Column(name = "registration_no", unique = true, length = 60)
-    private String registration_no;
+    private String registrationNo;
 
     @Column(name = "email", nullable = false, length = 120)
     private String email;
@@ -33,13 +33,13 @@ public class company {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "registered_by", nullable = false)
-    private sys_user registered_by;
+    private sys_user registeredBy;
 
     @Column(name = "registration_date", nullable = false)
-    private LocalDateTime registration_date;
+    private LocalDateTime registrationDate;
 
     @Column(name = "company_status", nullable = false, length = 20)
-    private String company_status;
+    private String companyStatus;
 
 
     public company() {
@@ -47,29 +47,29 @@ public class company {
 
 
     public Integer getCompany_id() {
-        return company_id;
+        return companyId;
     }
 
     public void setCompany_id(Integer company_id) {
-        this.company_id = company_id;
+        this.companyId = company_id;
     }
 
 
     public String getCompany_name() {
-        return company_name;
+        return companyName;
     }
 
     public void setCompany_name(String company_name) {
-        this.company_name = company_name;
+        this.companyName = company_name;
     }
 
 
     public String getRegistration_no() {
-        return registration_no;
+        return registrationNo;
     }
 
     public void setRegistration_no(String registration_no) {
-        this.registration_no = registration_no;
+        this.registrationNo = registration_no;
     }
 
 
@@ -101,30 +101,30 @@ public class company {
 
 
     public sys_user getRegistered_by() {
-        return registered_by;
+        return registeredBy;
     }
 
     public void setRegistered_by(sys_user registered_by) {
-        this.registered_by = registered_by;
+        this.registeredBy = registered_by;
     }
 
 
     public LocalDateTime getRegistration_date() {
-        return registration_date;
+        return registrationDate;
     }
 
     public void setRegistration_date(
             LocalDateTime registration_date) {
 
-        this.registration_date = registration_date;
+        this.registrationDate = registration_date;
     }
 
 
     public String getCompany_status() {
-        return company_status;
+        return companyStatus;
     }
 
     public void setCompany_status(String company_status) {
-        this.company_status = company_status;
+        this.companyStatus = company_status;
     }
 }
