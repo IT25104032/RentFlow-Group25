@@ -22,6 +22,10 @@ public interface RentalRepository
             Integer companyId
     );
 
+    List<Rental> findByCompanyIdOrderByDueDateAsc(
+            Integer companyId
+    );
+
     @Query("""
         SELECT r
         FROM Rental r
@@ -33,6 +37,17 @@ public interface RentalRepository
         ORDER BY r.dueDate
     """)
     List<Rental> findActiveRentals(
+            @Param("companyId") Integer companyId
+    );
+
+    @Query("""
+        SELECT r
+        FROM Rental r
+        WHERE r.companyId = :companyId
+          AND r.rentalStatus = 'DRAFT'
+        ORDER BY r.startDate, r.rentalId
+    """)
+    List<Rental> findRentalsForIssue(
             @Param("companyId") Integer companyId
     );
 

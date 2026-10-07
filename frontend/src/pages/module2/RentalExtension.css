@@ -373,3 +373,9 @@
         font-size: 12px;
     }
 }
+.rental-extension-page .not-eligible-label {
+    color: #8291a3;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}

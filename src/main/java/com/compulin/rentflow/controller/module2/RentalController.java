@@ -1,6 +1,5 @@
 package com.compulin.rentflow.controller.module2;
 
-
 import com.compulin.rentflow.dto.module2.RentalRequest;
 import com.compulin.rentflow.dto.module2.RentalResponse;
 import com.compulin.rentflow.dto.module2.RentalHistoryResponse;
@@ -34,10 +33,7 @@ public class RentalController {
                     .body(response);
 
         } catch (IllegalArgumentException exception) {
-
-            return ResponseEntity
-                    .badRequest()
-                    .build();
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -47,10 +43,7 @@ public class RentalController {
             @RequestParam Integer companyId) {
 
         RentalResponse response =
-                rentalService.getRental(
-                        rentalId,
-                        companyId
-                );
+                rentalService.getRental(rentalId, companyId);
 
         if (response == null) {
             return ResponseEntity.notFound().build();
@@ -77,37 +70,72 @@ public class RentalController {
     public ResponseEntity<List<RentalResponse>> getActiveRentals(
             @RequestParam Integer companyId) {
 
-        List<RentalResponse> rentals =
-                rentalService.getActiveRentals(
-                        companyId
-                );
-
-        return ResponseEntity.ok(rentals);
+        return ResponseEntity.ok(
+                rentalService.getActiveRentals(companyId)
+        );
     }
 
+    @GetMapping("/for-issue")
+    public ResponseEntity<List<RentalResponse>> getRentalsForIssue(
+            @RequestParam Integer companyId) {
+
+        return ResponseEntity.ok(
+                rentalService.getRentalsForIssue(companyId)
+        );
+    }
+
+    @GetMapping("/for-extension")
+    public ResponseEntity<List<RentalResponse>> getRentalsForExtension(
+            @RequestParam Integer companyId) {
+
+        return ResponseEntity.ok(
+                rentalService.getRentalsForExtension(companyId)
+        );
+    }
+
+    @PostMapping("/{rentalId}/issue")
+    public ResponseEntity<RentalResponse> issueRental(
+            @PathVariable Integer rentalId,
+            @RequestParam Integer companyId) {
+
+        try {
+            return ResponseEntity.ok(
+                    rentalService.issueRental(rentalId, companyId)
+            );
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/{rentalId}/cancel")
+    public ResponseEntity<RentalResponse> cancelRental(
+            @PathVariable Integer rentalId,
+            @RequestParam Integer companyId) {
+
+        try {
+            return ResponseEntity.ok(
+                    rentalService.cancelRental(rentalId, companyId)
+            );
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     @GetMapping("/overdue")
     public ResponseEntity<List<RentalResponse>> getOverdueRentals(
             @RequestParam Integer companyId) {
 
-        List<RentalResponse> rentals =
-                rentalService.getOverdueRentals(
-                        companyId
-                );
-
-        return ResponseEntity.ok(rentals);
+        return ResponseEntity.ok(
+                rentalService.getOverdueRentals(companyId)
+        );
     }
-
 
     @GetMapping("/due-soon")
     public ResponseEntity<List<RentalResponse>> getRentalsDueSoon(
             @RequestParam Integer companyId) {
 
-        List<RentalResponse> rentals =
-                rentalService.getRentalsDueSoon(
-                        companyId
-                );
-
-        return ResponseEntity.ok(rentals);
+        return ResponseEntity.ok(
+                rentalService.getRentalsDueSoon(companyId)
+        );
     }
 }
