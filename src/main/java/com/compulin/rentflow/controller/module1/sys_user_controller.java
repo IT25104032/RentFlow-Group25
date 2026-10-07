@@ -1,157 +1,411 @@
 package com.compulin.rentflow.controller.module1;
 
+import com.compulin.rentflow.entity.module1.company;
 import com.compulin.rentflow.entity.module1.sys_user;
+import com.compulin.rentflow.repository.module1.CompanyRepo;
 import com.compulin.rentflow.repository.module1.sys_user_repo;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/module1/users")
+@CrossOrigin(
+        origins = "http://localhost:5173",
+        allowCredentials = "true"
+)
 public class sys_user_controller {
 
     private final sys_user_repo userRepo;
+    private final CompanyRepo companyRepo;
     private final PasswordEncoder passwordEncoder;
 
     public sys_user_controller(
             sys_user_repo userRepo,
-            PasswordEncoder passwordEncoder) {
-
+            CompanyRepo companyRepo,
+            PasswordEncoder passwordEncoder
+    ) {
         this.userRepo = userRepo;
+        this.companyRepo = companyRepo;
         this.passwordEncoder = passwordEncoder;
     }
 
+    private boolean isCompanyAdmin(HttpSession session) {
+
+        String role =
+                (String) session.getAttribute("RENTFLOW_ROLE");
+
+        return "COMPANY_ADMIN".equalsIgnoreCase(role);
+    }
+
+    private Integer getCompanyId(HttpSession session) {
+
+        return (Integer) session.getAttribute(
+                "RENTFLOW_COMPANY_ID"
+        );
+    }
+
     @GetMapping
-    public List<sys_user> getAllUsers() {
-        return userRepo.findAll();
+    public ResponseEntity<?> getCompanyUsers(
+            HttpSession session
+    ) {
+
+        if (!isCompanyAdmin(session)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Only Company Admin can manage users"
+                    ));
+        }
+
+        Integer companyId = getCompanyId(session);
+
+        if (companyId == null) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Company information not found"
+                    ));
+        }
+
+        return ResponseEntity.ok(
+                userRepo.findByCompanyId(companyId)
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<sys_user> getUserById(
-            @PathVariable Integer id) {
+    public ResponseEntity<?> getUserById(
+            @PathVariable Integer id,
+            HttpSession session
+    ) {
 
-        Optional<sys_user> user = userRepo.findById(id);
+        if (!isCompanyAdmin(session)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Access denied"
+                    ));
+        }
 
-        return user.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
+        Integer companyId = getCompanyId(session);
 
-    @GetMapping("/company/{companyId}")
-    public List<sys_user> getUsersByCompany(
-            @PathVariable Integer companyId) {
+        if (companyId == null) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Company information not found"
+                    ));
+        }
 
-        return userRepo.findByCompanyCompanyId(companyId);
-    }
+        Optional<sys_user> user =
+                userRepo.findByUserIdAndCompanyId(
+                        id,
+                        companyId
+                );
 
-    @GetMapping("/email/{email}")
-    public ResponseEntity<sys_user> getUserByEmail(
-            @PathVariable String email) {
-
-        Optional<sys_user> user = userRepo.findByEmail(email);
-
-        return user.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return user.<ResponseEntity<?>>map(
+                        ResponseEntity::ok
+                )
+                .orElseGet(() ->
+                        ResponseEntity.notFound().build()
+                );
     }
 
     @PostMapping
     public ResponseEntity<?> createUser(
-            @RequestBody sys_user newUser) {
+            @RequestBody sys_user newUser,
+            HttpSession session
+    ) {
 
-        if (userRepo.findByEmail(newUser.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest()
-                    .body("Email already exists");
+        if (!isCompanyAdmin(session)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Only Company Admin can create users"
+                    ));
         }
 
-        if ("COMPULIN_ADMIN".equals(newUser.getUser_role())) {
+        Integer companyId = getCompanyId(session);
+
+        if (companyId == null) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Company information not found"
+                    ));
+        }
+
+        if (newUser.getFull_name() == null ||
+                newUser.getFull_name().isBlank()) {
+
             return ResponseEntity.badRequest()
-                    .body("COMPULIN_ADMIN cannot be created from the company user page");
+                    .body(Map.of(
+                            "message",
+                            "Full name is required"
+                    ));
+        }
+
+        if (newUser.getEmail() == null ||
+                newUser.getEmail().isBlank()) {
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message",
+                            "Email is required"
+                    ));
         }
 
         if (newUser.getPassword_hash() == null ||
                 newUser.getPassword_hash().isBlank()) {
 
             return ResponseEntity.badRequest()
-                    .body("Password is required");
+                    .body(Map.of(
+                            "message",
+                            "Password is required"
+                    ));
         }
+
+        String role = newUser.getUser_role();
+
+        if (!"COMPANY_ADMIN".equalsIgnoreCase(role) &&
+                !"RENTAL_OFFICER".equalsIgnoreCase(role)) {
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message",
+                            "Invalid company user role"
+                    ));
+        }
+
+        if (userRepo.findByEmail(
+                newUser.getEmail()
+        ).isPresent()) {
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message",
+                            "Email already exists"
+                    ));
+        }
+
+        company userCompany =
+                companyRepo.findById(companyId)
+                        .orElse(null);
+
+        if (userCompany == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message",
+                            "Company not found"
+                    ));
+        }
+
+        newUser.setCompany(userCompany);
 
         newUser.setPassword_hash(
-                passwordEncoder.encode(newUser.getPassword_hash())
+                passwordEncoder.encode(
+                        newUser.getPassword_hash()
+                )
         );
 
-        if (newUser.getUser_status() == null ||
-                newUser.getUser_status().isBlank()) {
+        newUser.setUser_status("ACTIVE");
+        newUser.setCreated_at(
+                LocalDateTime.now()
+        );
 
-            newUser.setUser_status("ACTIVE");
-        }
+        sys_user savedUser =
+                userRepo.save(newUser);
 
-        newUser.setCreated_at(LocalDateTime.now());
-
-        return ResponseEntity.ok(userRepo.save(newUser));
+        return ResponseEntity.ok(savedUser);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(
             @PathVariable Integer id,
-            @RequestBody sys_user userDetails) {
+            @RequestBody sys_user userDetails,
+            HttpSession session
+    ) {
 
-        Optional<sys_user> result = userRepo.findById(id);
+        if (!isCompanyAdmin(session)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Only Company Admin can update users"
+                    ));
+        }
 
-        if (result.isEmpty()) {
+        Integer companyId = getCompanyId(session);
+
+        if (companyId == null) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Company information not found"
+                    ));
+        }
+
+        sys_user existing =
+                userRepo.findByUserIdAndCompanyId(
+                        id,
+                        companyId
+                ).orElse(null);
+
+        if (existing == null) {
             return ResponseEntity.notFound().build();
         }
 
-        sys_user existing = result.get();
+        existing.setFull_name(
+                userDetails.getFull_name()
+        );
 
-        existing.setFull_name(userDetails.getFull_name());
-        existing.setEmail(userDetails.getEmail());
-        existing.setPhone(userDetails.getPhone());
-        existing.setUser_role(userDetails.getUser_role());
-        existing.setUser_status(userDetails.getUser_status());
+        existing.setPhone(
+                userDetails.getPhone()
+        );
 
-        if (userDetails.getPassword_hash() != null &&
-                !userDetails.getPassword_hash().isBlank()) {
+        String role = userDetails.getUser_role();
 
-            existing.setPassword_hash(
-                    passwordEncoder.encode(
-                            userDetails.getPassword_hash()
-                    )
+        if (role != null &&
+                !role.isBlank()) {
+
+            if (!"COMPANY_ADMIN".equalsIgnoreCase(role) &&
+                    !"RENTAL_OFFICER".equalsIgnoreCase(role)) {
+
+                return ResponseEntity.badRequest()
+                        .body(Map.of(
+                                "message",
+                                "Invalid company user role"
+                        ));
+            }
+
+            existing.setUser_role(role);
+        }
+
+        if (userDetails.getUser_status() != null &&
+                !userDetails.getUser_status().isBlank()) {
+
+            existing.setUser_status(
+                    userDetails.getUser_status()
             );
         }
 
-        return ResponseEntity.ok(userRepo.save(existing));
+        String password =
+                userDetails.getPassword_hash();
+
+        if (password != null &&
+                !password.isBlank()) {
+
+            existing.setPassword_hash(
+                    passwordEncoder.encode(password)
+            );
+        }
+
+        sys_user savedUser =
+                userRepo.save(existing);
+
+        return ResponseEntity.ok(savedUser);
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(
             @PathVariable Integer id,
-            @RequestParam String status) {
+            @RequestBody Map<String, String> body,
+            HttpSession session
+    ) {
 
-        Optional<sys_user> result = userRepo.findById(id);
+        if (!isCompanyAdmin(session)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Only Company Admin can change user status"
+                    ));
+        }
 
-        if (result.isEmpty()) {
+        Integer companyId = getCompanyId(session);
+
+        if (companyId == null) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Company information not found"
+                    ));
+        }
+
+        sys_user existing =
+                userRepo.findByUserIdAndCompanyId(
+                        id,
+                        companyId
+                ).orElse(null);
+
+        if (existing == null) {
             return ResponseEntity.notFound().build();
         }
 
-        sys_user user = result.get();
-        user.setUser_status(status);
+        String status = body.get("status");
 
-        return ResponseEntity.ok(userRepo.save(user));
+        if (status == null || status.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message",
+                            "Status is required"
+                    ));
+        }
+
+        existing.setUser_status(status);
+
+        return ResponseEntity.ok(
+                userRepo.save(existing)
+        );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(
-            @PathVariable Integer id) {
+    public ResponseEntity<?> deactivateUser(
+            @PathVariable Integer id,
+            HttpSession session
+    ) {
 
-        if (!userRepo.existsById(id)) {
+        if (!isCompanyAdmin(session)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Only Company Admin can deactivate users"
+                    ));
+        }
+
+        Integer companyId = getCompanyId(session);
+
+        if (companyId == null) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Company information not found"
+                    ));
+        }
+
+        sys_user existing =
+                userRepo.findByUserIdAndCompanyId(
+                        id,
+                        companyId
+                ).orElse(null);
+
+        if (existing == null) {
             return ResponseEntity.notFound().build();
         }
 
-        userRepo.deleteById(id);
+        existing.setUser_status("INACTIVE");
 
-        return ResponseEntity.noContent().build();
+        userRepo.save(existing);
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "message",
+                        "User deactivated successfully"
+                )
+        );
     }
 }

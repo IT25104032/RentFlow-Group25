@@ -52,7 +52,7 @@ public class sys_user_service {
     public List<sys_user> getUsersByCompany(
             Integer companyId) {
 
-        return userRepo.findByCompanyCompanyId(companyId);
+        return userRepo.findByCompanyId(companyId);
     }
 
     // Create user

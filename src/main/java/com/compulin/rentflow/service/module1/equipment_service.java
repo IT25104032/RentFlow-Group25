@@ -1,6 +1,10 @@
 package com.compulin.rentflow.service.module1;
 
+import com.compulin.rentflow.entity.module1.company;
 import com.compulin.rentflow.entity.module1.equipment;
+import com.compulin.rentflow.entity.module1.equipment_category;
+import com.compulin.rentflow.repository.module1.CompanyRepo;
+import com.compulin.rentflow.repository.module1.equipment_category_repo;
 import com.compulin.rentflow.repository.module1.equipment_repo;
 import org.springframework.stereotype.Service;
 
@@ -11,59 +15,133 @@ import java.util.List;
 public class equipment_service {
 
     private final equipment_repo equipmentRepo;
+    private final CompanyRepo companyRepo;
+    private final equipment_category_repo categoryRepo;
 
-    public equipment_service(equipment_repo equipmentRepo) {
+    public equipment_service(
+            equipment_repo equipmentRepo,
+            CompanyRepo companyRepo,
+            equipment_category_repo categoryRepo
+    ) {
         this.equipmentRepo = equipmentRepo;
+        this.companyRepo = companyRepo;
+        this.categoryRepo = categoryRepo;
     }
 
-    // Get all equipment
-    public List<equipment> getAllEquipment() {
-        return equipmentRepo.findAll();
-    }
-
-    // Get equipment by ID
-    public equipment getEquipmentById(Integer id) {
-        return equipmentRepo.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Equipment not found with ID: " + id));
-    }
-
-    // Search equipment by name
-    public List<equipment> searchEquipment(String name) {
-        return equipmentRepo
-                .findByItemNameContainingIgnoreCase(name);
-    }
-
-    // Get equipment by company
     public List<equipment> getEquipmentByCompany(
-            Integer companyId) {
-
-        return equipmentRepo.findByCompanyCompanyId(companyId);
+            Integer companyId
+    ) {
+        return equipmentRepo.findByCompanyId(companyId);
     }
 
-    // Get equipment by category
+    public equipment getEquipmentById(
+            Integer equipmentId,
+            Integer companyId
+    ) {
+        return equipmentRepo.findByIdAndCompanyId(
+                equipmentId,
+                companyId
+        ).orElseThrow(() ->
+                new RuntimeException(
+                        "Equipment not found"
+                )
+        );
+    }
+
+    public List<equipment> searchEquipment(
+            Integer companyId,
+            String name
+    ) {
+        return equipmentRepo.searchByCompany(
+                companyId,
+                name
+        );
+    }
+
     public List<equipment> getEquipmentByCategory(
-            Integer categoryId) {
-
-        return equipmentRepo.findByCategoryCategoryId(categoryId);
+            Integer companyId,
+            Integer categoryId
+    ) {
+        return equipmentRepo.findByCategoryAndCompanyId(
+                categoryId,
+                companyId
+        );
     }
 
-    // Get equipment by status
     public List<equipment> getEquipmentByStatus(
-            String status) {
-
-        return equipmentRepo.findByEquStatus(status);
+            Integer companyId,
+            String status
+    ) {
+        return equipmentRepo.findByCompanyIdAndStatus(
+                companyId,
+                status
+        );
     }
 
-    // Create equipment
     public equipment createEquipment(
-            equipment newEquipment) {
+            Integer companyId,
+            Integer categoryId,
+            equipment newEquipment
+    ) {
 
-        if (newEquipment.getCreated_at() == null) {
-            newEquipment.setCreated_at(
-                    LocalDateTime.now());
+        company company =
+                companyRepo.findById(companyId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Company not found"
+                                )
+                        );
+
+        equipment_category category =
+                categoryRepo.findByIdAndCompanyId(
+                        categoryId,
+                        companyId
+                ).orElseThrow(() ->
+                        new RuntimeException(
+                                "Category does not belong to this company"
+                        )
+                );
+
+        if (newEquipment.getItem_name() == null ||
+                newEquipment.getItem_name().isBlank()) {
+
+            throw new RuntimeException(
+                    "Item name is required"
+            );
         }
+
+        if (newEquipment.getRental_rate() == null ||
+                newEquipment.getRental_rate().signum() < 0) {
+
+            throw new RuntimeException(
+                    "Rental rate must be zero or greater"
+            );
+        }
+
+        if (newEquipment.getRefundable_deposit_per_unit() == null ||
+                newEquipment
+                        .getRefundable_deposit_per_unit()
+                        .signum() < 0) {
+
+            throw new RuntimeException(
+                    "Refundable deposit must be zero or greater"
+            );
+        }
+
+        if (newEquipment.getTotal_quantity() == null ||
+                newEquipment.getTotal_quantity() < 0) {
+
+            throw new RuntimeException(
+                    "Total quantity must be zero or greater"
+            );
+        }
+
+        newEquipment.setCompany(company);
+        newEquipment.setCategory(category);
+
+        newEquipment.setAvailable_quantity(
+                newEquipment.getTotal_quantity()
+        );
 
         if (newEquipment.getEqu_status() == null ||
                 newEquipment.getEqu_status().isBlank()) {
@@ -71,129 +149,138 @@ public class equipment_service {
             newEquipment.setEqu_status("AVAILABLE");
         }
 
-        if (newEquipment.getAvailable_quantity() == null &&
-                newEquipment.getTotal_quantity() != null) {
-
-            newEquipment.setAvailable_quantity(
-                    newEquipment.getTotal_quantity());
+        if (newEquipment.getCreated_at() == null) {
+            newEquipment.setCreated_at(
+                    LocalDateTime.now()
+            );
         }
 
         return equipmentRepo.save(newEquipment);
     }
 
-    // Update equipment
     public equipment updateEquipment(
-            Integer id,
-            equipment equipmentDetails) {
+            Integer equipmentId,
+            Integer companyId,
+            Integer categoryId,
+            equipment details
+    ) {
 
-        equipment existingEquipment =
-                getEquipmentById(id);
+        equipment existing =
+                getEquipmentById(
+                        equipmentId,
+                        companyId
+                );
 
-        if (equipmentDetails.getCompany() != null) {
-            existingEquipment.setCompany(
-                    equipmentDetails.getCompany());
+        if (categoryId != null) {
+
+            equipment_category category =
+                    categoryRepo.findByIdAndCompanyId(
+                            categoryId,
+                            companyId
+                    ).orElseThrow(() ->
+                            new RuntimeException(
+                                    "Category does not belong to this company"
+                            )
+                    );
+
+            existing.setCategory(category);
         }
 
-        if (equipmentDetails.getCategory() != null) {
-            existingEquipment.setCategory(
-                    equipmentDetails.getCategory());
+        existing.setItem_name(
+                details.getItem_name()
+        );
+
+        existing.setItem_code(
+                details.getItem_code()
+        );
+
+        existing.setEqu_description(
+                details.getEqu_description()
+        );
+
+        existing.setRental_rate(
+                details.getRental_rate()
+        );
+
+        existing.setRate_period(
+                details.getRate_period()
+        );
+
+        existing.setRefundable_deposit_per_unit(
+                details.getRefundable_deposit_per_unit()
+        );
+
+        Integer total =
+                details.getTotal_quantity();
+
+        Integer available =
+                details.getAvailable_quantity();
+
+        if (total == null || total < 0) {
+            throw new RuntimeException(
+                    "Total quantity must be zero or greater"
+            );
         }
 
-        if (equipmentDetails.getItem_name() != null) {
-            existingEquipment.setItem_name(
-                    equipmentDetails.getItem_name());
+        if (available == null ||
+                available < 0 ||
+                available > total) {
+
+            throw new RuntimeException(
+                    "Available quantity must be between zero and total quantity"
+            );
         }
 
-        if (equipmentDetails.getItem_code() != null) {
-            existingEquipment.setItem_code(
-                    equipmentDetails.getItem_code());
+        existing.setTotal_quantity(total);
+        existing.setAvailable_quantity(available);
+
+        if (details.getEqu_status() != null &&
+                !details.getEqu_status().isBlank()) {
+
+            existing.setEqu_status(
+                    details.getEqu_status()
+            );
         }
 
-        if (equipmentDetails.getEqu_description() != null) {
-            existingEquipment.setEqu_description(
-                    equipmentDetails.getEqu_description());
-        }
-
-        if (equipmentDetails.getRental_rate() != null) {
-            existingEquipment.setRental_rate(
-                    equipmentDetails.getRental_rate());
-        }
-
-        if (equipmentDetails.getRate_period() != null) {
-            existingEquipment.setRate_period(
-                    equipmentDetails.getRate_period());
-        }
-
-        if (equipmentDetails
-                .getRefundable_deposit_per_unit() != null) {
-
-            existingEquipment.setRefundable_deposit_per_unit(
-                    equipmentDetails
-                            .getRefundable_deposit_per_unit());
-        }
-
-        if (equipmentDetails.getTotal_quantity() != null) {
-            existingEquipment.setTotal_quantity(
-                    equipmentDetails.getTotal_quantity());
-        }
-
-        if (equipmentDetails.getAvailable_quantity() != null) {
-            existingEquipment.setAvailable_quantity(
-                    equipmentDetails
-                            .getAvailable_quantity());
-        }
-
-        if (equipmentDetails.getEqu_status() != null) {
-            existingEquipment.setEqu_status(
-                    equipmentDetails.getEqu_status());
-        }
-
-        return equipmentRepo.save(existingEquipment);
+        return equipmentRepo.save(existing);
     }
 
-    // Change equipment status
-    public equipment updateEquipmentStatus(
-            Integer id,
-            String status) {
+    public equipment updateStatus(
+            Integer equipmentId,
+            Integer companyId,
+            String status
+    ) {
 
-        equipment existingEquipment =
-                getEquipmentById(id);
-
-        existingEquipment.setEqu_status(status);
-
-        return equipmentRepo.save(existingEquipment);
-    }
-
-    // Update available quantity
-    public equipment updateAvailableQuantity(
-            Integer id,
-            Integer availableQuantity) {
-
-        equipment existingEquipment =
-                getEquipmentById(id);
-
-        if (availableQuantity == null ||
-                availableQuantity < 0 ||
-                existingEquipment.getTotal_quantity() == null ||
-                availableQuantity >
-                        existingEquipment.getTotal_quantity()) {
-
-            throw new IllegalArgumentException(
-                    "Available quantity must be between 0 and total quantity.");
+        if (status == null || status.isBlank()) {
+            throw new RuntimeException(
+                    "Status is required"
+            );
         }
 
-        existingEquipment.setAvailable_quantity(
-                availableQuantity);
+        equipment existing =
+                getEquipmentById(
+                        equipmentId,
+                        companyId
+                );
 
-        return equipmentRepo.save(existingEquipment);
+        existing.setEqu_status(status);
+
+        return equipmentRepo.save(existing);
     }
 
-    // Delete equipment
-    public void deleteEquipment(Integer id) {
+    public void deactivateEquipment(
+            Integer equipmentId,
+            Integer companyId
+    ) {
 
-        equipment existingEquipment =
-                getEquipmentById(id);
+        equipment existing =
+                getEquipmentById(
+                        equipmentId,
+                        companyId
+                );
 
-        equipmentRepo.delete(existingEquipment);
+        existing.setEqu_status("INACTIVE");
+
+        equipmentRepo.save(existing);
     }
 }
