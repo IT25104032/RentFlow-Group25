@@ -883,7 +883,7 @@ function EquipmentSelection({ onBack }) {
                     <div className="deposit-summary">
 
                         <span>
-                            Total Refundable Deposit
+                            Total Security Deposit
                         </span>
 
                         <strong>

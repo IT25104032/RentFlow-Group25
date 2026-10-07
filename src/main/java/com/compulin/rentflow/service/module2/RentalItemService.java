@@ -3,8 +3,10 @@ package com.compulin.rentflow.service.module2;
 
 import com.compulin.rentflow.dto.module2.RentalItemRequest;
 import com.compulin.rentflow.dto.module2.RentalItemResponse;
+import com.compulin.rentflow.entity.module2.Rental;
 import com.compulin.rentflow.entity.module2.RentalItem;
 import com.compulin.rentflow.repository.module2.RentalItemRepository;
+import com.compulin.rentflow.repository.module2.RentalRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -17,13 +19,18 @@ import java.util.stream.Collectors;
 public class RentalItemService {
 
     private final RentalItemRepository rentalItemRepository;
+    private final RentalRepository rentalRepository;
 
 
     public RentalItemService(
-            RentalItemRepository rentalItemRepository
+            RentalItemRepository rentalItemRepository,
+            RentalRepository rentalRepository
     ) {
         this.rentalItemRepository =
                 rentalItemRepository;
+
+        this.rentalRepository =
+                rentalRepository;
     }
 
 
@@ -222,6 +229,30 @@ public class RentalItemService {
                 rentalItemRepository.save(
                         rentalItem
                 );
+
+
+        /*
+         * Change the rental status from DRAFT to ACTIVE
+         * after the equipment has been successfully issued.
+         */
+        Rental rental =
+                rentalRepository
+                        .findById(rentalId)
+                        .orElseThrow(
+                                () -> new IllegalArgumentException(
+                                        "Rental not found."
+                                )
+                        );
+
+        if ("DRAFT".equalsIgnoreCase(
+                rental.getRentalStatus()
+        )) {
+
+            rental.setRentalStatus("ACTIVE");
+
+            rentalRepository.save(rental);
+        }
+
 
         return convertToResponse(
                 savedRentalItem

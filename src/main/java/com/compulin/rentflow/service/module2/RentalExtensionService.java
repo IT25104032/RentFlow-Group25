@@ -1,6 +1,5 @@
 package com.compulin.rentflow.service.module2;
 
-
 import com.compulin.rentflow.dto.module2.RentalExtensionRequest;
 import com.compulin.rentflow.dto.module2.RentalExtensionResponse;
 import com.compulin.rentflow.entity.module2.Rental;
@@ -21,49 +20,54 @@ public class RentalExtensionService {
 
     public RentalExtensionService(
             RentalRepository rentalRepository,
-            RentalExtensionRepository rentalExtensionRepository) {
-
+            RentalExtensionRepository rentalExtensionRepository
+    ) {
         this.rentalRepository = rentalRepository;
-        this.rentalExtensionRepository =
-                rentalExtensionRepository;
+        this.rentalExtensionRepository = rentalExtensionRepository;
     }
 
     @Transactional
     public RentalExtensionResponse extendRental(
-            RentalExtensionRequest request) {
+            RentalExtensionRequest request
+    ) {
+        if (request == null) {
+            throw new IllegalArgumentException("Extension request is required.");
+        }
 
         if (request.getRentalId() == null) {
-            throw new IllegalArgumentException(
-                    "Rental ID is required."
-            );
+            throw new IllegalArgumentException("Rental ID is required.");
         }
 
         if (request.getCompanyId() == null) {
-            throw new IllegalArgumentException(
-                    "Company ID is required."
-            );
+            throw new IllegalArgumentException("Company ID is required.");
         }
 
         if (request.getNewDueDate() == null) {
-            throw new IllegalArgumentException(
-                    "New due date is required."
-            );
+            throw new IllegalArgumentException("New due date is required.");
         }
 
         if (request.getApprovedBy() == null) {
-            throw new IllegalArgumentException(
-                    "Approving user is required."
-            );
+            throw new IllegalArgumentException("Approving user is required.");
         }
 
-        Rental rental =
-                rentalRepository.findByRentalIdAndCompanyId(
+        Rental rental = rentalRepository
+                .findByRentalIdAndCompanyId(
                         request.getRentalId(),
                         request.getCompanyId()
-                ).orElse(null);
+                )
+                .orElse(null);
 
         if (rental == null) {
             return null;
+        }
+
+        String status = rental.getRentalStatus();
+
+        if (!"ACTIVE".equalsIgnoreCase(status)
+                && !"OVERDUE".equalsIgnoreCase(status)) {
+            throw new IllegalArgumentException(
+                    "Only ACTIVE or OVERDUE rentals can be extended."
+            );
         }
 
         if (rental.getDueDate() == null) {
@@ -72,16 +76,13 @@ public class RentalExtensionService {
             );
         }
 
-        if (!request.getNewDueDate().isAfter(
-                rental.getDueDate()
-        )) {
+        if (!request.getNewDueDate().isAfter(rental.getDueDate())) {
             throw new IllegalArgumentException(
                     "New due date must be after the current due date."
             );
         }
 
-        BigDecimal extensionCharge =
-                request.getExtensionCharge();
+        BigDecimal extensionCharge = request.getExtensionCharge();
 
         if (extensionCharge == null) {
             extensionCharge = BigDecimal.ZERO;
@@ -93,98 +94,47 @@ public class RentalExtensionService {
             );
         }
 
-        RentalExtension extension =
-                new RentalExtension();
-
-        extension.setRentalId(
-                rental.getRentalId()
-        );
-
-        extension.setOldDueDate(
-                rental.getDueDate()
-        );
-
-        extension.setNewDueDate(
-                request.getNewDueDate()
-        );
-
-        extension.setExtensionCharge(
-                extensionCharge
-        );
-
-        extension.setApprovedBy(
-                request.getApprovedBy()
-        );
-
-        extension.setReason(
-                request.getReason()
-        );
+        RentalExtension extension = new RentalExtension();
+        extension.setRentalId(rental.getRentalId());
+        extension.setOldDueDate(rental.getDueDate());
+        extension.setNewDueDate(request.getNewDueDate());
+        extension.setExtensionCharge(extensionCharge);
+        extension.setApprovedBy(request.getApprovedBy());
+        extension.setReason(request.getReason());
 
         RentalExtension savedExtension =
-                rentalExtensionRepository.save(
-                        extension
-                );
+                rentalExtensionRepository.save(extension);
 
-        rental.setDueDate(
-                request.getNewDueDate()
-        );
-
+        rental.setDueDate(request.getNewDueDate());
         rentalRepository.save(rental);
 
         return mapToResponse(savedExtension);
     }
 
-    public List<RentalExtensionResponse>
-    getExtensionHistory(Integer rentalId) {
-
-        List<RentalExtension> extensions =
-                rentalExtensionRepository
-                        .findByRentalIdOrderByCreatedAtDesc(
-                                rentalId
-                        );
-
-        return extensions.stream()
+    public List<RentalExtensionResponse> getExtensionHistory(
+            Integer rentalId
+    ) {
+        return rentalExtensionRepository
+                .findByRentalIdOrderByCreatedAtDesc(rentalId)
+                .stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
     private RentalExtensionResponse mapToResponse(
-            RentalExtension extension) {
-
+            RentalExtension extension
+    ) {
         RentalExtensionResponse response =
                 new RentalExtensionResponse();
 
-        response.setExtensionId(
-                extension.getExtensionId()
-        );
-
-        response.setRentalId(
-                extension.getRentalId()
-        );
-
-        response.setOldDueDate(
-                extension.getOldDueDate()
-        );
-
-        response.setNewDueDate(
-                extension.getNewDueDate()
-        );
-
-        response.setExtensionCharge(
-                extension.getExtensionCharge()
-        );
-
-        response.setApprovedBy(
-                extension.getApprovedBy()
-        );
-
-        response.setReason(
-                extension.getReason()
-        );
-
-        response.setCreatedAt(
-                extension.getCreatedAt()
-        );
+        response.setExtensionId(extension.getExtensionId());
+        response.setRentalId(extension.getRentalId());
+        response.setOldDueDate(extension.getOldDueDate());
+        response.setNewDueDate(extension.getNewDueDate());
+        response.setExtensionCharge(extension.getExtensionCharge());
+        response.setApprovedBy(extension.getApprovedBy());
+        response.setReason(extension.getReason());
+        response.setCreatedAt(extension.getCreatedAt());
 
         return response;
     }

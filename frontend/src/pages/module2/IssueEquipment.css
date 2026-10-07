@@ -313,3 +313,35 @@
         padding: 18px;
     }
 }
+.issue-action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.issue-equipment-page .module2-danger-button {
+    border: 1px solid #f1b5b0;
+    border-radius: 8px;
+    padding: 10px 17px;
+    background: #fff1f1;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.issue-equipment-page .module2-danger-button:hover {
+    background: #ffe3e1;
+}
+
+.issue-equipment-page .module2-danger-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.issue-equipment-page .rental-status-badge.draft {
+    background: #fff4db;
+    color: #9a6700;
+}
