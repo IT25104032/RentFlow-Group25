@@ -1,252 +1,227 @@
 package com.compulin.rentflow.controller.module1;
 
+import com.compulin.rentflow.dto.module1.CompanyRegistrationRequest;
 import com.compulin.rentflow.entity.module1.company;
-import com.compulin.rentflow.entity.module1.sys_user;
 import com.compulin.rentflow.repository.module1.CompanyRepo;
-import com.compulin.rentflow.repository.module1.sys_user_repo;
-
+import com.compulin.rentflow.service.module1.company_service;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/module1/companies")
+@CrossOrigin(
+        origins = "http://localhost:5173",
+        allowCredentials = "true"
+)
 public class company_controller {
 
     private final CompanyRepo companyRepo;
-    private final sys_user_repo userRepo;
+    private final company_service companyService;
 
     public company_controller(
             CompanyRepo companyRepo,
-            sys_user_repo userRepo) {
-
+            company_service companyService
+    ) {
         this.companyRepo = companyRepo;
-        this.userRepo = userRepo;
+        this.companyService = companyService;
     }
 
-    // Get all companies
     @GetMapping
-    public List<company> getAllCompanies() {
-        return companyRepo.findAll();
-    }
+    public ResponseEntity<?> getAllCompanies(
+            HttpSession session
+    ) {
 
-    // Get company by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<company> getCompanyById(
-            @PathVariable Integer id) {
+        String role =
+                (String) session.getAttribute(
+                        "RENTFLOW_ROLE"
+                );
 
-        Optional<company> existingCompany =
-                companyRepo.findById(id);
-
-        if (existingCompany.isPresent()) {
-            return ResponseEntity.ok(existingCompany.get());
+        if (!"COMPULIN_ADMIN".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Access denied"
+                    ));
         }
 
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(
+                companyRepo.findAll()
+        );
     }
 
-    // Search company by name
-    @GetMapping("/search")
-    public List<company> searchCompanies(
-            @RequestParam String name) {
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getCompanyById(
+            @PathVariable Integer id,
+            HttpSession session
+    ) {
 
-        return companyRepo
-                .findByCompanyNameContainingIgnoreCase(name);
+        String role =
+                (String) session.getAttribute(
+                        "RENTFLOW_ROLE"
+                );
+
+        if (!"COMPULIN_ADMIN".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Access denied"
+                    ));
+        }
+
+        try {
+            return ResponseEntity.ok(
+                    companyService.getCompanyById(id)
+            );
+        } catch (RuntimeException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    // Get companies by status
-    @GetMapping("/status/{status}")
-    public List<company> getCompaniesByStatus(
-            @PathVariable String status) {
-
-        return companyRepo.findByCompanyStatus(status);
-    }
-
-    // Create company
     @PostMapping
-    public ResponseEntity<?> createCompany(
-            @RequestBody company newCompany) {
+    public ResponseEntity<?> registerCompany(
+            @RequestBody CompanyRegistrationRequest request,
+            HttpSession session
+    ) {
+
+        String role =
+                (String) session.getAttribute(
+                        "RENTFLOW_ROLE"
+                );
+
+        Integer userId =
+                (Integer) session.getAttribute(
+                        "RENTFLOW_USER_ID"
+                );
+
+        if (!"COMPULIN_ADMIN".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Only Compulin Administrator can register companies"
+                    ));
+        }
+
+        if (userId == null) {
+            return ResponseEntity.status(401)
+                    .body(Map.of(
+                            "message",
+                            "Please log in"
+                    ));
+        }
 
         try {
 
-            // Set registration date automatically
-            if (newCompany.getRegistration_date() == null) {
-                newCompany.setRegistration_date(
-                        LocalDateTime.now()
-                );
-            }
-
-            // Set default status
-            if (newCompany.getCompany_status() == null ||
-                    newCompany.getCompany_status().isBlank()) {
-
-                newCompany.setCompany_status("ACTIVE");
-            }
-
-            // Validate registered user
-            if (newCompany.getRegistered_by() == null ||
-                    newCompany.getRegistered_by().getUser_id() == null) {
-
-                return ResponseEntity.badRequest()
-                        .body("Registered By User ID is required.");
-            }
-
-            Integer userId =
-                    newCompany.getRegistered_by().getUser_id();
-
-            Optional<sys_user> user =
-                    userRepo.findById(userId);
-
-            if (user.isEmpty()) {
-
-                return ResponseEntity.badRequest()
-                        .body(
-                                "User ID " + userId +
-                                        " does not exist."
-                        );
-            }
-
-            // Use the real user entity from database
-            newCompany.setRegistered_by(user.get());
-
-            company savedCompany =
-                    companyRepo.save(newCompany);
-
-            return ResponseEntity.ok(savedCompany);
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            return ResponseEntity.internalServerError()
-                    .body(
-                            "Could not create company: "
-                                    + e.getMessage()
+            company saved =
+                    companyService.registerCompany(
+                            request,
+                            userId
                     );
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            "Company registered successfully",
+                            "companyId",
+                            saved.getCompany_id(),
+                            "companyName",
+                            saved.getCompany_name(),
+                            "username",
+                            saved.getEmail(),
+                            "role",
+                            "COMPANY_ADMIN"
+                    )
+            );
+
+        } catch (RuntimeException ex) {
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message",
+                            ex.getMessage()
+                    ));
         }
     }
 
-    // Update company
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCompany(
             @PathVariable Integer id,
-            @RequestBody company companyDetails) {
+            @RequestBody company companyDetails,
+            HttpSession session
+    ) {
+
+        String role =
+                (String) session.getAttribute(
+                        "RENTFLOW_ROLE"
+                );
+
+        if (!"COMPULIN_ADMIN".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Access denied"
+                    ));
+        }
 
         try {
 
-            Optional<company> existingCompany =
-                    companyRepo.findById(id);
-
-            if (existingCompany.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-
-            company existing =
-                    existingCompany.get();
-
-            // Update normal fields
-            existing.setCompany_name(
-                    companyDetails.getCompany_name()
-            );
-
-            existing.setRegistration_no(
-                    companyDetails.getRegistration_no()
-            );
-
-            existing.setEmail(
-                    companyDetails.getEmail()
-            );
-
-            existing.setPhone(
-                    companyDetails.getPhone()
-            );
-
-            existing.setAddress(
-                    companyDetails.getAddress()
-            );
-
-            existing.setCompany_status(
-                    companyDetails.getCompany_status()
-            );
-
-            // IMPORTANT:
-            // Keep the original registration date.
-            // Do NOT replace it with null.
-            if (companyDetails.getRegistration_date() != null) {
-
-                existing.setRegistration_date(
-                        companyDetails.getRegistration_date()
-                );
-            }
-
-            // Update registered-by user only if supplied
-            if (companyDetails.getRegistered_by() != null &&
-                    companyDetails.getRegistered_by().getUser_id() != null) {
-
-                Integer userId =
-                        companyDetails
-                                .getRegistered_by()
-                                .getUser_id();
-
-                Optional<sys_user> user =
-                        userRepo.findById(userId);
-
-                if (user.isEmpty()) {
-
-                    return ResponseEntity.badRequest()
-                            .body(
-                                    "User ID " + userId +
-                                            " does not exist."
-                            );
-                }
-
-                existing.setRegistered_by(user.get());
-            }
-
-            company updatedCompany =
-                    companyRepo.save(existing);
-
-            return ResponseEntity.ok(updatedCompany);
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            return ResponseEntity.internalServerError()
-                    .body(
-                            "Could not update company: "
-                                    + e.getMessage()
+            company updated =
+                    companyService.updateCompany(
+                            id,
+                            companyDetails
                     );
+
+            return ResponseEntity.ok(updated);
+
+        } catch (RuntimeException ex) {
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message",
+                            ex.getMessage()
+                    ));
         }
     }
 
-    // Delete company
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCompany(
-            @PathVariable Integer id) {
+    public ResponseEntity<?> deactivateCompany(
+            @PathVariable Integer id,
+            HttpSession session
+    ) {
+
+        String role =
+                (String) session.getAttribute(
+                        "RENTFLOW_ROLE"
+                );
+
+        if (!"COMPULIN_ADMIN".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Access denied"
+                    ));
+        }
 
         try {
 
-            if (!companyRepo.existsById(id)) {
-                return ResponseEntity.notFound().build();
-            }
+            companyService.deactivateCompany(id);
 
-            companyRepo.deleteById(id);
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            "Company deactivated successfully"
+                    )
+            );
 
-            return ResponseEntity.noContent().build();
+        } catch (RuntimeException ex) {
 
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            return ResponseEntity.internalServerError()
-                    .body(
-                            "Could not delete company: "
-                                    + e.getMessage()
-                    );
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message",
+                            ex.getMessage()
+                    ));
         }
     }
 }

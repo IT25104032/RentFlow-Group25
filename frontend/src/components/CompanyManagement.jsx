@@ -6,6 +6,7 @@ const API_URL = 'http://localhost:8081/api/module1/companies'
 function CompanyManagement({ user }) {
     const [companies, setCompanies] = useState([])
     const [showForm, setShowForm] = useState(true)
+    const [editingId, setEditingId] = useState(null)
     const [message, setMessage] = useState('')
     const [messageType, setMessageType] = useState('')
 
@@ -15,29 +16,29 @@ function CompanyManagement({ user }) {
         email: '',
         phone: '',
         address: '',
-        registeredByUserId: user?.userId || 1,
+        adminFullName: '',
+        adminPassword: '',
         status: 'ACTIVE'
     })
 
-    useEffect(() => {
-        if (user?.userId) {
-            setForm((previous) => ({
-                ...previous,
-                registeredByUserId: user.userId
-            }))
-        }
-    }, [user])
-
     const loadCompanies = async () => {
         try {
-            const response = await fetch(API_URL)
+            const response = await fetch(API_URL, {
+                method: 'GET',
+                credentials: 'include'
+            })
 
             if (!response.ok) {
-                throw new Error('Failed to fetch companies')
+                const data = await response.json().catch(() => ({}))
+
+                throw new Error(
+                    data.message || 'Failed to fetch companies'
+                )
             }
 
             const data = await response.json()
             setCompanies(data)
+
         } catch (error) {
             setMessage(error.message)
             setMessageType('error')
@@ -45,8 +46,10 @@ function CompanyManagement({ user }) {
     }
 
     useEffect(() => {
-        loadCompanies()
-    }, [])
+        if (user) {
+            loadCompanies()
+        }
+    }, [user])
 
     const handleChange = (e) => {
         const { name, value } = e.target
@@ -57,53 +60,142 @@ function CompanyManagement({ user }) {
         }))
     }
 
+    const resetForm = () => {
+        setForm({
+            companyName: '',
+            registrationNo: '',
+            email: '',
+            phone: '',
+            address: '',
+            adminFullName: '',
+            adminPassword: '',
+            status: 'ACTIVE'
+        })
+
+        setEditingId(null)
+    }
+
+    const handleEdit = (company) => {
+        const id =
+            company.company_id ??
+            company.companyId
+
+        const companyName =
+            company.company_name ??
+            company.companyName
+
+        const registrationNo =
+            company.registration_no ??
+            company.registrationNo
+
+        const status =
+            company.company_status ??
+            company.companyStatus
+
+        setForm({
+            companyName: companyName || '',
+            registrationNo: registrationNo || '',
+            email: company.email || '',
+            phone: company.phone || '',
+            address: company.address || '',
+            adminFullName: '',
+            adminPassword: '',
+            status: status || 'ACTIVE'
+        })
+
+        setEditingId(id)
+        setShowForm(true)
+        setMessage('')
+        setMessageType('')
+
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        })
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault()
 
         setMessage('')
         setMessageType('')
 
-        const companyData = {
-            company_name: form.companyName,
-            registration_no: form.registrationNo,
-            email: form.email,
-            phone: form.phone,
-            address: form.address,
-            registered_by: {
-                user_id: Number(form.registeredByUserId)
-            },
-            company_status: form.status
-        }
-
         try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(companyData)
-            })
+            let response
 
-            const data = await response.json()
+            if (editingId) {
+                const companyData = {
+                    company_name: form.companyName,
+                    registration_no: form.registrationNo,
+                    email: form.email,
+                    phone: form.phone,
+                    address: form.address,
+                    company_status: form.status
+                }
 
-            if (!response.ok) {
-                throw new Error(
-                    data.message || 'Failed to create company'
+                response = await fetch(
+                    `${API_URL}/${editingId}`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(companyData)
+                    }
+                )
+            } else {
+                const companyData = {
+                    companyName: form.companyName,
+                    registrationNo: form.registrationNo,
+                    email: form.email,
+                    phone: form.phone,
+                    address: form.address,
+                    adminFullName: form.adminFullName,
+                    adminPassword: form.adminPassword
+                }
+
+                response = await fetch(
+                    API_URL,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(companyData)
+                    }
                 )
             }
 
-            setMessage('Company created successfully')
+            const data = await response
+                .json()
+                .catch(() => ({}))
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message ||
+                    (
+                        editingId
+                            ? 'Failed to update company'
+                            : 'Failed to register company'
+                    )
+                )
+            }
+
+            if (editingId) {
+                setMessage(
+                    'Company updated successfully'
+                )
+            } else {
+                setMessage(
+                    `Company registered successfully. Company Admin username: ${data.username}`
+                )
+            }
+
             setMessageType('success')
 
-            setForm({
-                companyName: '',
-                registrationNo: '',
-                email: '',
-                phone: '',
-                address: '',
-                registeredByUserId: user?.userId || 1,
-                status: 'ACTIVE'
-            })
+            resetForm()
 
             await loadCompanies()
 
@@ -115,7 +207,7 @@ function CompanyManagement({ user }) {
 
     const handleDelete = async (id) => {
         const confirmed = window.confirm(
-            'Are you sure you want to delete this company?'
+            'Are you sure you want to deactivate this company?'
         )
 
         if (!confirmed) {
@@ -123,15 +215,29 @@ function CompanyManagement({ user }) {
         }
 
         try {
-            const response = await fetch(`${API_URL}/${id}`, {
-                method: 'DELETE'
-            })
+            const response = await fetch(
+                `${API_URL}/${id}`,
+                {
+                    method: 'DELETE',
+                    credentials: 'include'
+                }
+            )
+
+            const data = await response
+                .json()
+                .catch(() => ({}))
 
             if (!response.ok) {
-                throw new Error('Failed to delete company')
+                throw new Error(
+                    data.message ||
+                    'Failed to deactivate company'
+                )
             }
 
-            setMessage('Company deleted successfully')
+            setMessage(
+                'Company deactivated successfully'
+            )
+
             setMessageType('success')
 
             await loadCompanies()
@@ -149,12 +255,20 @@ function CompanyManagement({ user }) {
 
                 <div>
                     <h2>Company Management</h2>
-                    <p>Register and manage rental companies.</p>
+
+                    <p>
+                        Register and manage rental companies.
+                    </p>
                 </div>
 
                 <button
                     className="primary-button"
-                    onClick={() => setShowForm((previous) => !previous)}
+                    onClick={() => {
+                        resetForm()
+                        setShowForm(true)
+                        setMessage('')
+                        setMessageType('')
+                    }}
                 >
                     + Add Company
                 </button>
@@ -162,7 +276,9 @@ function CompanyManagement({ user }) {
             </div>
 
             {message && (
-                <div className={`company-message ${messageType}`}>
+                <div
+                    className={`company-message ${messageType}`}
+                >
                     {message}
                 </div>
             )}
@@ -170,7 +286,11 @@ function CompanyManagement({ user }) {
             {showForm && (
                 <div className="company-form-card">
 
-                    <h3>Register New Company</h3>
+                    <h3>
+                        {editingId
+                            ? 'Edit Company'
+                            : 'Register New Company'}
+                    </h3>
 
                     <form onSubmit={handleSubmit}>
 
@@ -192,7 +312,9 @@ function CompanyManagement({ user }) {
                             </div>
 
                             <div className="form-group">
-                                <label>Registration No</label>
+                                <label>
+                                    Registration No
+                                </label>
 
                                 <input
                                     type="text"
@@ -219,7 +341,9 @@ function CompanyManagement({ user }) {
                             </div>
 
                             <div className="form-group">
-                                <label>Phone</label>
+                                <label>
+                                    Phone
+                                </label>
 
                                 <input
                                     type="text"
@@ -231,7 +355,9 @@ function CompanyManagement({ user }) {
                             </div>
 
                             <div className="form-group full-width">
-                                <label>Address</label>
+                                <label>
+                                    Address
+                                </label>
 
                                 <textarea
                                     name="address"
@@ -242,46 +368,77 @@ function CompanyManagement({ user }) {
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label>
-                                    Registered By User ID <span>*</span>
-                                </label>
+                        </div>
 
-                                <input
-                                    type="number"
-                                    name="registeredByUserId"
-                                    value={form.registeredByUserId}
-                                    onChange={handleChange}
-                                    required
-                                />
+                        {!editingId && (
+                            <>
+                                <h3 className="admin-section-title">
+                                    Initial Company Administrator
+                                </h3>
 
-                                <small>
-                                    Enter an existing sys_user user ID.
-                                </small>
-                            </div>
+                                <div className="form-grid">
 
-                            <div className="form-group">
-                                <label>Status</label>
+                                    <div className="form-group">
+                                        <label>
+                                            Admin Full Name <span>*</span>
+                                        </label>
 
-                                <select
-                                    name="status"
-                                    value={form.status}
-                                    onChange={handleChange}
-                                >
-                                    <option value="ACTIVE">
-                                        ACTIVE
-                                    </option>
+                                        <input
+                                            type="text"
+                                            name="adminFullName"
+                                            value={form.adminFullName}
+                                            onChange={handleChange}
+                                            placeholder="Enter administrator name"
+                                            required
+                                        />
+                                    </div>
 
-                                    <option value="INACTIVE">
-                                        INACTIVE
-                                    </option>
+                                    <div className="form-group">
+                                        <label>
+                                            Admin Password <span>*</span>
+                                        </label>
 
-                                    <option value="SUSPENDED">
-                                        SUSPENDED
-                                    </option>
-                                </select>
-                            </div>
+                                        <input
+                                            type="password"
+                                            name="adminPassword"
+                                            value={form.adminPassword}
+                                            onChange={handleChange}
+                                            placeholder="Enter initial password"
+                                            required
+                                        />
+                                    </div>
 
+                                </div>
+
+                                <p className="admin-login-note">
+                                    The company email will be used as the
+                                    Company Administrator username.
+                                </p>
+                            </>
+                        )}
+
+                        <div className="form-group status-group">
+                            <label>
+                                Status
+                            </label>
+
+                            <select
+                                name="status"
+                                value={form.status}
+                                onChange={handleChange}
+                            >
+                                <option value="ACTIVE">
+                                    ACTIVE
+                                </option>
+
+                                <option value="INACTIVE">
+                                    INACTIVE
+                                </option>
+
+                                <option value="SUSPENDED">
+                                    SUSPENDED
+                                </option>
+                            </select>
                         </div>
 
                         <div className="form-actions">
@@ -290,15 +447,19 @@ function CompanyManagement({ user }) {
                                 type="submit"
                                 className="primary-button"
                             >
-                                Save Company
+                                {editingId
+                                    ? 'Update Company'
+                                    : 'Save Company'}
                             </button>
 
                             <button
                                 type="button"
                                 className="secondary-button"
                                 onClick={() => {
+                                    resetForm()
                                     setShowForm(false)
                                     setMessage('')
+                                    setMessageType('')
                                 }}
                             >
                                 Cancel
@@ -314,8 +475,15 @@ function CompanyManagement({ user }) {
             <div className="companies-table-card">
 
                 <div className="table-header">
-                    <h3>Registered Companies</h3>
-                    <span>{companies.length} companies</span>
+
+                    <h3>
+                        Registered Companies
+                    </h3>
+
+                    <span>
+                        {companies.length} companies
+                    </span>
+
                 </div>
 
                 <div className="table-wrapper">
@@ -368,15 +536,21 @@ function CompanyManagement({ user }) {
                                 return (
                                     <tr key={id}>
 
-                                        <td>{id}</td>
+                                        <td>
+                                            {id}
+                                        </td>
 
-                                        <td>{name}</td>
+                                        <td>
+                                            {name}
+                                        </td>
 
                                         <td>
                                             {registrationNo || '-'}
                                         </td>
 
-                                        <td>{company.email}</td>
+                                        <td>
+                                            {company.email}
+                                        </td>
 
                                         <td>
                                             {company.phone || '-'}
@@ -387,20 +561,42 @@ function CompanyManagement({ user }) {
                                         </td>
 
                                         <td>
-                                                <span className="status-badge">
-                                                    {status}
-                                                </span>
+                                            <span
+                                                className="status-badge"
+                                            >
+                                                {status}
+                                            </span>
                                         </td>
 
                                         <td>
-                                            <button
-                                                className="delete-button"
-                                                onClick={() =>
-                                                    handleDelete(id)
-                                                }
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    gap: '8px'
+                                                }}
                                             >
-                                                Delete
-                                            </button>
+
+                                                <button
+                                                    type="button"
+                                                    className="edit-button"
+                                                    onClick={() =>
+                                                        handleEdit(company)
+                                                    }
+                                                >
+                                                    Edit
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    className="delete-button"
+                                                    onClick={() =>
+                                                        handleDelete(id)
+                                                    }
+                                                >
+                                                    Deactivate
+                                                </button>
+
+                                            </div>
                                         </td>
 
                                     </tr>

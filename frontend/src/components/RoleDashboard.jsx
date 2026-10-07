@@ -47,96 +47,168 @@ function RoleDashboard({ user, onLogout }) {
         ]
     }
 
-    useEffect(() => {
-        loadStats()
-    }, [user])
-
     const loadStats = async () => {
-        try {
-            if (compulinAdmin) {
-                const companies = await fetch(
-                    'http://localhost:8081/api/module1/companies'
+        if (!user) {
+            return
+        }
+
+        if (compulinAdmin) {
+            try {
+                const response = await fetch(
+                    'http://localhost:8081/api/module1/companies',
+                    {
+                        method: 'GET',
+                        credentials: 'include'
+                    }
                 )
 
-                const users = await fetch(
-                    'http://localhost:8081/api/module1/users'
-                )
+                if (!response.ok) {
+                    throw new Error(
+                        `Companies request failed: ${response.status}`
+                    )
+                }
 
-                const categories = await fetch(
-                    'http://localhost:8081/api/module1/equipment-categories'
-                )
+                const data = await response.json()
 
-                const equipment = await fetch(
-                    'http://localhost:8081/api/module1/equipment'
-                )
-
-                const companyData = await companies.json()
-                const userData = await users.json()
-                const categoryData = await categories.json()
-                const equipmentData = await equipment.json()
-
-                setStats({
-                    companies: Array.isArray(companyData)
-                        ? companyData.length
-                        : 0,
-
-                    users: Array.isArray(userData)
-                        ? userData.length
-                        : 0,
-
-                    categories: Array.isArray(categoryData)
-                        ? categoryData.length
-                        : 0,
-
-                    equipment: Array.isArray(equipmentData)
-                        ? equipmentData.length
+                setStats((previous) => ({
+                    ...previous,
+                    companies: Array.isArray(data)
+                        ? data.length
                         : 0
-                })
+                }))
+            } catch (error) {
+                console.error(
+                    'Failed to load company statistics:',
+                    error
+                )
 
-                return
+                setStats((previous) => ({
+                    ...previous,
+                    companies: 0
+                }))
             }
 
-            if (user?.companyId) {
-                const users = await fetch(
-                    `http://localhost:8081/api/module1/users/company/${user.companyId}`
+            return
+        }
+
+        if (rentalCompanyAdmin || staff) {
+            setStats((previous) => ({
+                ...previous,
+                companies: 1
+            }))
+
+            try {
+                const response = await fetch(
+                    'http://localhost:8081/api/module1/users',
+                    {
+                        method: 'GET',
+                        credentials: 'include'
+                    }
                 )
 
-                const categories = await fetch(
-                    `http://localhost:8081/api/module1/equipment-categories/company/${user.companyId}`
-                )
+                if (!response.ok) {
+                    throw new Error(
+                        `Users request failed: ${response.status}`
+                    )
+                }
 
-                const equipment = await fetch(
-                    `http://localhost:8081/api/module1/equipment/company/${user.companyId}`
-                )
+                const data = await response.json()
 
-                const userData = await users.json()
-                const categoryData = await categories.json()
-                const equipmentData = await equipment.json()
-
-                setStats({
-                    companies: 1,
-
-                    users: Array.isArray(userData)
-                        ? userData.length
-                        : 0,
-
-                    categories: Array.isArray(categoryData)
-                        ? categoryData.length
-                        : 0,
-
-                    equipment: Array.isArray(equipmentData)
-                        ? equipmentData.length
+                setStats((previous) => ({
+                    ...previous,
+                    users: Array.isArray(data)
+                        ? data.length
                         : 0
-                })
+                }))
+            } catch (error) {
+                console.error(
+                    'Failed to load user statistics:',
+                    error
+                )
+
+                setStats((previous) => ({
+                    ...previous,
+                    users: 0
+                }))
             }
 
-        } catch (error) {
-            console.log('Failed to load dashboard statistics')
+            try {
+                const response = await fetch(
+                    'http://localhost:8081/api/module1/equipment-categories',
+                    {
+                        method: 'GET',
+                        credentials: 'include'
+                    }
+                )
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Categories request failed: ${response.status}`
+                    )
+                }
+
+                const data = await response.json()
+
+                setStats((previous) => ({
+                    ...previous,
+                    categories: Array.isArray(data)
+                        ? data.length
+                        : 0
+                }))
+            } catch (error) {
+                console.error(
+                    'Failed to load category statistics:',
+                    error
+                )
+
+                setStats((previous) => ({
+                    ...previous,
+                    categories: 0
+                }))
+            }
+
+            try {
+                const response = await fetch(
+                    'http://localhost:8081/api/module1/equipment',
+                    {
+                        method: 'GET',
+                        credentials: 'include'
+                    }
+                )
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Equipment request failed: ${response.status}`
+                    )
+                }
+
+                const data = await response.json()
+
+                setStats((previous) => ({
+                    ...previous,
+                    equipment: Array.isArray(data)
+                        ? data.length
+                        : 0
+                }))
+            } catch (error) {
+                console.error(
+                    'Failed to load equipment statistics:',
+                    error
+                )
+
+                setStats((previous) => ({
+                    ...previous,
+                    equipment: 0
+                }))
+            }
         }
     }
 
-    const renderPage = () => {
+    useEffect(() => {
+        loadStats()
+    }, [user, role])
 
+    const renderPage = () => {
         if (activePage === 'Dashboard') {
             return (
                 <>
@@ -219,12 +291,13 @@ function RoleDashboard({ user, onLogout }) {
             return (
                 <div className="module-placeholder">
                     <h2>Company Profile</h2>
+
                     <p>
                         View and update your rental company's profile.
                     </p>
 
                     <p>
-                        Company ID: {user.companyId}
+                        Company ID: {user?.companyId || 'Not available'}
                     </p>
                 </div>
             )
@@ -243,6 +316,7 @@ function RoleDashboard({ user, onLogout }) {
             return (
                 <div className="module-placeholder">
                     <h2>Equipment Categories</h2>
+
                     <p>
                         Create and manage equipment categories.
                     </p>
@@ -257,6 +331,7 @@ function RoleDashboard({ user, onLogout }) {
             return (
                 <div className="module-placeholder">
                     <h2>Equipment Management</h2>
+
                     <p>
                         Register, search, update and manage equipment.
                     </p>
@@ -267,7 +342,10 @@ function RoleDashboard({ user, onLogout }) {
         return (
             <div className="module-placeholder">
                 <h2>Access Denied</h2>
-                <p>You are not authorized to access this function.</p>
+
+                <p>
+                    You are not authorized to access this function.
+                </p>
             </div>
         )
     }
@@ -287,7 +365,9 @@ function RoleDashboard({ user, onLogout }) {
                         <button
                             key={item.key}
                             className={`nav-item ${
-                                activePage === item.key ? 'active' : ''
+                                activePage === item.key
+                                    ? 'active'
+                                    : ''
                             }`}
                             onClick={() => setActivePage(item.key)}
                         >
@@ -312,20 +392,30 @@ function RoleDashboard({ user, onLogout }) {
 
                     <div>
                         <h1>{activePage}</h1>
-                        <p>Company & Inventory Management</p>
+
+                        <p>
+                            Company & Inventory Management
+                        </p>
                     </div>
 
                     <div className="user-info">
 
                         <div className="user-avatar">
                             {user?.fullName
-                                ? user.fullName.charAt(0).toUpperCase()
+                                ? user.fullName
+                                    .charAt(0)
+                                    .toUpperCase()
                                 : 'U'}
                         </div>
 
                         <div>
-                            <strong>{user?.fullName}</strong>
-                            <small>{role}</small>
+                            <strong>
+                                {user?.fullName || 'User'}
+                            </strong>
+
+                            <small>
+                                {role}
+                            </small>
                         </div>
 
                     </div>
