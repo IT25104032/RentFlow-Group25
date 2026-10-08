@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getAllCustomers } from "../../services/module2/customerService";
 import { getCustomerRentalHistory } from "../../services/module2/rentalService";
 
@@ -9,6 +10,15 @@ const COMPANY_ID = 1000;
 
 
 function RentalHistory() {
+
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const notificationRentalId =
+        location.state?.rentalId;
+
+    const notificationCustomerId =
+        location.state?.customerId;
 
     const [renters, setRenters] = useState([]);
 
@@ -111,7 +121,14 @@ function RentalHistory() {
      * Select renter and load
      * their rental history.
      */
-    async function handleSelectRenter(renter) {
+    /*
+ * Select renter and load
+ * their rental history.
+ */
+    async function handleSelectRenter(
+        renter,
+        targetRentalId = null
+    ) {
 
         setSelectedRenter(renter);
 
@@ -131,6 +148,57 @@ function RentalHistory() {
 
             setRentalHistory(history);
 
+
+            /*
+             * If Rental History was opened from a
+             * notification, automatically find
+             * and open the matching rental.
+             */
+            if (targetRentalId) {
+
+                const matchingRental =
+                    history.find(record => {
+
+                        const rental =
+                            record?.rental || record;
+
+                        return (
+                            String(
+                                rental?.rentalId
+                            ) ===
+                            String(targetRentalId)
+                        );
+                    });
+
+                if (matchingRental) {
+
+                    /*
+                     * Normal history responses already contain
+                     * { rental, rentalItems }. Keep them unchanged.
+                     * If the API ever returns a direct rental object,
+                     * wrap it so the existing modal still works.
+                     */
+                    setSelectedRental(
+                        matchingRental.rental
+                            ? matchingRental
+                            : {
+                                rental: matchingRental,
+                                rentalItems: []
+                            }
+                    );
+
+                } else {
+
+                    console.warn(
+                        "Rental from notification was not found in customer history:",
+                        targetRentalId,
+                        history
+                    );
+
+                }
+
+            }
+
         } catch (err) {
 
             console.error(err);
@@ -147,6 +215,89 @@ function RentalHistory() {
         }
     }
 
+
+    /*
+     * If Rental History was opened by clicking a
+     * notification, automatically find the renter
+     * and open the selected rental.
+     */
+    useEffect(() => {
+
+        /*
+         * Do nothing when Rental History was opened
+         * normally from the sidebar.
+         */
+        if (
+            notificationRentalId == null ||
+            notificationCustomerId == null
+        ) {
+            return;
+        }
+
+
+        /*
+         * Wait until the renter list has loaded.
+         */
+        if (renters.length === 0) {
+            return;
+        }
+
+
+        const renter =
+            renters.find(
+                item =>
+                    String(item.customerId) ===
+                    String(notificationCustomerId)
+            );
+
+
+        /*
+         * The notification points to a customer that
+         * is not in the current company/renter list.
+         */
+        if (!renter) {
+
+            console.error(
+                "Notification customer was not found:",
+                notificationCustomerId
+            );
+
+            return;
+        }
+
+
+        /*
+         * Load that customer's rentals and let
+         * handleSelectRenter open the exact rental.
+         */
+        async function openNotificationRental() {
+
+            await handleSelectRenter(
+                renter,
+                notificationRentalId
+            );
+
+            /*
+             * Clear the navigation state only AFTER
+             * the rental history has been loaded.
+             */
+            navigate(
+                "/rental-history",
+                {
+                    replace: true,
+                    state: null
+                }
+            );
+        }
+
+
+        openNotificationRental();
+
+    }, [
+        renters,
+        notificationRentalId,
+        notificationCustomerId
+    ]);
 
     /*
      * Clear the selected renter.
