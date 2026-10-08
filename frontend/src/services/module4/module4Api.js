@@ -1,178 +1,75 @@
-const RETURNS_URL =
-    "http://localhost:8081/api/returns";
+// =========================================================
+// MODULE 4 (IT25104066) - returns, damage, lost items, settlement
+// All calls go through the Vite proxy (/api -> Spring Boot :8081),
+// so the login session cookie is sent and the backend knows the
+// logged-in user and company.
+// =========================================================
 
-const DAMAGES_URL =
-    "http://localhost:8081/api/damages";
+async function request(url, options = {}) {
+    const response = await fetch(url, {
+        credentials: "include",
+        headers: options.body ? { "Content-Type": "application/json" } : undefined,
+        ...options
+    });
 
-
-async function readJsonOrThrow(
-    response,
-    fallbackMessage
-) {
-
-    if (!response.ok) {
-
-        let message = fallbackMessage;
-
-        try {
-
-            const data =
-                await response.json();
-
-            if (data?.message) {
-                message = data.message;
-            }
-
-        } catch {
-            // Keep fallback message.
-        }
-
-        throw new Error(message);
+    const text = await response.text();
+    let data = null;
+    try {
+        data = text ? JSON.parse(text) : null;
+    } catch {
+        data = null;
     }
 
-    return response.json();
+    if (!response.ok) {
+        throw new Error(data?.message || `Request failed (${response.status})`);
+    }
+    return data;
 }
 
-
-export async function getAllReturns() {
-
-    const response =
-        await fetch(RETURNS_URL);
-
-    return readJsonOrThrow(
-        response,
-        "Failed to load returns."
-    );
+function query(params) {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+            q.set(key, value);
+        }
+    });
+    const s = q.toString();
+    return s ? `?${s}` : "";
 }
 
+const post = (url, body) =>
+    request(url, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
 
-export async function getReturnById(
-    returnId
-) {
+// ---------- returns ----------
+export const getOverview = () => request("/api/returns/overview");
 
-    const response =
-        await fetch(
-            `${RETURNS_URL}/${returnId}`
-        );
+export const getOpenRentals = (search) =>
+    request(`/api/returns/open-rentals${query({ search })}`);
 
-    return readJsonOrThrow(
-        response,
-        "Failed to load return."
-    );
-}
+export const getRentalForReturn = (rentalId, returnDate) =>
+    request(`/api/returns/rental/${rentalId}${query({ returnDate })}`);
 
+export const processReturn = (data) => post("/api/returns/process", data);
 
-export async function getReturnItems(
-    returnId
-) {
+export const getReturns = (search, rentalId) =>
+    request(`/api/returns${query({ search, rentalId })}`);
 
-    const response =
-        await fetch(
-            `${RETURNS_URL}/${returnId}/items`
-        );
+export const getReturnDetails = (returnId) => request(`/api/returns/${returnId}`);
 
-    return readJsonOrThrow(
-        response,
-        "Failed to load return items."
-    );
-}
+// ---------- damage records ----------
+export const getDamages = (status) => request(`/api/damages${query({ status })}`);
+export const chargeDamage = (damageId, amount) => post(`/api/damages/${damageId}/charge`, { amount });
+export const waiveDamage = (damageId) => post(`/api/damages/${damageId}/waive`);
+export const markDamageRepaired = (damageId) => post(`/api/damages/${damageId}/repaired`);
 
+// ---------- lost items ----------
+export const getLostItems = (status) => request(`/api/lost-items${query({ status })}`);
+export const recordLostItem = (data) => post("/api/lost-items", data);
+export const chargeLostItem = (lostItemId, amount) => post(`/api/lost-items/${lostItemId}/charge`, { amount });
+export const recoverLostItem = (lostItemId) => post(`/api/lost-items/${lostItemId}/recover`);
 
-export async function searchRentals(
-    search
-) {
-
-    const response =
-        await fetch(
-            `${RETURNS_URL}/search?search=${encodeURIComponent(search)}`
-        );
-
-    return readJsonOrThrow(
-        response,
-        "Failed to search rentals."
-    );
-}
-
-
-export async function getRentalForReturn(
-    rentalId
-) {
-
-    const response =
-        await fetch(
-            `${RETURNS_URL}/rental/${rentalId}`
-        );
-
-    return readJsonOrThrow(
-        response,
-        "Failed to load rental details."
-    );
-}
-
-
-export async function processReturn(
-    returnData
-) {
-
-    const response =
-        await fetch(
-            `${RETURNS_URL}/process`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-                body:
-                    JSON.stringify(
-                        returnData
-                    )
-            }
-        );
-
-    return readJsonOrThrow(
-        response,
-        "Failed to process return."
-    );
-}
-
-
-export async function createDamageRecord(
-    damageData
-) {
-
-    const response =
-        await fetch(
-            DAMAGES_URL,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-                body:
-                    JSON.stringify(
-                        damageData
-                    )
-            }
-        );
-
-    return readJsonOrThrow(
-        response,
-        "Failed to create damage record."
-    );
-}
-
-
-export async function getAllDamages() {
-
-    const response =
-        await fetch(
-            DAMAGES_URL
-        );
-
-    return readJsonOrThrow(
-        response,
-        "Failed to load damage records."
-    );
-}
+// ---------- settlement ----------
+export const getSettlements = (search) => request(`/api/settlements${query({ search })}`);
+export const getSettlement = (rentalId) => request(`/api/settlements/${rentalId}`);
+export const settleRental = (rentalId) => post(`/api/settlements/${rentalId}`, {});
+export const paySettlement = (rentalId, data) => post(`/api/settlements/${rentalId}/payments`, data);
