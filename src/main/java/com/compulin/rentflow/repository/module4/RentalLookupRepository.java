@@ -22,11 +22,7 @@ import java.util.Map;
 
 /*
  * MODULE 4 (IT25104066) - read queries that join several modules' tables
- * (rental, customer, equipment, charge, ...) and the few status updates
- * Module 4 makes on Module 2's rental tables.
- *
- * "Units out" of a rental line = issued quantity - returned - recorded lost.
- * Lines still SELECTED (never issued) are ignored.
+ * The other modules' entity tables are not connected yet.
  */
 @Repository
 public class RentalLookupRepository {
@@ -51,10 +47,8 @@ public class RentalLookupRepository {
         this.jdbc = jdbcTemplate;
     }
 
-    // =========================================================
-    // Rentals
-    // =========================================================
 
+//RENTALS
     /** Header of one rental, or null if it does not exist. */
     public Map<String, Object> findRental(Integer rentalId) {
         try {
@@ -133,10 +127,8 @@ public class RentalLookupRepository {
                 """, rentalId);
     }
 
-    // =========================================================
-    // Return history
-    // =========================================================
 
+//RETURN HISTORY
     public List<ReturnSummary> findReturns(Integer companyId, String search, Integer rentalId, Integer returnId) {
         List<Object> args = new ArrayList<>();
         StringBuilder where = new StringBuilder(" WHERE 1 = 1")
@@ -197,10 +189,7 @@ public class RentalLookupRepository {
                 rs.getString("returned_at")), returnId);
     }
 
-    // =========================================================
-    // Damage records and lost items
-    // =========================================================
-
+//DAMAGE RECORDS AND LOST ITEMS
     public List<DamageView> findDamages(Integer companyId, String status, Integer returnId,
                                         Integer rentalId, Integer damageId) {
         List<Object> args = new ArrayList<>();
@@ -282,10 +271,7 @@ public class RentalLookupRepository {
                 rs.getString("rental_status"));
     }
 
-    // =========================================================
-    // Billing (Module 3 tables, read only)
-    // =========================================================
-
+//Reading from module 3 tables
     public List<ChargeLine> findCharges(Integer rentalId) {
         return jdbc.query("""
                 SELECT charge_id, charge_type, charge_description, amount, charge_date, invoice_id
@@ -308,10 +294,8 @@ public class RentalLookupRepository {
         return value == null ? BigDecimal.ZERO : value;
     }
 
-    // =========================================================
-    // Settlements list and overview numbers
-    // =========================================================
 
+//SETTLEMENT
     /** Rentals that have equipment back (or partly back) and their settlement state. */
     public List<SettlementRow> findSettlementRows(Integer companyId, String search) {
         List<Object> args = new ArrayList<>();
@@ -398,10 +382,7 @@ public class RentalLookupRepository {
                 rs.getInt("returns_today")), all.toArray());
     }
 
-    // =========================================================
-    // helpers
-    // =========================================================
-
+//HELPERS
     private static String companyFilter(String alias, Integer companyId, List<Object> args) {
         if (companyId == null) {
             return "";
