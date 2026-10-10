@@ -44,7 +44,7 @@ public class SecurityDepositService {
     }
 
     /**
-     * Retrieve deposits filtered by status (PENDING, HELD, REFUNDED, etc.)
+     * Retrieve deposits filtered by status
      */
     public List<SecurityDeposit> getDepositsByStatus(SecurityDeposit.DepositStatus status) {
         return securityDepositRepository.findByDepositStatus(status);
@@ -93,37 +93,49 @@ public class SecurityDepositService {
     }
 
     /**
-     * Process deposit return/refund upon equipment return and inspection
+     * Process deposit return/refund upon equipment return and inspection.
+     * amountDeducted is any extra deduction now; amounts already deducted are kept.
      */
     @Transactional
     public SecurityDeposit processDepositReturn(Integer depositId, BigDecimal amountDeducted) {
         SecurityDeposit deposit = getDepositById(depositId);
 
-        BigDecimal received = deposit.getDepositAmountReceived() != null
-                ? deposit.getDepositAmountReceived()
-                : BigDecimal.ZERO;
-
-        BigDecimal deduction = amountDeducted != null ? amountDeducted : BigDecimal.ZERO;
-
-        if (deduction.compareTo(received) > 0) {
-            throw new RuntimeException("Deduction amount cannot exceed the received deposit (" + received + ")");
+        if (deposit.getDepositStatus() != SecurityDeposit.DepositStatus.HELD) {
+            throw new RuntimeException("Only a HELD deposit can be refunded.");
         }
 
-        BigDecimal refundAmount = received.subtract(deduction);
+        BigDecimal received = orZero(deposit.getDepositAmountReceived());
+        BigDecimal alreadyDeducted = orZero(deposit.getAmountDeducted());
+        BigDecimal available = received.subtract(alreadyDeducted);
 
-        deposit.setAmountDeducted(deduction);
+        BigDecimal deduction = orZero(amountDeducted);
+        if (deduction.compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("Deduction cannot be negative.");
+        }
+        if (deduction.compareTo(available) > 0) {
+            throw new RuntimeException("Deduction cannot exceed the remaining deposit (" + available + ")");
+        }
+
+        BigDecimal totalDeducted = alreadyDeducted.add(deduction);
+        BigDecimal refundAmount = received.subtract(totalDeducted);
+
+        deposit.setAmountDeducted(totalDeducted);
         deposit.setAmountRefunded(refundAmount);
         deposit.setRefundDate(LocalDateTime.now());
 
-        // Update status based on deduction
-        if (refundAmount.compareTo(BigDecimal.ZERO) == 0 && received.compareTo(BigDecimal.ZERO) > 0) {
+        // Update status based on what was kept
+        if (refundAmount.compareTo(BigDecimal.ZERO) == 0) {
             deposit.setDepositStatus(SecurityDeposit.DepositStatus.FORFEITED);
-        } else if (deduction.compareTo(BigDecimal.ZERO) > 0) {
+        } else if (totalDeducted.compareTo(BigDecimal.ZERO) > 0) {
             deposit.setDepositStatus(SecurityDeposit.DepositStatus.PARTIALLY_REFUNDED);
         } else {
             deposit.setDepositStatus(SecurityDeposit.DepositStatus.REFUNDED);
         }
 
         return securityDepositRepository.save(deposit);
+    }
+
+    private static BigDecimal orZero(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 }

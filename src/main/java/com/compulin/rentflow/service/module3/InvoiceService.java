@@ -1,17 +1,25 @@
 package com.compulin.rentflow.service.module3;
 
+import com.compulin.rentflow.dto.module3.InvoicePreview;
 import com.compulin.rentflow.entity.module3.Charge;
 import com.compulin.rentflow.entity.module3.Invoice;
+import com.compulin.rentflow.entity.module3.SecurityDeposit;
+import com.compulin.rentflow.exception.module3.DuplicateInvoiceException;
+import com.compulin.rentflow.exception.module3.InvoiceGenerationException;
+import com.compulin.rentflow.exception.module3.ResourceNotFoundException;
 import com.compulin.rentflow.repository.module3.ChargeRepository;
 import com.compulin.rentflow.repository.module3.InvoiceRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.compulin.rentflow.repository.module3.RentalBillingRepository;
+import com.compulin.rentflow.repository.module3.RentalBillingRepository.RentalItemLine;
+import com.compulin.rentflow.repository.module3.RentalBillingRepository.RentalPeriod;
+import com.compulin.rentflow.repository.module3.SecurityDepositRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.compulin.rentflow.exception.module3.DuplicateInvoiceException;
-import com.compulin.rentflow.exception.module3.ResourceNotFoundException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,70 +27,182 @@ public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
     private final ChargeRepository chargeRepository;
+    private final SecurityDepositRepository securityDepositRepository;
+    private final RentalBillingRepository rentalBillingRepository;
+    private final RentalChargeCalculator chargeCalculator;
 
-    @Autowired
-    public InvoiceService(InvoiceRepository invoiceRepository, ChargeRepository chargeRepository) {
+    public InvoiceService(InvoiceRepository invoiceRepository,
+                          ChargeRepository chargeRepository,
+                          SecurityDepositRepository securityDepositRepository,
+                          RentalBillingRepository rentalBillingRepository,
+                          RentalChargeCalculator chargeCalculator) {
         this.invoiceRepository = invoiceRepository;
         this.chargeRepository = chargeRepository;
+        this.securityDepositRepository = securityDepositRepository;
+        this.rentalBillingRepository = rentalBillingRepository;
+        this.chargeCalculator = chargeCalculator;
     }
 
-    // Generates a new invoice for a given rental ID with base initial values
-    @Transactional
-    public Invoice generateInvoiceForRental(Integer rentalId) {
+    // Builds the invoice breakdown without saving anything
+    public InvoicePreview previewInvoice(Integer rentalId) {
         // Make sure the rental exists before creating an invoice for it
-        if (invoiceRepository.countRentalById(rentalId) == 0) {
-            throw new ResourceNotFoundException("Rental not found with ID: " + rentalId);
-        }
+        RentalPeriod rental = rentalBillingRepository.findRentalPeriod(rentalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Rental not found with ID: " + rentalId));
 
         // Prevent duplicate invoices for the same rental
         invoiceRepository.findByRentalId(rentalId).ifPresent(existing -> {
-            throw new DuplicateInvoiceException("An invoice already exists for Rental ID: " + rentalId);
+            throw new DuplicateInvoiceException("An invoice already exists for Rental ID: " + rentalId
+                    + " (Invoice #" + existing.getInvoiceId() + ")");
         });
 
-        // Sum initial base charges (RENTAL type charges) attached to this rental
-        List<Charge> charges = chargeRepository.findByRentalId(rentalId);
-        BigDecimal subtotal = charges.stream()
-                .filter(c -> c.getChargeType() == Charge.ChargeType.RENTAL)
-                .map(Charge::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Rental information must be complete
+        if (rental.startDate() == null || rental.dueDate() == null) {
+            throw new InvoiceGenerationException("Rental #" + rentalId + " has no rental period recorded.");
+        }
+        List<RentalItemLine> items = rentalBillingRepository.findRentalItems(rentalId);
+        if (items.isEmpty()) {
+            throw new InvoiceGenerationException("Rental #" + rentalId + " has no rental items recorded.");
+        }
 
+        // Step 5 rate x quantity x rental period for each item
+        long days = chargeCalculator.rentalDays(rental.startDate(), rental.dueDate());
+        List<InvoicePreview.RentalLine> rentalLines = new ArrayList<>();
+        BigDecimal rentalCharges = BigDecimal.ZERO;
+        for (RentalItemLine item : items) {
+            long units;
+            try {
+                units = chargeCalculator.billableUnits(item.ratePeriod(), days);
+            } catch (IllegalArgumentException ex) {
+                throw new InvoiceGenerationException("Rental item #" + item.rentalItemId() + ": " + ex.getMessage());
+            }
+            BigDecimal amount = chargeCalculator.lineCharge(item.ratePerUnit(), item.quantity(), units);
+            rentalLines.add(new InvoicePreview.RentalLine(item.rentalItemId(), item.itemName(), item.quantity(),
+                    item.ratePerUnit(), item.ratePeriod(), units, amount));
+            rentalCharges = rentalCharges.add(amount);
+        }
+
+        // Step 6 late, damage, lost-item and other charges recorded for this rental but not billed yet
+        List<InvoicePreview.AdditionalLine> additionalLines = new ArrayList<>();
         BigDecimal additionalCharges = BigDecimal.ZERO;
-        BigDecimal totalAmount = subtotal.add(additionalCharges);
-        BigDecimal amountPaid = BigDecimal.ZERO;
-        BigDecimal balanceDue = totalAmount.subtract(amountPaid);
+        for (Charge charge : chargeRepository.findByRentalIdAndInvoiceIsNull(rentalId)) {
+            if (charge.getChargeType() == Charge.ChargeType.RENTAL) {
+                continue; // rental charges are calculated above, not taken from old charge rows
+            }
+            additionalLines.add(new InvoicePreview.AdditionalLine(charge.getChargeId(),
+                    charge.getChargeType().name(), charge.getChargeDescription(), charge.getAmount()));
+            additionalCharges = additionalCharges.add(charge.getAmount());
+        }
+
+        // Step 7 deduct the security deposit still held, without the total going below zero
+        BigDecimal depositHeld = heldDepositFor(rentalId);
+        BigDecimal grossTotal = rentalCharges.add(additionalCharges);
+        BigDecimal depositDeduction = depositHeld.min(grossTotal);
+
+        // Step 8: Total = Rental Charges + Additional Charges - Security Deposit Deduction
+        BigDecimal totalPayable = grossTotal.subtract(depositDeduction);
+
+        return new InvoicePreview(rentalId, rental.startDate(), rental.dueDate(), days,
+                rentalLines, additionalLines, rentalCharges, additionalCharges,
+                depositHeld, depositDeduction, totalPayable);
+    }
+
+    // Saves the invoice after the Rental Officer confirms it
+    @Transactional
+    public Invoice generateInvoiceForRental(Integer rentalId) {
+        InvoicePreview preview = previewInvoice(rentalId);
+        RentalPeriod rental = rentalBillingRepository.findRentalPeriod(rentalId).orElseThrow();
 
         Invoice invoice = new Invoice();
         invoice.setRentalId(rentalId);
         invoice.setInvoiceDate(LocalDate.now());
-        invoice.setDueDate(LocalDate.now().plusDays(14)); // Default 14-day payment terms
-        invoice.setSubtotal(subtotal);
-        invoice.setAdditionalCharges(additionalCharges);
-        invoice.setTotalAmount(totalAmount);
-        invoice.setAmountPaid(amountPaid);
-        invoice.setBalanceDue(balanceDue);
-        invoice.setInvoiceStatus(Invoice.InvoiceStatus.UNPAID);
+        invoice.setDueDate(LocalDate.now().plusDays(14));
+        invoice.setSubtotal(preview.rentalCharges());
+        invoice.setAdditionalCharges(preview.additionalCharges());
+        invoice.setTotalAmount(preview.totalPayable());
+        invoice.setAmountPaid(BigDecimal.ZERO);
+        invoice.setBalanceDue(preview.totalPayable());
+        invoice.setInvoiceStatus(preview.totalPayable().compareTo(BigDecimal.ZERO) == 0
+                ? Invoice.InvoiceStatus.PAID
+                : Invoice.InvoiceStatus.UNPAID);
 
         Invoice savedInvoice = invoiceRepository.save(invoice);
 
-        // Associate existing charges with this newly created invoice ID
-        for (Charge charge : charges) {
+        // Record one RENTAL charge per item so the receipt is itemized
+        for (InvoicePreview.RentalLine line : preview.rentalLines()) {
+            Charge charge = new Charge();
+            charge.setRentalId(rentalId);
+            charge.setRentalItemId(line.rentalItemId());
             charge.setInvoice(savedInvoice);
+            charge.setChargeType(Charge.ChargeType.RENTAL);
+            charge.setChargeDescription(line.itemName() + " (" + line.quantity() + " x Rs. "
+                    + line.ratePerUnit() + " x " + line.units() + " " + line.ratePeriod().toLowerCase() + ")");
+            charge.setAmount(line.amount());
+            charge.setChargeDate(LocalDateTime.now());
+            charge.setCreatedBy(rental.createdBy()); // the rental's staff member until login is integrated
             chargeRepository.save(charge);
         }
 
+        // Attach the additional charges to this invoice
+        for (InvoicePreview.AdditionalLine line : preview.additionalLines()) {
+            chargeRepository.findById(line.chargeId()).ifPresent(charge -> {
+                charge.setInvoice(savedInvoice);
+                chargeRepository.save(charge);
+            });
+        }
+
+        // Mark the deposit amount as used by this invoice, so it can't also be refunded
+        applyDepositToInvoice(rentalId, preview.depositDeduction());
+
         return savedInvoice;
+    }
+
+    // Records the deduction on the deposit: only the remainder can still be refunded.
+    // If nothing is left, the deposit is FORFEITED.
+    private void applyDepositToInvoice(Integer rentalId, BigDecimal deduction) {
+        if (deduction.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        securityDepositRepository.findByRentalId(rentalId)
+                .filter(d -> d.getDepositStatus() == SecurityDeposit.DepositStatus.HELD)
+                .ifPresent(deposit -> {
+                    BigDecimal newDeducted = orZero(deposit.getAmountDeducted()).add(deduction);
+                    deposit.setAmountDeducted(newDeducted);
+
+                    BigDecimal remaining = orZero(deposit.getDepositAmountReceived())
+                            .subtract(newDeducted)
+                            .subtract(orZero(deposit.getAmountRefunded()));
+                    if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
+                        deposit.setDepositStatus(SecurityDeposit.DepositStatus.FORFEITED);
+                    }
+                    securityDepositRepository.save(deposit);
+                });
+    }
+
+    // Deposit still held for the rental = received - already deducted - already refunded
+    private BigDecimal heldDepositFor(Integer rentalId) {
+        return securityDepositRepository.findByRentalId(rentalId)
+                .filter(d -> d.getDepositStatus() == SecurityDeposit.DepositStatus.HELD)
+                .map(d -> orZero(d.getDepositAmountReceived())
+                        .subtract(orZero(d.getAmountDeducted()))
+                        .subtract(orZero(d.getAmountRefunded()))
+                        .max(BigDecimal.ZERO))
+                .orElse(BigDecimal.ZERO);
+    }
+
+    private static BigDecimal orZero(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 
     // Retrieves an invoice by primary key
     public Invoice getInvoiceById(Integer id) {
         return invoiceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Invoice not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with ID: " + id));
     }
 
     // Retrieves an invoice by linked rental ID
     public Invoice getInvoiceByRentalId(Integer rentalId) {
         return invoiceRepository.findByRentalId(rentalId)
-                .orElseThrow(() -> new RuntimeException("No invoice found for Rental ID: " + rentalId));
+                .orElseThrow(() -> new ResourceNotFoundException("No invoice found for Rental ID: " + rentalId));
     }
 
     // Retrieves all invoices
@@ -106,21 +226,28 @@ public class InvoiceService {
                 .map(Charge::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal totalAmount = subtotal.add(additionalCharges);
-        BigDecimal balanceDue = totalAmount.subtract(invoice.getAmountPaid() != null ? invoice.getAmountPaid() : BigDecimal.ZERO);
+        // Keep the deposit deduction,
+        // but never let it push the total below zero
+        BigDecimal grossTotal = subtotal.add(additionalCharges);
+        BigDecimal depositDeduction = invoice.getDepositDeduction().min(grossTotal);
+        BigDecimal totalAmount = grossTotal.subtract(depositDeduction);
+        BigDecimal amountPaid = orZero(invoice.getAmountPaid());
+        BigDecimal balanceDue = totalAmount.subtract(amountPaid);
 
         invoice.setSubtotal(subtotal);
         invoice.setAdditionalCharges(additionalCharges);
         invoice.setTotalAmount(totalAmount);
         invoice.setBalanceDue(balanceDue);
 
-        // Auto-update status based on balance
-        if (balanceDue.compareTo(BigDecimal.ZERO) <= 0 && invoice.getAmountPaid().compareTo(BigDecimal.ZERO) > 0) {
-            invoice.setInvoiceStatus(Invoice.InvoiceStatus.PAID);
-        } else if (invoice.getAmountPaid().compareTo(BigDecimal.ZERO) > 0) {
-            invoice.setInvoiceStatus(Invoice.InvoiceStatus.PARTIALLY_PAID);
-        } else {
-            invoice.setInvoiceStatus(Invoice.InvoiceStatus.UNPAID);
+        // Auto-update status based on balance (a cancelled invoice stays cancelled)
+        if (invoice.getInvoiceStatus() != Invoice.InvoiceStatus.CANCELLED) {
+            if (balanceDue.compareTo(BigDecimal.ZERO) <= 0) {
+                invoice.setInvoiceStatus(Invoice.InvoiceStatus.PAID);
+            } else if (amountPaid.compareTo(BigDecimal.ZERO) > 0) {
+                invoice.setInvoiceStatus(Invoice.InvoiceStatus.PARTIALLY_PAID);
+            } else {
+                invoice.setInvoiceStatus(Invoice.InvoiceStatus.UNPAID);
+            }
         }
 
         return invoiceRepository.save(invoice);

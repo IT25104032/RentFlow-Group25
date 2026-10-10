@@ -22,6 +22,11 @@ public class BillingExceptionHandler {
         return build(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(InvoiceGenerationException.class)
+    public ResponseEntity<Map<String, Object>> handleInvoiceGeneration(InvoiceGenerationException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     private ResponseEntity<Map<String, Object>> build(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(Map.of(
                 "status", status.value(),
@@ -30,4 +35,3 @@ public class BillingExceptionHandler {
         ));
     }
 }
-
