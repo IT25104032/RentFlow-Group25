@@ -5,6 +5,7 @@ import com.compulin.rentflow.entity.module3.Payment;
 import com.compulin.rentflow.service.module3.PaymentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.compulin.rentflow.dto.module3.PaymentHistoryItem;
 
 import java.util.List;
 
@@ -35,5 +36,14 @@ public class PaymentController {
                 request.getReferenceNo()
         );
         return ResponseEntity.ok(processedPayment);
+    }
+
+    // Retrieves the payment history for one invoice
+    @GetMapping("/invoice/{invoiceId}")
+    public ResponseEntity<List<PaymentHistoryItem>> getPaymentHistory(@PathVariable Integer invoiceId) {
+        return ResponseEntity.ok(
+                paymentService.getPaymentsForInvoice(invoiceId).stream()
+                        .map(PaymentHistoryItem::from)
+                        .toList());
     }
 }
