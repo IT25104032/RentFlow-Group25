@@ -4,7 +4,10 @@ import com.compulin.rentflow.entity.module1.equipment_category;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,4 +51,28 @@ public interface equipment_category_repo
             @Param("companyId") Integer companyId,
             @Param("status") String status
     );
+
+
+    @Query(
+            value = "SELECT * FROM equipment_category " +
+                    "WHERE company_id = :companyId " +
+                    "ORDER BY category_name",
+            nativeQuery = true
+    )
+    List<equipment_category> findAllForCompany(
+            @Param("companyId") Integer companyId
+    );
+
+    @Query(
+            value = "SELECT * FROM equipment_category " +
+                    "WHERE category_id = :categoryId " +
+                    "AND company_id = :companyId",
+            nativeQuery = true
+    )
+    Optional<equipment_category> findOwnedCategory(
+            @Param("categoryId") Integer categoryId,
+            @Param("companyId") Integer companyId
+    );
+
+
 }

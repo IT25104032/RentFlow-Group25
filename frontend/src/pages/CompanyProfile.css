@@ -1,0 +1,124 @@
+
+.company-profile {
+    padding: 28px;
+    max-width: 1100px;
+    margin: 0 auto;
+    color: #1f2937;
+}
+
+.profile-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.profile-heading h2 {
+    margin: 0 0 8px;
+    font-size: 26px;
+}
+
+.profile-heading p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.profile-status {
+    background: #e5f3e8;
+    color: #216e39;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.profile-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.profile-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.profile-form input,
+.profile-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    font: inherit;
+    font-weight: 400;
+}
+
+.profile-form input:focus,
+.profile-form textarea:focus {
+    outline: 2px solid #bfdbfe;
+    border-color: #2563eb;
+}
+
+.profile-form input:disabled {
+    background: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.profile-form button {
+    justify-self: start;
+    border: none;
+    border-radius: 7px;
+    padding: 12px 20px;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.profile-form button:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.profile-message,
+.profile-error {
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    border-radius: 7px;
+}
+
+.profile-message {
+    background: #ecfdf3;
+    color: #166534;
+}
+
+.profile-error {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+@media (max-width: 650px) {
+    .company-profile {
+        padding: 16px;
+    }
+
+    .profile-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .profile-form {
+        grid-template-columns: 1fr;
+        padding: 16px;
+    }
+}

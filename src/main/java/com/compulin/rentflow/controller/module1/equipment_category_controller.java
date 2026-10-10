@@ -1,383 +1,322 @@
+
 package com.compulin.rentflow.controller.module1;
 
-import com.compulin.rentflow.entity.module1.company;
 import com.compulin.rentflow.entity.module1.equipment_category;
-import com.compulin.rentflow.repository.module1.CompanyRepo;
+import com.compulin.rentflow.security.Module1SessionAccess;
 import com.compulin.rentflow.service.module1.equipment_category_service;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/module1/equipment-categories")
-@CrossOrigin(
-        origins = "http://localhost:5173",
-        allowCredentials = "true"
-)
 public class equipment_category_controller {
 
     private final equipment_category_service categoryService;
-    private final CompanyRepo companyRepo;
 
     public equipment_category_controller(
-            equipment_category_service categoryService,
-            CompanyRepo companyRepo
-    ) {
+            equipment_category_service categoryService) {
         this.categoryService = categoryService;
-        this.companyRepo = companyRepo;
     }
 
-    private boolean canManageCategories(HttpSession session) {
+    private ResponseEntity<?> checkAccess(HttpSession session) {
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
 
-        String role =
-                (String) session.getAttribute("RENTFLOW_ROLE");
+        if (companyId == null) {
+            return ResponseEntity.status(401)
+                    .body(Map.of(
+                            "message",
+                            "Please log in first."
+                    ));
+        }
 
-        return "COMPANY_ADMIN".equalsIgnoreCase(role)
-                || "RENTAL_OFFICER".equalsIgnoreCase(role);
+        if (!Module1SessionAccess.hasAnyRole(
+                session,
+                "COMPANY_ADMIN",
+                "RENTAL_OFFICER")) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "You do not have permission to access categories."
+                    ));
+        }
+
+        return null;
     }
 
-    private Integer getCompanyId(HttpSession session) {
+    private ResponseEntity<Map<String, String>> badRequest(
+            Exception exception) {
+        String message = exception.getMessage();
 
-        return (Integer) session.getAttribute(
-                "RENTFLOW_COMPANY_ID"
-        );
+        if (message == null || message.isBlank()) {
+            message = "Unable to process the category request.";
+        }
+
+        return ResponseEntity.badRequest()
+                .body(Map.of("message", message));
     }
 
     @GetMapping
     public ResponseEntity<?> getCategories(
-            HttpSession session
-    ) {
+            HttpSession session) {
 
-        if (!canManageCategories(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
+        ResponseEntity<?> accessError = checkAccess(session);
+        if (accessError != null) {
+            return accessError;
         }
 
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
-        return ResponseEntity.ok(
-                categoryService.getCategoriesByCompany(
-                        companyId
-                )
-        );
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getCategoryById(
-            @PathVariable Integer id,
-            HttpSession session
-    ) {
-
-        if (!canManageCategories(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
-        }
-
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
 
         try {
-
             return ResponseEntity.ok(
-                    categoryService.getCategoryById(
-                            id,
-                            companyId
-                    )
+                    categoryService.getCategoriesByCompany(companyId)
             );
-
-        } catch (RuntimeException ex) {
-
-            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return badRequest(e);
         }
     }
 
     @GetMapping("/search")
     public ResponseEntity<?> searchCategories(
             @RequestParam String name,
-            HttpSession session
-    ) {
+            HttpSession session) {
 
-        if (!canManageCategories(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
+        ResponseEntity<?> accessError = checkAccess(session);
+        if (accessError != null) {
+            return accessError;
         }
 
-        Integer companyId = getCompanyId(session);
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
 
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
+        try {
+            return ResponseEntity.ok(
+                    categoryService.searchCategories(
+                            companyId,
+                            name
+                    )
+            );
+        } catch (Exception e) {
+            return badRequest(e);
         }
-
-        return ResponseEntity.ok(
-                categoryService.searchCategories(
-                        companyId,
-                        name
-                )
-        );
     }
 
     @GetMapping("/status/{status}")
     public ResponseEntity<?> getCategoriesByStatus(
             @PathVariable String status,
-            HttpSession session
-    ) {
+            HttpSession session) {
 
-        if (!canManageCategories(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
+        ResponseEntity<?> accessError = checkAccess(session);
+        if (accessError != null) {
+            return accessError;
         }
 
-        Integer companyId = getCompanyId(session);
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
 
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
+        try {
+            return ResponseEntity.ok(
+                    categoryService.getCategoriesByStatus(
+                            companyId,
+                            status
+                    )
+            );
+        } catch (Exception e) {
+            return badRequest(e);
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getCategory(
+            @PathVariable Integer id,
+            HttpSession session) {
+
+        ResponseEntity<?> accessError = checkAccess(session);
+        if (accessError != null) {
+            return accessError;
         }
 
-        return ResponseEntity.ok(
-                categoryService.getCategoriesByStatus(
-                        companyId,
-                        status
-                )
-        );
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
+
+        try {
+            Optional<equipment_category> category =
+                    categoryService.getCategoryById(id, companyId);
+
+            if (category.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok(category.get());
+
+        } catch (Exception e) {
+            return badRequest(e);
+        }
     }
 
     @PostMapping
     public ResponseEntity<?> createCategory(
-            @RequestBody equipment_category newCategory,
-            HttpSession session
-    ) {
+            @RequestBody Map<String, Object> request,
+            HttpSession session) {
 
-        if (!canManageCategories(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
+        ResponseEntity<?> accessError = checkAccess(session);
+        if (accessError != null) {
+            return accessError;
         }
 
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
 
         try {
+            String categoryName =
+                    (String) request.get("categoryName");
 
-            company company =
-                    companyRepo.findById(companyId)
-                            .orElseThrow(() ->
-                                    new RuntimeException(
-                                            "Company not found"
-                                    )
-                            );
+            String description =
+                    (String) request.get("catDescription");
 
-            newCategory.setCompany(company);
+            if (categoryName == null || categoryName.isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of(
+                                "message",
+                                "Category name is required."
+                        ));
+            }
 
-            equipment_category saved =
+            return ResponseEntity.ok(
                     categoryService.createCategory(
-                            newCategory
-                    );
+                            companyId,
+                            categoryName,
+                            description
+                    )
+            );
 
-            return ResponseEntity.ok(saved);
-
-        } catch (RuntimeException ex) {
-
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            ex.getMessage()
-                    ));
+        } catch (Exception e) {
+            return badRequest(e);
         }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCategory(
             @PathVariable Integer id,
-            @RequestBody equipment_category details,
-            HttpSession session
-    ) {
+            @RequestBody Map<String, Object> request,
+            HttpSession session) {
 
-        if (!canManageCategories(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
+        ResponseEntity<?> accessError = checkAccess(session);
+        if (accessError != null) {
+            return accessError;
         }
 
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
 
         try {
+            String categoryName =
+                    (String) request.get("categoryName");
 
-            equipment_category updated =
+            String description =
+                    (String) request.get("catDescription");
+
+            String status =
+                    (String) request.get("catStatus");
+
+            return ResponseEntity.ok(
                     categoryService.updateCategory(
                             id,
                             companyId,
-                            details
-                    );
-
-            return ResponseEntity.ok(updated);
-
-        } catch (RuntimeException ex) {
-
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            ex.getMessage()
-                    ));
-        }
-    }
-
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<?> updateStatus(
-            @PathVariable Integer id,
-            @RequestBody Map<String, String> body,
-            HttpSession session
-    ) {
-
-        if (!canManageCategories(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
-        }
-
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
-        String status = body.get("status");
-
-        if (status == null || status.isBlank()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            "Status is required"
-                    ));
-        }
-
-        try {
-
-            return ResponseEntity.ok(
-                    categoryService.updateStatus(
-                            id,
-                            companyId,
+                            categoryName,
+                            description,
                             status
                     )
             );
 
-        } catch (RuntimeException ex) {
-
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            ex.getMessage()
-                    ));
+        } catch (Exception e) {
+            return badRequest(e);
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCategory(
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateStatus(
             @PathVariable Integer id,
-            HttpSession session
-    ) {
+            @RequestParam String status,
+            HttpSession session) {
 
-        if (!canManageCategories(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
+        ResponseEntity<?> accessError = checkAccess(session);
+        if (accessError != null) {
+            return accessError;
         }
 
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
 
         try {
+            equipment_category updated =
+                    categoryService.updateStatus(
+                            id,
+                            companyId,
+                            status
+                    );
 
-            categoryService.deleteCategory(
-                    id,
-                    companyId
-            );
+            return ResponseEntity.ok(updated);
 
+        } catch (Exception e) {
+            return badRequest(e);
+        }
+    }
+
+    @PutMapping("/{id}/deactivate")
+    public ResponseEntity<?> deactivateCategory(
+            @PathVariable Integer id,
+            HttpSession session) {
+
+        ResponseEntity<?> accessError = checkAccess(session);
+        if (accessError != null) {
+            return accessError;
+        }
+
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
+
+        try {
             return ResponseEntity.ok(
-                    Map.of(
-                            "message",
-                            "Category deactivated successfully"
+                    categoryService.deactivateCategory(
+                            id,
+                            companyId
                     )
             );
 
-        } catch (RuntimeException ex) {
+        } catch (Exception e) {
+            return badRequest(e);
+        }
+    }
 
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            ex.getMessage()
-                    ));
+    @PutMapping("/{id}/activate")
+    public ResponseEntity<?> activateCategory(
+            @PathVariable Integer id,
+            HttpSession session) {
+
+        ResponseEntity<?> accessError = checkAccess(session);
+        if (accessError != null) {
+            return accessError;
+        }
+
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
+
+        try {
+            return ResponseEntity.ok(
+                    categoryService.activateCategory(
+                            id,
+                            companyId
+                    )
+            );
+
+        } catch (Exception e) {
+            return badRequest(e);
         }
     }
 }

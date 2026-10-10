@@ -1,20 +1,26 @@
 package com.compulin.rentflow.service.module1;
 
+import com.compulin.rentflow.entity.module1.company;
 import com.compulin.rentflow.entity.module1.equipment_category;
+import com.compulin.rentflow.repository.module1.CompanyRepo;
 import com.compulin.rentflow.repository.module1.equipment_category_repo;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class equipment_category_service {
 
     private final equipment_category_repo categoryRepo;
+    private final CompanyRepo companyRepo;
 
     public equipment_category_service(
-            equipment_category_repo categoryRepo
+            equipment_category_repo categoryRepo,
+            CompanyRepo companyRepo
     ) {
         this.categoryRepo = categoryRepo;
+        this.companyRepo = companyRepo;
     }
 
     public List<equipment_category> getCategoriesByCompany(
@@ -23,17 +29,13 @@ public class equipment_category_service {
         return categoryRepo.findByCompanyId(companyId);
     }
 
-    public equipment_category getCategoryById(
+    public Optional<equipment_category> getCategoryById(
             Integer categoryId,
             Integer companyId
     ) {
         return categoryRepo.findByIdAndCompanyId(
                 categoryId,
                 companyId
-        ).orElseThrow(() ->
-                new RuntimeException(
-                        "Category not found"
-                )
         );
     }
 
@@ -58,30 +60,55 @@ public class equipment_category_service {
     }
 
     public equipment_category createCategory(
-            equipment_category newCategory
+            Integer companyId,
+            String categoryName,
+            String description
     ) {
 
-        if (newCategory.getCategoryName() == null ||
-                newCategory.getCategoryName().isBlank()) {
+        if (categoryName == null ||
+                categoryName.trim().isEmpty()) {
 
             throw new RuntimeException(
                     "Category name is required"
             );
         }
 
-        if (newCategory.getCat_status() == null ||
-                newCategory.getCat_status().isBlank()) {
+        company existingCompany =
+                companyRepo.findById(companyId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Company not found"
+                                )
+                        );
 
-            newCategory.setCat_status("ACTIVE");
-        }
+        equipment_category category =
+                new equipment_category();
 
-        return categoryRepo.save(newCategory);
+        category.setCategoryName(
+                categoryName.trim()
+        );
+
+        category.setCatDescription(
+                description
+        );
+
+        category.setCat_status(
+                "ACTIVE"
+        );
+
+        category.setCompany(
+                existingCompany
+        );
+
+        return categoryRepo.save(category);
     }
 
     public equipment_category updateCategory(
             Integer categoryId,
             Integer companyId,
-            equipment_category categoryDetails
+            String categoryName,
+            String description,
+            String status
     ) {
 
         equipment_category existing =
@@ -90,27 +117,31 @@ public class equipment_category_service {
                         companyId
                 ).orElseThrow(() ->
                         new RuntimeException(
-                                "Category not found"
+                                "Equipment category not found"
                         )
                 );
 
-        if (categoryDetails.getCategoryName() != null &&
-                !categoryDetails.getCategoryName().isBlank()) {
+        if (categoryName == null ||
+                categoryName.trim().isEmpty()) {
 
-            existing.setCategoryName(
-                    categoryDetails.getCategoryName()
+            throw new RuntimeException(
+                    "Category name is required"
             );
         }
 
-        existing.setCatDescription(
-                categoryDetails.getCatDescription()
+        existing.setCategoryName(
+                categoryName.trim()
         );
 
-        if (categoryDetails.getCat_status() != null &&
-                !categoryDetails.getCat_status().isBlank()) {
+        existing.setCatDescription(
+                description
+        );
+
+        if (status != null &&
+                !status.trim().isEmpty()) {
 
             existing.setCat_status(
-                    categoryDetails.getCat_status()
+                    status.trim().toUpperCase()
             );
         }
 
@@ -123,38 +154,59 @@ public class equipment_category_service {
             String status
     ) {
 
+        if (status == null ||
+                status.trim().isEmpty()) {
+
+            throw new RuntimeException(
+                    "Status is required"
+            );
+        }
+
+        String newStatus =
+                status.trim().toUpperCase();
+
+        if (!newStatus.equals("ACTIVE") &&
+                !newStatus.equals("INACTIVE")) {
+
+            throw new RuntimeException(
+                    "Invalid category status"
+            );
+        }
+
         equipment_category existing =
                 categoryRepo.findByIdAndCompanyId(
                         categoryId,
                         companyId
                 ).orElseThrow(() ->
                         new RuntimeException(
-                                "Category not found"
+                                "Equipment category not found"
                         )
                 );
 
-        existing.setCat_status(status);
+        existing.setCat_status(newStatus);
 
         return categoryRepo.save(existing);
     }
 
-    public void deleteCategory(
+    public equipment_category deactivateCategory(
             Integer categoryId,
             Integer companyId
     ) {
+        return updateStatus(
+                categoryId,
+                companyId,
+                "INACTIVE"
+        );
+    }
 
-        equipment_category existing =
-                categoryRepo.findByIdAndCompanyId(
-                        categoryId,
-                        companyId
-                ).orElseThrow(() ->
-                        new RuntimeException(
-                                "Category not found"
-                        )
-                );
-
-        existing.setCat_status("INACTIVE");
-
-        categoryRepo.save(existing);
+    public equipment_category activateCategory(
+            Integer categoryId,
+            Integer companyId
+    ) {
+        return updateStatus(
+                categoryId,
+                companyId,
+                "ACTIVE"
+        );
     }
 }
