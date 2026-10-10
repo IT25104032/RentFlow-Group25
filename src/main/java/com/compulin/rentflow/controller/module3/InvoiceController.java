@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.compulin.rentflow.dto.module3.InvoicePreview;
+import com.compulin.rentflow.dto.module3.ExtensionPreview;
 
 import java.util.List;
 
@@ -80,5 +81,17 @@ public class InvoiceController {
     @GetMapping("/preview/{rentalId}")
     public ResponseEntity<InvoicePreview> previewInvoice(@PathVariable Integer rentalId) {
         return ResponseEntity.ok(invoiceService.previewInvoice(rentalId));
+    }
+
+    // Shows previous vs updated amounts after the rental is extended
+    @GetMapping("/{id}/extension-preview")
+    public ResponseEntity<ExtensionPreview> previewExtension(@PathVariable Integer id) {
+        return ResponseEntity.ok(invoiceService.previewExtensionUpdate(id));
+    }
+
+    // Saves the recalculated charges for the extended rental period
+    @PutMapping("/{id}/apply-extension")
+    public ResponseEntity<Invoice> applyExtension(@PathVariable Integer id) {
+        return ResponseEntity.ok(invoiceService.applyExtensionUpdate(id));
     }
 }

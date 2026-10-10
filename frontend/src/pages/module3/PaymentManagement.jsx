@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { getInvoices, getChargesByInvoice, previewInvoice } from '../../services/module3/paymentApi';
+import { getInvoices, getChargesByInvoice, previewInvoice, previewExtension } from '../../services/module3/paymentApi';
 import InvoicePreviewModal from '../../components/module3/InvoicePreviewModal';
 import PaymentModal from '../../components/module3/PaymentModal';
 import AddChargeModal from '../../components/module3/AddChargeModal';
 import '../../styles/module3/PaymentManagement.css';
 import PaymentHistoryModal from '../../components/module3/PaymentHistoryModal';
+import ExtensionUpdateModal from '../../components/module3/ExtensionUpdateModal';
 
 export default function PaymentManagement() {
     const [invoices, setInvoices] = useState([]);
@@ -14,6 +15,7 @@ export default function PaymentManagement() {
     const [chargeInvoice, setChargeInvoice] = useState(null);
     const [invoicePreview, setInvoicePreview] = useState(null);
     const [historyInvoice, setHistoryInvoice] = useState(null);
+    const [extensionPreview, setExtensionPreview] = useState(null);
     // State for generating invoice
     const [rentalIdInput, setRentalIdInput] = useState('');
     const [generating, setGenerating] = useState(false);
@@ -45,6 +47,15 @@ export default function PaymentManagement() {
             setError(err.message || 'Error generating invoice');
         } finally {
             setGenerating(false);
+        }
+    };
+
+    const handleExtension = async (inv) => {
+        setError(null);
+        try {
+            setExtensionPreview(await previewExtension(inv.invoiceId));
+        } catch (err) {
+            setError(err.message);
         }
     };
 
@@ -206,6 +217,9 @@ export default function PaymentManagement() {
                                     <button className="btn-pay" style={{ backgroundColor: '#17a2b8' }} onClick={() => setChargeInvoice(inv)}>+ Fee</button>
                                     <button className="btn-print" onClick={() => handlePrint(inv)}>🖨️️ Print</button>
                                     <button className="btn-pay" style={{ backgroundColor: '#6f42c1' }} onClick={() => setHistoryInvoice(inv)}>History</button>
+                                    {inv.invoiceStatus !== 'CANCELLED' && (
+                                        <button className="btn-pay" style={{ backgroundColor: '#fd7e14' }} onClick={() => handleExtension(inv)}>Extend</button>
+                                    )}
                                 </div>
                             </td>
                         </tr>
@@ -242,6 +256,14 @@ export default function PaymentManagement() {
                 <PaymentHistoryModal
                     invoice={historyInvoice}
                     onClose={() => setHistoryInvoice(null)}
+                />
+            )}
+
+            {extensionPreview && (
+                <ExtensionUpdateModal
+                    preview={extensionPreview}
+                    onClose={() => setExtensionPreview(null)}
+                    onSuccess={() => { setExtensionPreview(null); fetchList(); }}
                 />
             )}
         </div>
