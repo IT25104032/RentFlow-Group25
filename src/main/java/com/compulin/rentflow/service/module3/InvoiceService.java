@@ -7,6 +7,8 @@ import com.compulin.rentflow.repository.module3.InvoiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.compulin.rentflow.exception.module3.DuplicateInvoiceException;
+import com.compulin.rentflow.exception.module3.ResourceNotFoundException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,13 +26,17 @@ public class InvoiceService {
         this.chargeRepository = chargeRepository;
     }
 
-     //Generates a new invoice for a given rental ID with base initial values
-
+    // Generates a new invoice for a given rental ID with base initial values
     @Transactional
     public Invoice generateInvoiceForRental(Integer rentalId) {
+        // Make sure the rental exists before creating an invoice for it
+        if (invoiceRepository.countRentalById(rentalId) == 0) {
+            throw new ResourceNotFoundException("Rental not found with ID: " + rentalId);
+        }
+
         // Prevent duplicate invoices for the same rental
         invoiceRepository.findByRentalId(rentalId).ifPresent(existing -> {
-            throw new RuntimeException("An invoice already exists for Rental ID: " + rentalId);
+            throw new DuplicateInvoiceException("An invoice already exists for Rental ID: " + rentalId);
         });
 
         // Sum initial base charges (RENTAL type charges) attached to this rental
@@ -68,29 +74,23 @@ public class InvoiceService {
     }
 
     // Retrieves an invoice by primary key
-
     public Invoice getInvoiceById(Integer id) {
         return invoiceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Invoice not found with ID: " + id));
     }
 
     // Retrieves an invoice by linked rental ID
-
     public Invoice getInvoiceByRentalId(Integer rentalId) {
         return invoiceRepository.findByRentalId(rentalId)
                 .orElseThrow(() -> new RuntimeException("No invoice found for Rental ID: " + rentalId));
     }
 
     // Retrieves all invoices
-
     public List<Invoice> getAllInvoices() {
-
         return invoiceRepository.findAll();
     }
 
-
     // Recalculates subtotal, additional charges, total amount, and balance due when fees are updated
-
     @Transactional
     public Invoice recalculateInvoiceTotals(Integer invoiceId) {
         Invoice invoice = getInvoiceById(invoiceId);
@@ -107,7 +107,7 @@ public class InvoiceService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalAmount = subtotal.add(additionalCharges);
-        BigDecimal balanceDue = totalAmount.subtract(invoice.getAmountPaid());
+        BigDecimal balanceDue = totalAmount.subtract(invoice.getAmountPaid() != null ? invoice.getAmountPaid() : BigDecimal.ZERO);
 
         invoice.setSubtotal(subtotal);
         invoice.setAdditionalCharges(additionalCharges);
@@ -126,9 +126,7 @@ public class InvoiceService {
         return invoiceRepository.save(invoice);
     }
 
-
     // Cancels an existing invoice
-
     @Transactional
     public Invoice cancelInvoice(Integer invoiceId) {
         Invoice invoice = getInvoiceById(invoiceId);

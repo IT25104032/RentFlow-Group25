@@ -26,7 +26,7 @@ export default function AddChargeModal({ invoice, onClose, onSuccess }) {
                 chargeType: chargeType,
                 chargeDescription: description,
                 amount: parseFloat(amount),
-                chargeDate: new Date().toISOString(),
+                chargeDate: new Date().toISOString().substring(0, 19),
                 createdBy: 1 // Default system user ID until Auth module integration
             };
 
