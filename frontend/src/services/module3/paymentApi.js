@@ -95,3 +95,21 @@ export const getPaymentHistory = async (invoiceId) => {
     if (!response.ok) throw new Error('Failed to load payment history.');
     return response.json();
 };
+
+export const previewExtension = async (invoiceId) => {
+    const response = await fetch(`http://localhost:8081/api/v1/invoices/${invoiceId}/extension-preview`);
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to load extension preview.');
+    }
+    return response.json();
+};
+
+export const applyExtension = async (invoiceId) => {
+    const response = await fetch(`http://localhost:8081/api/v1/invoices/${invoiceId}/apply-extension`, { method: 'PUT' });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to update charges.');
+    }
+    return response.json();
+};
