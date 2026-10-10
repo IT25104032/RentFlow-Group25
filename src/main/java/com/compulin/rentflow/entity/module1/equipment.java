@@ -28,7 +28,7 @@ public class equipment {
      * equipment.category_id
      * -> equipment_category.category_id
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id", nullable = false)
     private equipment_category category;
 
@@ -73,12 +73,12 @@ public class equipment {
 
 
     @Column(
-            name = "refundable_deposit_per_unit",
+            name = "security_deposit_per_unit",
             nullable = false,
             precision = 12,
             scale = 2
     )
-    private BigDecimal refundableDepositPerUnit;
+    private BigDecimal securityDepositPerUnit;
 
 
     @Column(
@@ -195,16 +195,16 @@ public class equipment {
 
 
     public BigDecimal
-    getRefundable_deposit_per_unit() {
+    getSecurity_deposit_per_unit() {
 
-        return refundableDepositPerUnit;
+        return securityDepositPerUnit;
     }
 
-    public void setRefundable_deposit_per_unit(
-            BigDecimal refundable_deposit_per_unit) {
+    public void setSecurity_deposit_per_unit(
+            BigDecimal security_deposit_per_unit) {
 
-        this.refundableDepositPerUnit =
-                refundable_deposit_per_unit;
+        this.securityDepositPerUnit =
+                security_deposit_per_unit;
     }
 
 

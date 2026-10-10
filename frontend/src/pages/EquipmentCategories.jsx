@@ -196,10 +196,6 @@ function EquipmentCategories({ user }) {
             category.category_name ??
             category.categoryName
 
-        const description =
-            category.cat_description ??
-            category.catDescription
-
         const confirmed = window.confirm(
             `Deactivate category "${name}"?`
         )
@@ -210,18 +206,10 @@ function EquipmentCategories({ user }) {
 
         try {
             const response = await fetch(
-                `${API_URL}/${id}`,
+                `${API_URL}/${id}/deactivate`,
                 {
                     method: 'PUT',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        categoryName: name,
-                        catDescription: description || '',
-                        catStatus: 'INACTIVE'
-                    })
+                    credentials: 'include'
                 }
             )
 
@@ -259,28 +247,12 @@ function EquipmentCategories({ user }) {
             category.category_id ??
             category.categoryId
 
-        const name =
-            category.category_name ??
-            category.categoryName
-
-        const description =
-            category.cat_description ??
-            category.catDescription
-
         try {
             const response = await fetch(
-                `${API_URL}/${id}`,
+                `${API_URL}/${id}/activate`,
                 {
                     method: 'PUT',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        categoryName: name,
-                        catDescription: description || '',
-                        catStatus: 'ACTIVE'
-                    })
+                    credentials: 'include'
                 }
             )
 

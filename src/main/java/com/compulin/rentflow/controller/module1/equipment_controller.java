@@ -6,15 +6,14 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/module1/equipment")
-@CrossOrigin(
-        origins = "http://localhost:5173",
-        allowCredentials = "true"
-)
 public class equipment_controller {
 
     private final equipment_service equipmentService;
@@ -25,56 +24,253 @@ public class equipment_controller {
         this.equipmentService = equipmentService;
     }
 
-    private boolean canManageEquipment(
-            HttpSession session
-    ) {
-
-        String role =
-                (String) session.getAttribute(
-                        "RENTFLOW_ROLE"
-                );
-
-        return "COMPANY_ADMIN".equalsIgnoreCase(role)
-                || "RENTAL_OFFICER".equalsIgnoreCase(role);
-    }
-
     private Integer getCompanyId(
             HttpSession session
     ) {
 
-        return (Integer) session.getAttribute(
-                "RENTFLOW_COMPANY_ID"
+        Object companyId =
+                session.getAttribute(
+                        "RENTFLOW_COMPANY_ID"
+                );
+
+        if (companyId == null) {
+            throw new RuntimeException(
+                    "No company is associated with the logged-in user"
+            );
+        }
+
+        return Integer.valueOf(
+                companyId.toString()
+        );
+    }
+
+    private Map<String, Object> toResponse(
+            equipment item
+    ) {
+
+        Map<String, Object> response =
+                new HashMap<>();
+
+        response.put(
+                "equipmentId",
+                item.getEquipment_id()
+        );
+
+        response.put(
+                "itemName",
+                item.getItem_name()
+        );
+
+        response.put(
+                "itemCode",
+                item.getItem_code()
+        );
+
+        response.put(
+                "equDescription",
+                item.getEqu_description()
+        );
+
+        response.put(
+                "rentalRate",
+                item.getRental_rate()
+        );
+
+        response.put(
+                "ratePeriod",
+                item.getRate_period()
+        );
+
+        response.put(
+                "securityDepositPerUnit",
+                item.getSecurity_deposit_per_unit()
+        );
+
+        response.put(
+                "totalQuantity",
+                item.getTotal_quantity()
+        );
+
+        response.put(
+                "availableQuantity",
+                item.getAvailable_quantity()
+        );
+
+        response.put(
+                "equStatus",
+                item.getEqu_status()
+        );
+
+        response.put(
+                "createdAt",
+                item.getCreated_at()
+        );
+
+        if (item.getCategory() != null) {
+
+            response.put(
+                    "categoryId",
+                    item.getCategory()
+                            .getCategory_id()
+            );
+
+            response.put(
+                    "categoryName",
+                    item.getCategory()
+                            .getCategoryName()
+            );
+        }
+
+        return response;
+    }
+
+    private equipment fromRequest(
+            Map<String, Object> request
+    ) {
+
+        equipment item =
+                new equipment();
+
+        item.setItem_name(
+                (String) request.get(
+                        "itemName"
+                )
+        );
+
+        item.setItem_code(
+                (String) request.get(
+                        "itemCode"
+                )
+        );
+
+        item.setEqu_description(
+                (String) request.get(
+                        "equDescription"
+                )
+        );
+
+        item.setRental_rate(
+                toBigDecimal(
+                        request.get(
+                                "rentalRate"
+                        )
+                )
+        );
+
+        item.setRate_period(
+                (String) request.get(
+                        "ratePeriod"
+                )
+        );
+
+        item.setSecurity_deposit_per_unit(
+                toBigDecimal(
+                        request.get(
+                                "securityDepositPerUnit"
+                        )
+                )
+        );
+
+        item.setTotal_quantity(
+                toInteger(
+                        request.get(
+                                "totalQuantity"
+                        )
+                )
+        );
+
+        item.setAvailable_quantity(
+                toInteger(
+                        request.get(
+                                "availableQuantity"
+                        )
+                )
+        );
+
+        item.setEqu_status(
+                (String) request.get(
+                        "equStatus"
+                )
+        );
+
+        return item;
+    }
+
+    private BigDecimal toBigDecimal(
+            Object value
+    ) {
+
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof Number number) {
+
+            return BigDecimal.valueOf(
+                    number.doubleValue()
+            );
+        }
+
+        return new BigDecimal(
+                value.toString()
+        );
+    }
+
+    private Integer toInteger(
+            Object value
+    ) {
+
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+
+        return Integer.valueOf(
+                value.toString()
         );
     }
 
     @GetMapping
-    public ResponseEntity<?> getEquipment(
+    public ResponseEntity<?> getAllEquipment(
             HttpSession session
     ) {
 
-        if (!canManageEquipment(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
+        try {
+
+            Integer companyId =
+                    getCompanyId(session);
+
+            List<equipment> equipmentList =
+                    equipmentService
+                            .getEquipmentByCompany(
+                                    companyId
+                            );
+
+            List<Map<String, Object>> response =
+                    new ArrayList<>();
+
+            for (equipment item : equipmentList) {
+                response.add(
+                        toResponse(item)
+                );
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+
+            return ResponseEntity
+                    .status(401)
+                    .body(
+                            Map.of(
+                                    "message",
+                                    e.getMessage()
+                            )
+                    );
         }
-
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
-        return ResponseEntity.ok(
-                equipmentService.getEquipmentByCompany(
-                        companyId
-                )
-        );
     }
 
     @GetMapping("/{id}")
@@ -83,36 +279,37 @@ public class equipment_controller {
             HttpSession session
     ) {
 
-        if (!canManageEquipment(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
-        }
-
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
         try {
 
-            return ResponseEntity.ok(
-                    equipmentService.getEquipmentById(
+            Integer companyId =
+                    getCompanyId(session);
+
+            return equipmentService
+                    .getEquipmentById(
                             id,
                             companyId
                     )
-            );
+                    .map(item ->
+                            ResponseEntity.ok(
+                                    toResponse(item)
+                            )
+                    )
+                    .orElseGet(() ->
+                            ResponseEntity
+                                    .notFound()
+                                    .build()
+                    );
 
-        } catch (RuntimeException ex) {
+        } catch (Exception e) {
 
-            return ResponseEntity.notFound().build();
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            Map.of(
+                                    "message",
+                                    e.getMessage()
+                            )
+                    );
         }
     }
 
@@ -122,30 +319,40 @@ public class equipment_controller {
             HttpSession session
     ) {
 
-        if (!canManageEquipment(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
+        try {
+
+            Integer companyId =
+                    getCompanyId(session);
+
+            List<equipment> equipmentList =
+                    equipmentService
+                            .searchEquipment(
+                                    companyId,
+                                    name
+                            );
+
+            List<Map<String, Object>> response =
+                    new ArrayList<>();
+
+            for (equipment item : equipmentList) {
+                response.add(
+                        toResponse(item)
+                );
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            Map.of(
+                                    "message",
+                                    e.getMessage()
+                            )
+                    );
         }
-
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
-        return ResponseEntity.ok(
-                equipmentService.searchEquipment(
-                        companyId,
-                        name
-                )
-        );
     }
 
     @GetMapping("/category/{categoryId}")
@@ -154,30 +361,40 @@ public class equipment_controller {
             HttpSession session
     ) {
 
-        if (!canManageEquipment(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
+        try {
+
+            Integer companyId =
+                    getCompanyId(session);
+
+            List<equipment> equipmentList =
+                    equipmentService
+                            .getEquipmentByCategory(
+                                    companyId,
+                                    categoryId
+                            );
+
+            List<Map<String, Object>> response =
+                    new ArrayList<>();
+
+            for (equipment item : equipmentList) {
+                response.add(
+                        toResponse(item)
+                );
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            Map.of(
+                                    "message",
+                                    e.getMessage()
+                            )
+                    );
         }
-
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
-        return ResponseEntity.ok(
-                equipmentService.getEquipmentByCategory(
-                        companyId,
-                        categoryId
-                )
-        );
     }
 
     @GetMapping("/status/{status}")
@@ -186,30 +403,40 @@ public class equipment_controller {
             HttpSession session
     ) {
 
-        if (!canManageEquipment(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
+        try {
+
+            Integer companyId =
+                    getCompanyId(session);
+
+            List<equipment> equipmentList =
+                    equipmentService
+                            .getEquipmentByStatus(
+                                    companyId,
+                                    status
+                            );
+
+            List<Map<String, Object>> response =
+                    new ArrayList<>();
+
+            for (equipment item : equipmentList) {
+                response.add(
+                        toResponse(item)
+                );
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            Map.of(
+                                    "message",
+                                    e.getMessage()
+                            )
+                    );
         }
-
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
-        return ResponseEntity.ok(
-                equipmentService.getEquipmentByStatus(
-                        companyId,
-                        status
-                )
-        );
     }
 
     @PostMapping
@@ -218,122 +445,49 @@ public class equipment_controller {
             HttpSession session
     ) {
 
-        if (!canManageEquipment(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
-        }
-
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
         try {
 
-            equipment newEquipment =
-                    new equipment();
-
-            newEquipment.setItem_name(
-                    (String) request.get("item_name")
-            );
-
-            newEquipment.setItem_code(
-                    (String) request.get("item_code")
-            );
-
-            newEquipment.setEqu_description(
-                    (String) request.get("equ_description")
-            );
-
-            if (request.get("rental_rate") != null) {
-                newEquipment.setRental_rate(
-                        new java.math.BigDecimal(
-                                request
-                                        .get("rental_rate")
-                                        .toString()
-                        )
-                );
-            }
-
-            newEquipment.setRate_period(
-                    (String) request.get("rate_period")
-            );
-
-            if (request.get(
-                    "refundable_deposit_per_unit"
-            ) != null) {
-
-                newEquipment
-                        .setRefundable_deposit_per_unit(
-                                new java.math.BigDecimal(
-                                        request
-                                                .get(
-                                                        "refundable_deposit_per_unit"
-                                                )
-                                                .toString()
-                                )
-                        );
-            }
-
-            if (request.get("total_quantity") != null) {
-
-                newEquipment.setTotal_quantity(
-                        Integer.parseInt(
-                                request
-                                        .get("total_quantity")
-                                        .toString()
-                        )
-                );
-            }
-
-            if (request.get("equ_status") != null) {
-
-                newEquipment.setEqu_status(
-                        (String) request.get("equ_status")
-                );
-            }
+            Integer companyId =
+                    getCompanyId(session);
 
             Integer categoryId =
-                    request.get("category_id") == null
-                            ? null
-                            : Integer.parseInt(
-                            request
-                                    .get("category_id")
-                                    .toString()
+                    toInteger(
+                            request.get(
+                                    "categoryId"
+                            )
                     );
 
             if (categoryId == null) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of(
-                                "message",
-                                "Category is required"
-                        ));
+
+                throw new RuntimeException(
+                        "Category is required"
+                );
             }
+
+            equipment item =
+                    fromRequest(request);
 
             equipment saved =
                     equipmentService.createEquipment(
                             companyId,
                             categoryId,
-                            newEquipment
+                            item
                     );
 
-            return ResponseEntity.ok(saved);
+            return ResponseEntity.ok(
+                    toResponse(saved)
+            );
 
-        } catch (RuntimeException ex) {
+        } catch (Exception e) {
 
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            ex.getMessage()
-                    ));
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            Map.of(
+                                    "message",
+                                    e.getMessage()
+                            )
+                    );
         }
     }
 
@@ -344,223 +498,120 @@ public class equipment_controller {
             HttpSession session
     ) {
 
-        if (!canManageEquipment(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
-        }
-
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
         try {
 
-            equipment details =
-                    new equipment();
-
-            details.setItem_name(
-                    (String) request.get("item_name")
-            );
-
-            details.setItem_code(
-                    (String) request.get("item_code")
-            );
-
-            details.setEqu_description(
-                    (String) request.get("equ_description")
-            );
-
-            if (request.get("rental_rate") != null) {
-
-                details.setRental_rate(
-                        new java.math.BigDecimal(
-                                request
-                                        .get("rental_rate")
-                                        .toString()
-                        )
-                );
-            }
-
-            details.setRate_period(
-                    (String) request.get("rate_period")
-            );
-
-            if (request.get(
-                    "refundable_deposit_per_unit"
-            ) != null) {
-
-                details.setRefundable_deposit_per_unit(
-                        new java.math.BigDecimal(
-                                request
-                                        .get(
-                                                "refundable_deposit_per_unit"
-                                        )
-                                        .toString()
-                        )
-                );
-            }
-
-            if (request.get("total_quantity") != null) {
-
-                details.setTotal_quantity(
-                        Integer.parseInt(
-                                request
-                                        .get("total_quantity")
-                                        .toString()
-                        )
-                );
-            }
-
-            if (request.get("available_quantity") != null) {
-
-                details.setAvailable_quantity(
-                        Integer.parseInt(
-                                request
-                                        .get("available_quantity")
-                                        .toString()
-                        )
-                );
-            }
-
-            if (request.get("equ_status") != null) {
-
-                details.setEqu_status(
-                        (String) request.get(
-                                "equ_status"
-                        )
-                );
-            }
+            Integer companyId =
+                    getCompanyId(session);
 
             Integer categoryId =
-                    request.get("category_id") == null
-                            ? null
-                            : Integer.parseInt(
-                            request
-                                    .get("category_id")
-                                    .toString()
+                    toInteger(
+                            request.get(
+                                    "categoryId"
+                            )
                     );
+
+            if (categoryId == null) {
+
+                throw new RuntimeException(
+                        "Category is required"
+                );
+            }
+
+            equipment item =
+                    fromRequest(request);
 
             equipment updated =
                     equipmentService.updateEquipment(
                             id,
                             companyId,
                             categoryId,
-                            details
+                            item
                     );
 
-            return ResponseEntity.ok(updated);
+            return ResponseEntity.ok(
+                    toResponse(updated)
+            );
 
-        } catch (RuntimeException ex) {
+        } catch (Exception e) {
 
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            ex.getMessage()
-                    ));
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            Map.of(
+                                    "message",
+                                    e.getMessage()
+                            )
+                    );
         }
     }
 
-    @PatchMapping("/{id}/status")
+    @PutMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(
             @PathVariable Integer id,
-            @RequestBody Map<String, String> body,
+            @RequestParam String status,
             HttpSession session
     ) {
 
-        if (!canManageEquipment(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
-        }
-
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
-        String status = body.get("status");
-
         try {
 
-            return ResponseEntity.ok(
+            Integer companyId =
+                    getCompanyId(session);
+
+            equipment updated =
                     equipmentService.updateStatus(
                             id,
                             companyId,
                             status
-                    )
+                    );
+
+            return ResponseEntity.ok(
+                    toResponse(updated)
             );
 
-        } catch (RuntimeException ex) {
+        } catch (Exception e) {
 
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            ex.getMessage()
-                    ));
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            Map.of(
+                                    "message",
+                                    e.getMessage()
+                            )
+                    );
         }
     }
 
-    @DeleteMapping("/{id}")
+    @PutMapping("/{id}/deactivate")
     public ResponseEntity<?> deactivateEquipment(
             @PathVariable Integer id,
             HttpSession session
     ) {
 
-        if (!canManageEquipment(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
-        }
-
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
         try {
 
-            equipmentService.deactivateEquipment(
-                    id,
-                    companyId
-            );
+            Integer companyId =
+                    getCompanyId(session);
+
+            equipment updated =
+                    equipmentService.deactivateEquipment(
+                            id,
+                            companyId
+                    );
 
             return ResponseEntity.ok(
-                    Map.of(
-                            "message",
-                            "Equipment deactivated successfully"
-                    )
+                    toResponse(updated)
             );
 
-        } catch (RuntimeException ex) {
+        } catch (Exception e) {
 
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            ex.getMessage()
-                    ));
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            Map.of(
+                                    "message",
+                                    e.getMessage()
+                            )
+                    );
         }
     }
 }

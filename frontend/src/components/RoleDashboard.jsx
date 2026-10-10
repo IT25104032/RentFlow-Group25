@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import CompanyManagement from './CompanyManagement'
 import Users from '../pages/Users'
+import EquipmentCategories from '../pages/EquipmentCategories'
+import EquipmentManagement from '../pages/EquipmentManagement'
+import CompanyProfile from '../pages/CompanyProfile'
 
 function RoleDashboard({ user, onLogout }) {
     const role = (user?.role || '')
@@ -288,19 +291,7 @@ function RoleDashboard({ user, onLogout }) {
         }
 
         if (activePage === 'Company Profile' && rentalCompanyAdmin) {
-            return (
-                <div className="module-placeholder">
-                    <h2>Company Profile</h2>
-
-                    <p>
-                        View and update your rental company's profile.
-                    </p>
-
-                    <p>
-                        Company ID: {user?.companyId || 'Not available'}
-                    </p>
-                </div>
-            )
+            return <CompanyProfile />
         }
 
         if (activePage === 'Users' && rentalCompanyAdmin) {
@@ -314,13 +305,7 @@ function RoleDashboard({ user, onLogout }) {
             (rentalCompanyAdmin || staff)
         ) {
             return (
-                <div className="module-placeholder">
-                    <h2>Equipment Categories</h2>
-
-                    <p>
-                        Create and manage equipment categories.
-                    </p>
-                </div>
+                <EquipmentCategories user={user} />
             )
         }
 
@@ -329,13 +314,7 @@ function RoleDashboard({ user, onLogout }) {
             (rentalCompanyAdmin || staff)
         ) {
             return (
-                <div className="module-placeholder">
-                    <h2>Equipment Management</h2>
-
-                    <p>
-                        Register, search, update and manage equipment.
-                    </p>
-                </div>
+                <EquipmentManagement user={user} />
             )
         }
 

@@ -8,24 +8,26 @@ import com.compulin.rentflow.repository.module1.equipment_category_repo;
 import com.compulin.rentflow.repository.module1.equipment_repo;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class equipment_service {
 
     private final equipment_repo equipmentRepo;
-    private final CompanyRepo companyRepo;
     private final equipment_category_repo categoryRepo;
+    private final CompanyRepo companyRepo;
 
     public equipment_service(
             equipment_repo equipmentRepo,
-            CompanyRepo companyRepo,
-            equipment_category_repo categoryRepo
+            equipment_category_repo categoryRepo,
+            CompanyRepo companyRepo
     ) {
         this.equipmentRepo = equipmentRepo;
-        this.companyRepo = companyRepo;
         this.categoryRepo = categoryRepo;
+        this.companyRepo = companyRepo;
     }
 
     public List<equipment> getEquipmentByCompany(
@@ -34,17 +36,13 @@ public class equipment_service {
         return equipmentRepo.findByCompanyId(companyId);
     }
 
-    public equipment getEquipmentById(
+    public Optional<equipment> getEquipmentById(
             Integer equipmentId,
             Integer companyId
     ) {
         return equipmentRepo.findByIdAndCompanyId(
                 equipmentId,
                 companyId
-        ).orElseThrow(() ->
-                new RuntimeException(
-                        "Equipment not found"
-                )
         );
     }
 
@@ -84,7 +82,9 @@ public class equipment_service {
             equipment newEquipment
     ) {
 
-        company company =
+        validateEquipment(newEquipment);
+
+        company existingCompany =
                 companyRepo.findById(companyId)
                         .orElseThrow(() ->
                                 new RuntimeException(
@@ -98,62 +98,24 @@ public class equipment_service {
                         companyId
                 ).orElseThrow(() ->
                         new RuntimeException(
-                                "Category does not belong to this company"
+                                "Equipment category not found"
                         )
                 );
 
-        if (newEquipment.getItem_name() == null ||
-                newEquipment.getItem_name().isBlank()) {
-
-            throw new RuntimeException(
-                    "Item name is required"
-            );
-        }
-
-        if (newEquipment.getRental_rate() == null ||
-                newEquipment.getRental_rate().signum() < 0) {
-
-            throw new RuntimeException(
-                    "Rental rate must be zero or greater"
-            );
-        }
-
-        if (newEquipment.getRefundable_deposit_per_unit() == null ||
-                newEquipment
-                        .getRefundable_deposit_per_unit()
-                        .signum() < 0) {
-
-            throw new RuntimeException(
-                    "Refundable deposit must be zero or greater"
-            );
-        }
-
-        if (newEquipment.getTotal_quantity() == null ||
-                newEquipment.getTotal_quantity() < 0) {
-
-            throw new RuntimeException(
-                    "Total quantity must be zero or greater"
-            );
-        }
-
-        newEquipment.setCompany(company);
+        newEquipment.setCompany(existingCompany);
         newEquipment.setCategory(category);
 
         newEquipment.setAvailable_quantity(
                 newEquipment.getTotal_quantity()
         );
 
-        if (newEquipment.getEqu_status() == null ||
-                newEquipment.getEqu_status().isBlank()) {
+        newEquipment.setEqu_status(
+                "AVAILABLE"
+        );
 
-            newEquipment.setEqu_status("AVAILABLE");
-        }
-
-        if (newEquipment.getCreated_at() == null) {
-            newEquipment.setCreated_at(
-                    LocalDateTime.now()
-            );
-        }
+        newEquipment.setCreated_at(
+                LocalDateTime.now()
+        );
 
         return equipmentRepo.save(newEquipment);
     }
@@ -166,25 +128,42 @@ public class equipment_service {
     ) {
 
         equipment existing =
-                getEquipmentById(
+                equipmentRepo.findByIdAndCompanyId(
                         equipmentId,
                         companyId
+                ).orElseThrow(() ->
+                        new RuntimeException(
+                                "Equipment not found"
+                        )
                 );
 
-        if (categoryId != null) {
+        validateEquipment(details);
 
-            equipment_category category =
-                    categoryRepo.findByIdAndCompanyId(
-                            categoryId,
-                            companyId
-                    ).orElseThrow(() ->
-                            new RuntimeException(
-                                    "Category does not belong to this company"
-                            )
-                    );
+        equipment_category category =
+                categoryRepo.findByIdAndCompanyId(
+                        categoryId,
+                        companyId
+                ).orElseThrow(() ->
+                        new RuntimeException(
+                                "Equipment category not found"
+                        )
+                );
 
-            existing.setCategory(category);
+        if (details.getAvailable_quantity() < 0) {
+            throw new RuntimeException(
+                    "Available quantity cannot be negative"
+            );
         }
+
+        if (details.getAvailable_quantity()
+                > details.getTotal_quantity()) {
+
+            throw new RuntimeException(
+                    "Available quantity cannot be greater than total quantity"
+            );
+        }
+
+        existing.setCategory(category);
 
         existing.setItem_name(
                 details.getItem_name()
@@ -206,39 +185,25 @@ public class equipment_service {
                 details.getRate_period()
         );
 
-        existing.setRefundable_deposit_per_unit(
-                details.getRefundable_deposit_per_unit()
+        existing.setSecurity_deposit_per_unit(
+                details.getSecurity_deposit_per_unit()
         );
 
-        Integer total =
-                details.getTotal_quantity();
+        existing.setTotal_quantity(
+                details.getTotal_quantity()
+        );
 
-        Integer available =
-                details.getAvailable_quantity();
-
-        if (total == null || total < 0) {
-            throw new RuntimeException(
-                    "Total quantity must be zero or greater"
-            );
-        }
-
-        if (available == null ||
-                available < 0 ||
-                available > total) {
-
-            throw new RuntimeException(
-                    "Available quantity must be between zero and total quantity"
-            );
-        }
-
-        existing.setTotal_quantity(total);
-        existing.setAvailable_quantity(available);
+        existing.setAvailable_quantity(
+                details.getAvailable_quantity()
+        );
 
         if (details.getEqu_status() != null &&
-                !details.getEqu_status().isBlank()) {
+                !details.getEqu_status().trim().isEmpty()) {
 
             existing.setEqu_status(
-                    details.getEqu_status()
+                    normalizeStatus(
+                            details.getEqu_status()
+                    )
             );
         }
 
@@ -251,36 +216,117 @@ public class equipment_service {
             String status
     ) {
 
-        if (status == null || status.isBlank()) {
-            throw new RuntimeException(
-                    "Status is required"
-            );
-        }
-
         equipment existing =
-                getEquipmentById(
+                equipmentRepo.findByIdAndCompanyId(
                         equipmentId,
                         companyId
+                ).orElseThrow(() ->
+                        new RuntimeException(
+                                "Equipment not found"
+                        )
                 );
 
-        existing.setEqu_status(status);
+        String newStatus =
+                normalizeStatus(status);
+
+        existing.setEqu_status(newStatus);
+
+        if (newStatus.equals("INACTIVE") ||
+                newStatus.equals("DAMAGED") ||
+                newStatus.equals("LOST") ||
+                newStatus.equals("MAINTENANCE")) {
+
+            existing.setAvailable_quantity(0);
+        }
 
         return equipmentRepo.save(existing);
     }
 
-    public void deactivateEquipment(
+    public equipment deactivateEquipment(
             Integer equipmentId,
             Integer companyId
     ) {
+        return updateStatus(
+                equipmentId,
+                companyId,
+                "INACTIVE"
+        );
+    }
 
-        equipment existing =
-                getEquipmentById(
-                        equipmentId,
-                        companyId
-                );
+    private void validateEquipment(
+            equipment item
+    ) {
 
-        existing.setEqu_status("INACTIVE");
+        if (item.getItem_name() == null ||
+                item.getItem_name().trim().isEmpty()) {
 
-        equipmentRepo.save(existing);
+            throw new RuntimeException(
+                    "Item name is required"
+            );
+        }
+
+        if (item.getRental_rate() == null ||
+                item.getRental_rate()
+                        .compareTo(BigDecimal.ZERO) < 0) {
+
+            throw new RuntimeException(
+                    "Rental rate must be zero or greater"
+            );
+        }
+
+        if (item.getSecurity_deposit_per_unit() == null ||
+                item.getSecurity_deposit_per_unit()
+                        .compareTo(BigDecimal.ZERO) < 0) {
+
+            throw new RuntimeException(
+                    "Security deposit must be zero or greater"
+            );
+        }
+
+        if (item.getTotal_quantity() == null ||
+                item.getTotal_quantity() <= 0) {
+
+            throw new RuntimeException(
+                    "Total quantity must be greater than zero"
+            );
+        }
+
+        if (item.getRate_period() == null ||
+                item.getRate_period().trim().isEmpty()) {
+
+            throw new RuntimeException(
+                    "Rate period is required"
+            );
+        }
+    }
+
+    private String normalizeStatus(
+            String status
+    ) {
+
+        if (status == null ||
+                status.trim().isEmpty()) {
+
+            throw new RuntimeException(
+                    "Equipment status is required"
+            );
+        }
+
+        String value =
+                status.trim().toUpperCase();
+
+        if (!value.equals("AVAILABLE") &&
+                !value.equals("RENTED") &&
+                !value.equals("DAMAGED") &&
+                !value.equals("LOST") &&
+                !value.equals("MAINTENANCE") &&
+                !value.equals("INACTIVE")) {
+
+            throw new RuntimeException(
+                    "Invalid equipment status"
+            );
+        }
+
+        return value;
     }
 }
