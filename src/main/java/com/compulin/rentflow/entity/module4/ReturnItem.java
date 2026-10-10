@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+
+/*
+ * A return item which is one item(with an equipment_id) that is returned.
+ */
 @Entity
 @Table(name = "return_item")
 public class ReturnItem {

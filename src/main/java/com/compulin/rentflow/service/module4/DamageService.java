@@ -1,137 +1,188 @@
 package com.compulin.rentflow.service.module4;
 
+import com.compulin.rentflow.dto.module4.ReturnDtos.DamageInput;
+import com.compulin.rentflow.dto.module4.ReturnDtos.DamageView;
 import com.compulin.rentflow.entity.module4.DamageRecord;
+import com.compulin.rentflow.entity.module4.ReturnItem;
 import com.compulin.rentflow.repository.module4.DamageRecordRepository;
+import com.compulin.rentflow.repository.module4.RentalLookupRepository;
+import com.compulin.rentflow.repository.module4.SettlementRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.compulin.rentflow.service.module4.Module4Support.money;
+
+/*
+ * Damage assessment.
+ *
+ * Damage is recorded while processing a return (units returned DAMAGED,
+ * MISSING PARTS or NEEDS MAINTENANCE). Those units stay out of stock.
+ */
 @Service
 public class DamageService {
 
     private final DamageRecordRepository damageRecordRepository;
+    private final SettlementRepository settlementRepository;
+    private final RentalLookupRepository lookup;
+    private final Module4Support support;
+    private final Module4Billing billing;
 
-    public DamageService(
-            DamageRecordRepository damageRecordRepository) {
+    // equipment (Module 1 table)
+    private final Module4Links links;
 
+    public DamageService(DamageRecordRepository damageRecordRepository,
+                         SettlementRepository settlementRepository,
+                         RentalLookupRepository lookup,
+                         Module4Support support,
+                         Module4Billing billing,
+                         Module4Links links) {
         this.damageRecordRepository = damageRecordRepository;
+        this.settlementRepository = settlementRepository;
+        this.lookup = lookup;
+        this.support = support;
+        this.billing = billing;
+        this.links = links;
     }
 
-    public List<DamageRecord> getAllDamageRecords() {
-        return damageRecordRepository.findAll();
+    public List<DamageView> list(Integer companyId, String status, Integer returnId, Integer rentalId) {
+        return lookup.findDamages(companyId, status, returnId, rentalId, null);
     }
 
-    public DamageRecord getDamageRecord(
-            Integer id) {
-
-        return damageRecordRepository
-                .findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Damage record not found"
-                        )
-                );
+    public DamageView get(Integer companyId, Integer damageId) {
+        List<DamageView> found = lookup.findDamages(companyId, null, null, null, damageId);
+        if (found.isEmpty()) {
+            throw new IllegalArgumentException("Damage record not found.");
+        }
+        return found.get(0);
     }
 
-    public DamageRecord createDamageRecord(
-            DamageRecord damageRecord) {
-
-        if (damageRecord.getReturnItem() == null ||
-                damageRecord.getReturnItem()
-                        .getReturnItemId() == null) {
-
-            throw new IllegalArgumentException(
-                    "Return item is required."
-            );
+    /** Validates the damage part of a return line before anything is saved. */
+    static void validate(DamageInput damage, int quantityReturned, String name, String condition) {
+        if (damage == null) {
+            throw new IllegalArgumentException("Add damage details for " + name + " returned as "
+                    + condition.toLowerCase() + ".");
         }
-
-        if (damageRecord.getDamagedQuantity() == null ||
-                damageRecord.getDamagedQuantity() <= 0) {
-
-            throw new IllegalArgumentException(
-                    "Damaged quantity must be greater than zero."
-            );
+        if (damage.damageDescription() == null || damage.damageDescription().isBlank()) {
+            throw new IllegalArgumentException("Describe the damage on " + name + ".");
         }
-
-        if (damageRecord.getDamageDescription() == null ||
-                damageRecord.getDamageDescription().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "Damage description is required."
-            );
+        if (damage.damageLevel() == null
+                || !Module4Support.DAMAGE_LEVELS.contains(damage.damageLevel().trim().toUpperCase())) {
+            throw new IllegalArgumentException("Damage level must be MINOR, MODERATE or SEVERE.");
         }
-
-        if (damageRecord.getDamageLevel() == null) {
-            throw new IllegalArgumentException(
-                    "Damage level is required."
-            );
+        int qty = damage.damagedQuantity() == null ? quantityReturned : damage.damagedQuantity();
+        if (qty <= 0 || qty > quantityReturned) {
+            throw new IllegalArgumentException("Damaged quantity for " + name
+                    + " must be between 1 and the " + quantityReturned + " returned.");
         }
-
-        if (damageRecord.getEstimatedCost() == null) {
-            damageRecord.setEstimatedCost(
-                    BigDecimal.ZERO
-            );
+        if (isNegative(damage.estimatedCost()) || isNegative(damage.finalCharge())) {
+            throw new IllegalArgumentException("Damage amounts cannot be negative.");
         }
-
-        if (damageRecord.getFinalCharge() == null) {
-            damageRecord.setFinalCharge(
-                    BigDecimal.ZERO
-            );
-        }
-
-        if (damageRecord.getAssessmentDate() == null) {
-            damageRecord.setAssessmentDate(
-                    LocalDateTime.now()
-            );
-        }
-
-        if (damageRecord.getStatus() == null ||
-                damageRecord.getStatus().isBlank()) {
-
-            damageRecord.setStatus("ASSESSED");
-        }
-
-        return damageRecordRepository.save(
-                damageRecord
-        );
     }
 
-    public DamageRecord updateDamageRecord(
-            Integer id,
-            DamageRecord newRecord) {
+    /** Saves the damage record for a return line, a charge above zero is billed at once. */
+    DamageRecord record(Integer rentalId, ReturnItem returnItem, DamageInput damage,
+                        String equipmentName, Integer userId) {
+        DamageRecord d = new DamageRecord();
+        d.setReturnItem(returnItem);
+        d.setDamagedQuantity(damage.damagedQuantity() == null
+                ? returnItem.getQuantityReturned()
+                : damage.damagedQuantity());
+        d.setDamageDescription(damage.damageDescription().trim());
+        d.setDamageLevel(damage.damageLevel().trim().toUpperCase());
+        d.setEstimatedCost(money(damage.estimatedCost()));
+        d.setFinalCharge(money(damage.finalCharge()));
+        d.setAssessedBy(userId);
+        d.setAssessmentDate(LocalDateTime.now());
+        d.setStatus("ASSESSED");
+        d = damageRecordRepository.save(d);
 
-        DamageRecord record =
-                getDamageRecord(id);
+        if (Module4Support.isPositive(d.getFinalCharge())) {
+            billDamage(rentalId, returnItem.getRentalItemId(), d, equipmentName, userId);
+        }
+        return damageRecordRepository.saveAndFlush(d);
+    }
 
-        record.setDamagedQuantity(
-                newRecord.getDamagedQuantity()
-        );
+    /** Charges an ASSESSED record */
+    @Transactional
+    public DamageView charge(Integer companyId, Integer damageId, BigDecimal amount, Integer userId) {
+        DamageView view = get(companyId, damageId);
+        DamageRecord d = find(damageId);
+        if (!"ASSESSED".equals(d.getStatus())) {
+            throw new IllegalArgumentException("Only an ASSESSED damage record can be charged.");
+        }
+        if (!Module4Support.isPositive(amount)) {
+            throw new IllegalArgumentException("Charge must be greater than zero.");
+        }
+        requireNotSettled(view.rentalId());
 
-        record.setDamageDescription(
-                newRecord.getDamageDescription()
-        );
+        d.setFinalCharge(money(amount));
+        billDamage(view.rentalId(), d.getReturnItem().getRentalItemId(), d, view.equipmentName(), userId);
+        damageRecordRepository.saveAndFlush(d);
+        return get(companyId, damageId);
+    }
 
-        record.setDamageLevel(
-                newRecord.getDamageLevel()
-        );
+    /** Removes the damage charge from the bill. */
+    @Transactional
+    public DamageView waive(Integer companyId, Integer damageId) {
+        DamageView view = get(companyId, damageId);
+        DamageRecord d = find(damageId);
+        if (!List.of("ASSESSED", "CHARGED").contains(d.getStatus())) {
+            throw new IllegalArgumentException("This damage record is already " + d.getStatus().toLowerCase() + ".");
+        }
+        requireNotSettled(view.rentalId());
 
-        record.setEstimatedCost(
-                newRecord.getEstimatedCost()
-        );
+        billing.removeCharges(view.rentalId(), Module4Billing.DAMAGE, Module4Billing.damageLabel(damageId));
+        d.setFinalCharge(BigDecimal.ZERO);
+        d.setStatus("WAIVED");
+        damageRecordRepository.saveAndFlush(d);
+        return get(companyId, damageId);
+    }
 
-        record.setFinalCharge(
-                newRecord.getFinalCharge()
-        );
+    /** Repaired units go back into available equipment (Module 1). The charge stays on the bill. */
+    @Transactional
+    public DamageView markRepaired(Integer companyId, Integer damageId) {
+        get(companyId, damageId);
+        DamageRecord d = find(damageId);
+        if ("REPAIRED".equals(d.getStatus())) {
+            throw new IllegalArgumentException("Already marked as repaired.");
+        }
+        links.addToAvailableStock(links.equipmentOfRentalItem(d.getReturnItem().getRentalItemId()),
+                d.getDamagedQuantity());
+        d.setStatus("REPAIRED");
+        damageRecordRepository.saveAndFlush(d);
+        return get(companyId, damageId);
+    }
 
-        record.setStatus(
-                newRecord.getStatus()
-        );
+    private void billDamage(Integer rentalId, Integer rentalItemId, DamageRecord d,
+                            String equipmentName, Integer userId) {
+        billing.addCharge(rentalId, rentalItemId, Module4Billing.DAMAGE,
+                Module4Billing.damageLabel(d.getDamageId()) + ": " + d.getDamageLevel().toLowerCase() + ", "
+                        + equipmentName + " x" + d.getDamagedQuantity() + " - " + d.getDamageDescription(),
+                d.getFinalCharge(), userId);
+        d.setStatus("CHARGED");
+    }
 
-        return damageRecordRepository.save(
-                record
-        );
+    private DamageRecord find(Integer damageId) {
+        return damageRecordRepository.findById(damageId)
+                .orElseThrow(() -> new IllegalArgumentException("Damage record not found."));
+    }
+
+    private void requireNotSettled(Integer rentalId) {
+        settlementRepository.findByRentalId(rentalId)
+                .filter(s -> "SETTLED".equals(s.getSettlementStatus()))
+                .ifPresent(s -> {
+                    throw new IllegalArgumentException(
+                            "Rental #" + rentalId + " is already settled, so its charges cannot change.");
+                });
+        support.rental(rentalId, null);
+    }
+
+    private static boolean isNegative(BigDecimal value) {
+        return value != null && value.signum() < 0;
     }
 }
