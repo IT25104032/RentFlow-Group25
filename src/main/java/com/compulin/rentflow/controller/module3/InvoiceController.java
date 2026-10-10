@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.compulin.rentflow.dto.module3.InvoicePreview;
 
 import java.util.List;
 
@@ -73,5 +74,11 @@ public class InvoiceController {
     public ResponseEntity<Invoice> cancelInvoice(@PathVariable Integer id) {
         Invoice cancelledInvoice = invoiceService.cancelInvoice(id);
         return ResponseEntity.ok(cancelledInvoice);
+    }
+
+    // Shows the invoice breakdown for review before it is generated
+    @GetMapping("/preview/{rentalId}")
+    public ResponseEntity<InvoicePreview> previewInvoice(@PathVariable Integer rentalId) {
+        return ResponseEntity.ok(invoiceService.previewInvoice(rentalId));
     }
 }

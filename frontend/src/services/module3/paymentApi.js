@@ -80,3 +80,12 @@ export const generateInvoice = async (rentalId) => {
     }
     return response.json();
 };
+
+export const previewInvoice = async (rentalId) => {
+    const response = await fetch(`http://localhost:8081/api/v1/invoices/preview/${rentalId}`);
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `Failed to preview invoice for Rental #${rentalId}`);
+    }
+    return response.json();
+};

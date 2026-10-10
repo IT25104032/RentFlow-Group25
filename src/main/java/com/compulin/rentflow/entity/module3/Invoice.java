@@ -161,4 +161,13 @@ public class Invoice {
 
         this.invoiceStatus = invoiceStatus;
     }
+
+    // total_amount = subtotal + additional_charges - deposit deduction
+    public BigDecimal getDepositDeduction() {
+        BigDecimal sub = subtotal != null ? subtotal : BigDecimal.ZERO;
+        BigDecimal extra = additionalCharges != null ? additionalCharges : BigDecimal.ZERO;
+        BigDecimal total = totalAmount != null ? totalAmount : BigDecimal.ZERO;
+        return sub.add(extra).subtract(total).max(BigDecimal.ZERO);
+    }
 }
+

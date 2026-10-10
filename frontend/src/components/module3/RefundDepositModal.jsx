@@ -7,15 +7,17 @@ export default function RefundDepositModal({ deposit, onClose, onSuccess }) {
     const [error, setError] = useState('');
 
     const received = Number(deposit.depositAmountReceived) || 0;
+    const alreadyDeducted = Number(deposit.amountDeducted) || 0;
+    const available = received - alreadyDeducted; // part already used on an invoice is not refundable
     const deductionNum = parseFloat(deduction) || 0;
-    const refundAmount = received - deductionNum;
+    const refundAmount = available - deductionNum;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
         if (deductionNum < 0) return setError('Deduction cannot be negative.');
-        if (deductionNum > received) return setError(`Deduction cannot exceed the deposit of Rs. ${received.toFixed(2)}`);
+        if (deductionNum > available) return setError(`Deduction cannot exceed the remaining deposit of Rs. ${available.toFixed(2)}`);
 
         setSubmitting(true);
         try {
@@ -32,13 +34,17 @@ export default function RefundDepositModal({ deposit, onClose, onSuccess }) {
         <div className="modal-overlay">
             <div className="modal-content">
                 <h3>Refund Deposit for Rental #{deposit.rentalId}</h3>
-                <p>Deposit Held: <strong>Rs. {received.toFixed(2)}</strong></p>
+                <p>Deposit Received: <strong>Rs. {received.toFixed(2)}</strong></p>
+                {alreadyDeducted > 0 && (
+                    <p>Already Deducted: <strong>Rs. {alreadyDeducted.toFixed(2)}</strong></p>
+                )}
+                <p>Remaining Deposit: <strong>Rs. {available.toFixed(2)}</strong></p>
 
                 {error && <div className="error-banner">{error}</div>}
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Deduction for damage / loss (Rs.):</label>
+                        <label>Further deduction for damage / loss (Rs.):</label>
                         <input type="number" step="0.01" min="0" value={deduction} onChange={(e) => setDeduction(e.target.value)} />
                     </div>
                     <p>Amount to refund: <strong>Rs. {Math.max(refundAmount, 0).toFixed(2)}</strong></p>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getInvoices, getChargesByInvoice, generateInvoice } from '../../services/module3/paymentApi';
+import { getInvoices, getChargesByInvoice, previewInvoice } from '../../services/module3/paymentApi';
+import InvoicePreviewModal from '../../components/module3/InvoicePreviewModal';
 import PaymentModal from '../../components/module3/PaymentModal';
 import AddChargeModal from '../../components/module3/AddChargeModal';
 import '../../styles/module3/PaymentManagement.css';
@@ -10,6 +11,7 @@ export default function PaymentManagement() {
     const [error, setError] = useState(null);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [chargeInvoice, setChargeInvoice] = useState(null);
+    const [invoicePreview, setInvoicePreview] = useState(null);
 
     // State for generating invoice
     const [rentalIdInput, setRentalIdInput] = useState('');
@@ -36,9 +38,8 @@ export default function PaymentManagement() {
         setGenerating(true);
         setError(null);
         try {
-            await generateInvoice(rentalIdInput.trim());
-            setRentalIdInput('');
-            await fetchList(); // Refresh table to show the new invoice
+            const preview = await previewInvoice(rentalIdInput.trim());
+            setInvoicePreview(preview); // opens the preview modal
         } catch (err) {
             setError(err.message || 'Error generating invoice');
         } finally {
@@ -100,7 +101,11 @@ export default function PaymentManagement() {
                     </thead>
                     <tbody>
                         ${chargeRows.length > 0 ? chargeRows : '<tr><td colspan="2">No itemized charges found.</td></tr>'}
-                        
+                        ${Number(inv.depositDeduction) > 0 ? `
+                        <tr>
+                            <td style="text-align: right;">Security Deposit Deduction:</td>
+                            <td>- Rs. ${Number(inv.depositDeduction).toFixed(2)}</td>
+                        </tr>` : ''}
                         <tr class="summary-row">
                             <td style="text-align: right;">Total Amount:</td>
                             <td>Rs. ${Number(inv.totalAmount).toFixed(2)}</td>
@@ -220,6 +225,14 @@ export default function PaymentManagement() {
                     invoice={chargeInvoice}
                     onClose={() => setChargeInvoice(null)}
                     onSuccess={() => { setChargeInvoice(null); fetchList(); }}
+                />
+            )}
+
+            {invoicePreview && (
+                <InvoicePreviewModal
+                    preview={invoicePreview}
+                    onClose={() => setInvoicePreview(null)}
+                    onSuccess={() => { setInvoicePreview(null); setRentalIdInput(''); fetchList(); }}
                 />
             )}
         </div>
