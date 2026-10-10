@@ -941,3 +941,30 @@
     }
 
 }
+
+
+.rental-details-payment-summary {
+    border: 1px solid #dce6f2;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.rental-payment-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 18px;
+    color: #526b88;
+}
+
+.rental-payment-row + .rental-payment-row {
+    border-top: 1px solid #dce6f2;
+    background-color: #eef5fc;
+}
+
+.rental-payment-row strong {
+    color: #123f6b;
+    font-size: 18px;
+    text-align: right;
+}

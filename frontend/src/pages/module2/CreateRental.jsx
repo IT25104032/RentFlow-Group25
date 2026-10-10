@@ -8,32 +8,43 @@ import "./CreateRental.css";
 
 function CreateRental({ onBack }) {
 
+
     const location = useLocation();
     const navigate = useNavigate();
 
-    /*
-     * Get the renter selected in Step 1.
-     */
-    const selectedRenter =
-        location.state?.selectedRenter || null;
+    // Restore the unfinished rental from this browser tab.
+    let savedDraft = {};
 
+    try {
+        savedDraft = JSON.parse(
+            sessionStorage.getItem("rentFlowRentalDraft") || "{}"
+        );
+    } catch {
+        savedDraft = {};
+    }
 
-    const previousRentalDetails =
-        location.state?.rentalDetails || null;
-    /*
-     * Rental details entered on this page.
-     */
+    // Navigation state takes priority over the saved draft.
+    const draft = {
+        ...savedDraft,
+        ...(location.state || {})
+    };
+
+    const selectedRenter = draft.selectedRenter || null;
+    const previousRentalDetails = draft.rentalDetails || {};
+
     const [startDate, setStartDate] = useState(
-        previousRentalDetails?.startDate || ""
+        previousRentalDetails.startDate || draft.startDate || ""
     );
 
     const [dueDate, setDueDate] = useState(
-        previousRentalDetails?.dueDate || ""
+        previousRentalDetails.dueDate || draft.dueDate || ""
     );
 
     const [notes, setNotes] = useState(
-        previousRentalDetails?.notes || ""
+        previousRentalDetails.notes || draft.notes || ""
     );
+
+    const selectedEquipment = draft.selectedEquipment || [];
 
 
     /*
@@ -113,12 +124,28 @@ function CreateRental({ onBack }) {
             notes: notes.trim() || null
         };
 
+
+        sessionStorage.setItem(
+            "rentFlowRentalDraft",
+            JSON.stringify({
+                ...draft,
+                selectedRenter,
+                rentalDetails,
+                startDate,
+                dueDate,
+                notes,
+                selectedEquipment
+            })
+        );
+
+
         navigate(
             "/rentals/equipment",
             {
                 state: {
                     selectedRenter,
-                    rentalDetails
+                    rentalDetails,
+                    selectedEquipment
                 }
             }
         );
@@ -133,6 +160,18 @@ function CreateRental({ onBack }) {
         setStartDate("");
         setDueDate("");
         setNotes("");
+
+        sessionStorage.setItem(
+            "rentFlowRentalDraft",
+            JSON.stringify({
+                ...draft,
+                selectedRenter,
+                startDate: "",
+                dueDate: "",
+                notes: "",
+                selectedEquipment
+            })
+        );
 
         setError("");
         setSuccess("");
@@ -341,11 +380,25 @@ function CreateRental({ onBack }) {
                                 id="startDate"
                                 type="date"
                                 value={startDate}
-                                onChange={(event) =>
-                                    setStartDate(
-                                        event.target.value
-                                    )
-                                }
+
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    setStartDate(value);
+
+                                    sessionStorage.setItem(
+                                        "rentFlowRentalDraft",
+                                        JSON.stringify({
+                                            ...draft,
+                                            selectedRenter,
+                                            startDate: value,
+                                            dueDate,
+                                            notes,
+                                            selectedEquipment
+                                        })
+                                    );
+                                }}
+
+
                             />
 
                         </div>
@@ -366,11 +419,24 @@ function CreateRental({ onBack }) {
                                 min={
                                     startDate || undefined
                                 }
-                                onChange={(event) =>
-                                    setDueDate(
-                                        event.target.value
-                                    )
-                                }
+
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    setDueDate(value);
+
+                                    sessionStorage.setItem(
+                                        "rentFlowRentalDraft",
+                                        JSON.stringify({
+                                            ...draft,
+                                            selectedRenter,
+                                            startDate,
+                                            dueDate: value,
+                                            notes,
+                                            selectedEquipment
+                                        })
+                                    );
+                                }}
+
                             />
 
                         </div>
@@ -387,11 +453,24 @@ function CreateRental({ onBack }) {
                             <textarea
                                 id="notes"
                                 value={notes}
-                                onChange={(event) =>
-                                    setNotes(
-                                        event.target.value
-                                    )
-                                }
+
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    setNotes(value);
+
+                                    sessionStorage.setItem(
+                                        "rentFlowRentalDraft",
+                                        JSON.stringify({
+                                            ...draft,
+                                            selectedRenter,
+                                            startDate,
+                                            dueDate,
+                                            notes: value,
+                                            selectedEquipment
+                                        })
+                                    );
+                                }}
+
                                 placeholder="Enter any notes about this rental"
                                 rows="4"
                             />

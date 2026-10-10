@@ -21,39 +21,56 @@ function ReviewRental() {
         useState("");
 
 
-    const selectedRenter =
-        location.state?.selectedRenter || null;
+    let savedDraft = {};
 
-
-    const rentalDetails =
-        location.state?.rentalDetails || null;
-
-
-    const selectedEquipment =
-        location.state?.selectedEquipment || [];
-
-
-    const totalDeposit =
-        location.state?.totalDeposit || 0;
-
-
-    /*
-     * Calculate the estimated rental amount.
-     *
-     * At this stage the equipment rate is stored
-     * per unit/per day. Later we can connect this
-     * to the actual rental period calculation.
-     */
-    const totalDailyRentalRate =
-        selectedEquipment.reduce(
-            (total, item) =>
-                total +
-                (
-                    item.quantity *
-                    item.rentalRate
-                ),
-            0
+    try {
+        savedDraft = JSON.parse(
+            sessionStorage.getItem("rentFlowRentalDraft") || "{}"
         );
+    } catch {
+        savedDraft = {};
+    }
+
+    const draft = {
+        ...savedDraft,
+        ...(location.state || {})
+    };
+
+    const selectedRenter = draft.selectedRenter || null;
+    const rentalDetails = draft.rentalDetails || null;
+    const selectedEquipment = draft.selectedEquipment || [];
+    const totalDeposit = draft.totalDeposit || 0;
+
+
+
+    // Calculate the rental duration in days.
+    const start = rentalDetails?.startDate
+        ? new Date(`${rentalDetails.startDate}T00:00:00`)
+        : null;
+
+    const due = rentalDetails?.dueDate
+        ? new Date(`${rentalDetails.dueDate}T00:00:00`)
+        : null;
+
+    const rentalDays =
+        start && due && !Number.isNaN(start.getTime()) &&
+        !Number.isNaN(due.getTime())
+            ? Math.max(
+                1,
+                Math.round((due - start) / (1000 * 60 * 60 * 24))
+            )
+            : 1;
+
+    // Total rental charges, excluding security deposits.
+    const totalRentalAmount = selectedEquipment.reduce(
+        (total, item) =>
+            total +
+            Number(item.quantity || 0) *
+            Number(item.rentalRate ?? item.ratePerUnit ?? 0) *
+            rentalDays,
+        0
+    );
+
 
 
     /*
@@ -61,6 +78,17 @@ function ReviewRental() {
      * keeping the current selections.
      */
     const handleBack = () => {
+
+        sessionStorage.setItem(
+            "rentFlowRentalDraft",
+            JSON.stringify({
+                ...draft,
+                selectedRenter,
+                rentalDetails,
+                selectedEquipment,
+                totalDeposit
+            })
+        );
 
         navigate(
             "/rentals/equipment",
@@ -239,6 +267,7 @@ function ReviewRental() {
             setSuccess(
                 `Rental ${result.rental.rentalId} confirmed successfully.`
             );
+            sessionStorage.removeItem("rentFlowRentalDraft");
 
             setTimeout(() => {
                 navigate("/renters");
@@ -517,33 +546,14 @@ function ReviewRental() {
                         <table className="review-equipment-table">
 
                             <thead>
-
                             <tr>
-
-                                <th>
-                                    Equipment
-                                </th>
-
-                                <th>
-                                    Code
-                                </th>
-
-                                <th>
-                                    Quantity
-                                </th>
-
-                                <th>
-                                    Rate
-                                </th>
-
-                                <th>
-                                    Deposit
-                                </th>
-
+                                <th>Equipment</th>
+                                <th>Code</th>
+                                <th>Quantity</th>
+                                <th>Rate</th>
+                                <th>Deposit</th>
                             </tr>
-
                             </thead>
-
 
                             <tbody>
 
@@ -571,28 +581,13 @@ function ReviewRental() {
                                                 </span>
 
                                         </td>
-
-
                                         <td>
-
-                                            {
-                                                item.itemCode
-                                            }
-
+                                            {item.itemCode}
                                         </td>
-
-
                                         <td>
-
-                                            {
-                                                item.quantity
-                                            }
-
+                                            {item.quantity}
                                         </td>
-
-
                                         <td>
-
                                             Rs.{" "}
 
                                             {
@@ -675,30 +670,21 @@ function ReviewRental() {
 
                 <div className="review-summary">
 
-                    <div className="summary-row">
 
+                    <div className="summary-row">
                         <span>
-                            Estimated Daily Rental Rate
+                            Total Rental Amount (Excluding Security Deposit)
                         </span>
 
                         <strong>
-
-                            Rs.{" "}
-
-                            {
-                                totalDailyRentalRate
-                                    .toLocaleString()
-                            }
-
+                            Rs. {totalRentalAmount.toLocaleString()}
                         </strong>
-
                     </div>
-
 
                     <div className="summary-row deposit-row">
 
                         <span>
-                            Total Refundable Deposit
+                            Total Security Deposit
                         </span>
 
                         <strong>
