@@ -10,6 +10,9 @@ import com.compulin.rentflow.entity.module2.RentalItem;
 import com.compulin.rentflow.repository.module2.RentalRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -138,6 +141,20 @@ public class RentalService {
             );
         }
 
+        // A rental can only be issued on or after its start date.
+        LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Colombo"));
+        if (rental.getStartDate() == null) {
+            throw new IllegalArgumentException(
+                    "Rental start date is required before equipment can be issued."
+            );
+        }
+        if (rental.getStartDate().isAfter(today)) {
+            throw new IllegalArgumentException(
+                    "This rental cannot be issued before its start date: "
+                            + rental.getStartDate() + "."
+            );
+        }
+
         List<RentalItem> items =
                 rentalItemRepository.findByRentalId(rentalId);
 
@@ -197,6 +214,40 @@ public class RentalService {
         Rental savedRental = rentalRepository.save(rental);
 
         return convertToResponse(savedRental);
+    }
+
+    /**
+     * Runs once after the application has started so rentals that became
+     * overdue while the backend was stopped are updated immediately.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void updateOverdueRentalStatusesOnStartup() {
+        updateOverdueRentalStatusesNow();
+    }
+
+    /**
+     * Automatically marks unreturned rentals overdue after their due date.
+     * Runs daily at midnight in the Asia/Colombo timezone.
+     */
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Colombo")
+    @Transactional
+    public void updateOverdueRentalStatuses() {
+        updateOverdueRentalStatusesNow();
+    }
+
+    private void updateOverdueRentalStatusesNow() {
+        LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Colombo"));
+        List<Rental> rentals =
+                rentalRepository.findRentalsNeedingOverdueStatus(today);
+
+        for (Rental rental : rentals) {
+            rental.setRentalStatus("OVERDUE");
+        }
+
+        if (!rentals.isEmpty()) {
+            rentalRepository.saveAll(rentals);
+        }
     }
 
     public List<RentalResponse> getOverdueRentals(Integer companyId) {

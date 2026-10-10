@@ -329,6 +329,61 @@ function RentalHistory() {
     }
 
 
+    // Calculate the rental duration in days.
+    function getRentalDays(startDate, dueDate) {
+        if (!startDate || !dueDate) {
+            return 1;
+        }
+
+        const start = new Date(`${startDate}T00:00:00`);
+        const due = new Date(`${dueDate}T00:00:00`);
+
+        if (
+            Number.isNaN(start.getTime()) ||
+            Number.isNaN(due.getTime())
+        ) {
+            return 1;
+        }
+
+        return Math.max(
+            1,
+            Math.round((due - start) / (1000 * 60 * 60 * 24))
+        );
+    }
+
+    // Calculate total rental charges, excluding deposits.
+    function getTotalRentalAmount(rental) {
+        const days = getRentalDays(
+            rental.rental.startDate,
+            rental.rental.dueDate
+        );
+
+        return (rental.rentalItems || []).reduce(
+            (total, item) =>
+                total +
+                Number(item.quantity || 0) *
+                Number(item.ratePerUnit ?? item.rentalRate ?? 0) *
+                days,
+            0
+        );
+    }
+
+    // Calculate the total security deposit separately.
+    function getTotalSecurityDeposit(rental) {
+        return (rental.rentalItems || []).reduce(
+            (total, item) =>
+                total +
+                Number(item.quantity || 0) *
+                Number(
+                    item.securityDepositPerUnit ??
+                    item.depositPerUnit ??
+                    0
+                ),
+            0
+        );
+    }
+
+
     /*
      * Format rental status.
      */
@@ -436,13 +491,9 @@ function RentalHistory() {
                                 <tr>
 
                                     <th>Customer ID</th>
-
                                     <th>Renter Name</th>
-
                                     <th>Phone</th>
-
                                     <th>Type</th>
-
                                     <th>Actions</th>
 
                                 </tr>
@@ -671,35 +722,13 @@ function RentalHistory() {
                                     <thead>
 
                                     <tr>
-
-                                        <th>
-                                            Rental ID
-                                        </th>
-
-                                        <th>
-                                            Rental Date
-                                        </th>
-
-                                        <th>
-                                            Start Date
-                                        </th>
-
-                                        <th>
-                                            Due Date
-                                        </th>
-
-                                        <th>
-                                            Status
-                                        </th>
-
-                                        <th>
-                                            Equipment
-                                        </th>
-
-                                        <th>
-                                            Action
-                                        </th>
-
+                                        <th>Rental ID</th>
+                                        <th>Rental Date</th>
+                                        <th>Start Date</th>
+                                        <th>Due Date</th>
+                                        <th>Status</th>
+                                        <th>Equipment</th>
+                                        <th>Action</th>
                                     </tr>
 
                                     </thead>
@@ -763,17 +792,17 @@ function RentalHistory() {
 
                                                 <td>
 
-                        <span
-                            className={
-                                getStatusClass(
-                                    rental.rentalStatus
-                                )
-                            }
-                        >
-                            {
-                                rental.rentalStatus
-                            }
-                        </span>
+                                                    <span
+                                                        className={
+                                                            getStatusClass(
+                                                                rental.rentalStatus
+                                                            )
+                                                        }
+                                                    >
+                                                        {
+                                                            rental.rentalStatus
+                                                        }
+                                                    </span>
 
                                                 </td>
 
@@ -794,10 +823,10 @@ function RentalHistory() {
 
 
                                                 {/* IMPORTANT:
-                        This button is INSIDE
-                        the map, so it knows
-                        which rental was clicked.
-                    */}
+                                                This button is INSIDE
+                                                the map, so it knows
+                                                which rental was clicked.
+                                                */}
 
                                                 <td>
 
@@ -967,35 +996,14 @@ function RentalHistory() {
                                 <table className="rental-details-table">
 
                                     <thead>
-
                                     <tr>
-
-                                        <th>
-                                            Equipment ID
-                                        </th>
-
-                                        <th>
-                                            Quantity
-                                        </th>
-
-                                        <th>
-                                            Rate / Unit
-                                        </th>
-
-                                        <th>
-                                            Rate Period
-                                        </th>
-
-                                        <th>
-                                            Deposit / Unit
-                                        </th>
-
-                                        <th>
-                                            Line Deposit
-                                        </th>
-
+                                        <th>Equipment ID</th>
+                                        <th>Quantity</th>
+                                        <th>Rate / Unit</th>
+                                        <th>Rate Period</th>
+                                        <th>Deposit / Unit</th>
+                                        <th>Line Deposit</th>
                                     </tr>
-
                                     </thead>
 
 
@@ -1088,6 +1096,33 @@ function RentalHistory() {
 
                             </p>
 
+                        </div>
+
+
+                        <div className="rental-details-section">
+                            <h3>Payment Summary</h3>
+
+                            <div className="rental-details-payment-summary">
+                                <div className="rental-payment-row">
+                                    <span>
+                                        Total Rental Amount (Excluding Security Deposit)
+                                    </span>
+
+                                    <strong>
+                                        Rs.{" "}
+                                        {getTotalRentalAmount(selectedRental).toLocaleString()}
+                                    </strong>
+                                </div>
+
+                                <div className="rental-payment-row">
+                                    <span>Security Deposit Payable</span>
+
+                                    <strong>
+                                        Rs.{" "}
+                                        {getTotalSecurityDeposit(selectedRental).toLocaleString()}
+                                    </strong>
+                                </div>
+                            </div>
                         </div>
 
 

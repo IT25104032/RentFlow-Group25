@@ -1633,9 +1633,7 @@ function RegisterRenter() {
 
                                             <div className="field">
 
-                                                <label>
-                                                    Expiry Date
-                                                </label>
+                                                <label>Expiry Date</label>
 
                                                 <input
                                                     type="date"

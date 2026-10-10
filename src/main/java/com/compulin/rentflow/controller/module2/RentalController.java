@@ -94,7 +94,7 @@ public class RentalController {
     }
 
     @PostMapping("/{rentalId}/issue")
-    public ResponseEntity<RentalResponse> issueRental(
+    public ResponseEntity<?> issueRental(
             @PathVariable Integer rentalId,
             @RequestParam Integer companyId) {
 
@@ -103,12 +103,14 @@ public class RentalController {
                     rentalService.issueRental(rentalId, companyId)
             );
         } catch (IllegalArgumentException exception) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity
+                    .badRequest()
+                    .body(exception.getMessage());
         }
     }
 
     @PostMapping("/{rentalId}/cancel")
-    public ResponseEntity<RentalResponse> cancelRental(
+    public ResponseEntity<?> cancelRental(
             @PathVariable Integer rentalId,
             @RequestParam Integer companyId) {
 
@@ -117,7 +119,9 @@ public class RentalController {
                     rentalService.cancelRental(rentalId, companyId)
             );
         } catch (IllegalArgumentException exception) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity
+                    .badRequest()
+                    .body(exception.getMessage());
         }
     }
 

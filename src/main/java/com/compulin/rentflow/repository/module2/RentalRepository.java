@@ -70,6 +70,20 @@ public interface RentalRepository
     @Query("""
         SELECT r
         FROM Rental r
+        WHERE r.dueDate < :today
+          AND r.rentalStatus IN (
+              'ACTIVE',
+              'PARTIALLY_RETURNED'
+          )
+        ORDER BY r.dueDate
+    """)
+    List<Rental> findRentalsNeedingOverdueStatus(
+            @Param("today") LocalDate today
+    );
+
+    @Query("""
+        SELECT r
+        FROM Rental r
         WHERE r.companyId = :companyId
           AND r.dueDate BETWEEN :today AND :dueSoonDate
           AND r.rentalStatus IN (

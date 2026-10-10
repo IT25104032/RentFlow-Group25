@@ -18,6 +18,7 @@ const EQUIPMENT_DATA = [
         categoryName: "Power Tools",
         rentalRate: 1500,
         ratePeriod: "DAY",
+        depositPerUnit: 250,
         availableQuantity: 10
     },
     {
@@ -27,6 +28,7 @@ const EQUIPMENT_DATA = [
         categoryName: "Power Tools",
         rentalRate: 1200,
         ratePeriod: "DAY",
+        depositPerUnit: 500,
         availableQuantity: 7
     },
     {
@@ -36,6 +38,7 @@ const EQUIPMENT_DATA = [
         categoryName: "Construction Equipment",
         rentalRate: 5000,
         ratePeriod: "DAY",
+        depositPerUnit: 2500,
         availableQuantity: 4
     },
     {
@@ -45,6 +48,7 @@ const EQUIPMENT_DATA = [
         categoryName: "Cleaning Equipment",
         rentalRate: 2500,
         ratePeriod: "DAY",
+        depositPerUnit: 1250,
         availableQuantity: 5
     },
     {
@@ -54,6 +58,7 @@ const EQUIPMENT_DATA = [
         categoryName: "Photography Equipment",
         rentalRate: 2000,
         ratePeriod: "DAY",
+        depositPerUnit: 1500,
         availableQuantity: 4
     }
 ];
@@ -61,36 +66,63 @@ const EQUIPMENT_DATA = [
 
 function EquipmentSelection({ onBack }) {
 
+
     const location = useLocation();
     const navigate = useNavigate();
 
-    /*
-     * Receive the renter and rental details
-     * that were collected in Step 1 and Step 2.
-     */
-    const selectedRenter =
-        location.state?.selectedRenter || null;
+    let savedDraft = {};
 
-    const rentalDetails =
-        location.state?.rentalDetails || null;
+    try {
+        savedDraft = JSON.parse(
+            sessionStorage.getItem("rentFlowRentalDraft") || "{}"
+        );
+    } catch {
+        savedDraft = {};
+    }
+
+    const draft = {
+        ...savedDraft,
+        ...(location.state || {})
+    };
+
+    const selectedRenter = draft.selectedRenter || null;
+    const rentalDetails = draft.rentalDetails || null;
+
+    const [searchText, setSearchText] = useState("");
+
+    const [selectedEquipment, setSelectedEquipment] = useState(
+        draft.selectedEquipment || []
+    );
 
 
-    /*
-     * Search text entered by the staff user.
-     */
-    const [searchText, setSearchText] =
-        useState("");
+    const [depositOverride, setDepositOverride] = useState(
+        draft.depositOverride ?? null
+    );
 
+    const updateSelectedEquipment = (updatedEquipment) => {
+        setSelectedEquipment(updatedEquipment);
+        setDepositOverride(null);
 
-    /*
-     * Equipment currently selected for
-     * this rental.
-     */
-    const [selectedEquipment, setSelectedEquipment] =
-        useState(
-            location.state?.selectedEquipment || []
+        const recalculatedTotal = updatedEquipment.reduce(
+            (total, item) =>
+                total +
+                Number(item.quantity || 0) *
+                (Number(item.securityDepositPerUnit) || 0),
+            0
         );
 
+        sessionStorage.setItem(
+            "rentFlowRentalDraft",
+            JSON.stringify({
+                ...draft,
+                selectedRenter,
+                rentalDetails,
+                selectedEquipment: updatedEquipment,
+                depositOverride: null,
+                totalDeposit: recalculatedTotal
+            })
+        );
+    };
 
     const [error, setError] =
         useState("");
@@ -151,14 +183,16 @@ function EquipmentSelection({ onBack }) {
         }
 
 
-        setSelectedEquipment([
+        updateSelectedEquipment([
             ...selectedEquipment,
             {
                 ...equipment,
                 quantity: 1,
-                securityDepositPerUnit: ""
+                securityDepositPerUnit:
+                equipment.depositPerUnit
             }
         ]);
+
     };
 
 
@@ -166,115 +200,49 @@ function EquipmentSelection({ onBack }) {
      * Change the quantity of a selected
      * equipment item.
      */
-    const handleQuantityChange = (
-        equipmentId,
-        quantity
-    ) => {
-
+    const handleQuantityChange = (equipmentId, quantity) => {
         setError("");
 
-        const numericQuantity =
-            Number(quantity);
+        const numericQuantity = Number(quantity);
 
+        const updatedEquipment = selectedEquipment.map((item) => {
+            if (item.equipmentId !== equipmentId) {
+                return item;
+            }
 
-        setSelectedEquipment(
-            selectedEquipment.map(
-                (item) => {
+            if (numericQuantity < 1) {
+                return { ...item, quantity: 1 };
+            }
 
-                    if (
-                        item.equipmentId !==
-                        equipmentId
-                    ) {
-                        return item;
-                    }
+            if (numericQuantity > item.availableQuantity) {
+                setError(
+                    `${item.itemName} has only ${item.availableQuantity} unit(s) available.`
+                );
 
+                return {
+                    ...item,
+                    quantity: item.availableQuantity
+                };
+            }
 
-                    if (
-                        numericQuantity < 1
-                    ) {
-                        return {
-                            ...item,
-                            quantity: 1
-                        };
-                    }
+            return { ...item, quantity: numericQuantity };
+        });
 
-
-                    if (
-                        numericQuantity >
-                        item.availableQuantity
-                    ) {
-
-                        setError(
-                            `${item.itemName} has only ${item.availableQuantity} unit(s) available.`
-                        );
-
-                        return {
-                            ...item,
-                            quantity:
-                            item.availableQuantity
-                        };
-                    }
-
-
-                    return {
-                        ...item,
-                        quantity:
-                        numericQuantity
-                    };
-                }
-            )
-        );
+        updateSelectedEquipment(updatedEquipment);
     };
-
 
     /*
  * Change the security deposit per unit
  * for a selected equipment item.
  */
-    const handleDepositChange = (
-        equipmentId,
-        deposit
-    ) => {
-
+    const handleRemoveEquipment = (equipmentId) => {
         setError("");
 
-        setSelectedEquipment(
-            selectedEquipment.map(
-                (item) => {
-
-                    if (
-                        item.equipmentId !==
-                        equipmentId
-                    ) {
-                        return item;
-                    }
-
-                    return {
-                        ...item,
-                        securityDepositPerUnit:
-                        deposit
-                    };
-                }
-            )
+        const updatedEquipment = selectedEquipment.filter(
+            (item) => item.equipmentId !== equipmentId
         );
-    };
 
-    /*
-     * Remove equipment from the rental.
-     */
-    const handleRemoveEquipment = (
-        equipmentId
-    ) => {
-
-        setError("");
-
-        setSelectedEquipment(
-            selectedEquipment.filter(
-                (item) =>
-                    item.equipmentId !==
-                    equipmentId
-            )
-        );
+        updateSelectedEquipment(updatedEquipment);
     };
 
 
@@ -282,27 +250,20 @@ function EquipmentSelection({ onBack }) {
      * Calculate the total refundable
      * deposit for all selected items.
      */
-    const totalDeposit = useMemo(() => {
 
-        return selectedEquipment.reduce(
-            (total, item) => {
 
-                const depositPerUnit =
-                    Number(
-                        item.securityDepositPerUnit
-                    ) || 0;
-
-                return total +
-                    (
-                        item.quantity *
-                        depositPerUnit
-                    );
-            },
-            0
-        );
-
+    const calculatedTotalDeposit = useMemo(() => {
+        return selectedEquipment.reduce((total, item) => {
+            return total +
+                Number(item.quantity || 0) *
+                (Number(item.securityDepositPerUnit) || 0);
+        }, 0);
     }, [selectedEquipment]);
 
+    const totalDeposit =
+        depositOverride === null
+            ? calculatedTotalDeposit
+            : depositOverride;
 
     /*
      * Continue to the review step.
@@ -334,14 +295,11 @@ function EquipmentSelection({ onBack }) {
         }
 
 
-        const missingDeposit =
-            selectedEquipment.some(
-                (item) =>
-                    item.securityDepositPerUnit === "" ||
-                    item.securityDepositPerUnit === null ||
-                    item.securityDepositPerUnit === undefined ||
-                    Number(item.securityDepositPerUnit) < 0
-            );
+        const missingDeposit = selectedEquipment.some(
+            (item) =>
+                item.securityDepositPerUnit == null ||
+                Number(item.securityDepositPerUnit) < 0
+        );
 
         if (missingDeposit) {
 
@@ -352,6 +310,17 @@ function EquipmentSelection({ onBack }) {
             return;
         }
 
+        sessionStorage.setItem(
+            "rentFlowRentalDraft",
+            JSON.stringify({
+                ...draft,
+                selectedRenter,
+                rentalDetails,
+                selectedEquipment,
+                depositOverride,
+                totalDeposit
+            })
+        );
 
         navigate(
             "/rentals/review",
@@ -545,33 +514,14 @@ function EquipmentSelection({ onBack }) {
                         <thead>
 
                         <tr>
-
-                            <th>
-                                Equipment
-                            </th>
-
-                            <th>
-                                Code
-                            </th>
-
-                            <th>
-                                Category
-                            </th>
-
-                            <th>
-                                Available
-                            </th>
-
-                            <th>
-                                Rate
-                            </th>
-
-                            <th>
-                                Action
-                            </th>
-
+                            <th>Equipment</th>
+                            <th>Code</th>
+                            <th>Category</th>
+                            <th>Available</th>
+                            <th>Rate</th>
+                            <th>Security Deposit/Unit</th>
+                            <th>Action</th>
                         </tr>
-
                         </thead>
 
 
@@ -624,6 +574,12 @@ function EquipmentSelection({ onBack }) {
                                         </td>
 
                                         <td>
+                                            Rs. {Number(
+                                            equipment.depositPerUnit
+                                        ).toLocaleString()}
+                                        </td>
+
+                                        <td>
 
                                             <button
                                                 type="button"
@@ -648,7 +604,7 @@ function EquipmentSelection({ onBack }) {
                             <tr>
 
                                 <td
-                                    colSpan="6"
+                                    colSpan="7"
                                     className="empty-table-message"
                                 >
                                     No equipment found.
@@ -696,37 +652,15 @@ function EquipmentSelection({ onBack }) {
                         <table className="equipment-table">
 
                             <thead>
-
                             <tr>
-
-                                <th>
-                                    Equipment
-                                </th>
-
-                                <th>
-                                    Available
-                                </th>
-
-                                <th>
-                                    Quantity
-                                </th>
-
-                                <th>
-                                    Rate
-                                </th>
-
-                                <th>
-                                    Security Deposit
-                                </th>
-
-                                <th>
-                                    Action
-                                </th>
-
+                                <th>Equipment</th>
+                                <th>Available</th>
+                                <th>Quantity</th>
+                                <th>Rate</th>
+                                <th>Security Deposit/Unit</th>
+                                <th>Action</th>
                             </tr>
-
                             </thead>
-
 
                             <tbody>
 
@@ -801,46 +735,9 @@ function EquipmentSelection({ onBack }) {
                                         </td>
 
                                         <td>
-                                            <div className="deposit-input-wrapper">
-
-                                                <span className="deposit-currency">
-                                                    Rs.
-                                                </span>
-
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    step="0.01"
-                                                    value={
-                                                        item.securityDepositPerUnit
-                                                    }
-                                                    onChange={(event) =>
-                                                        handleDepositChange(
-                                                            item.equipmentId,
-                                                            event.target.value
-                                                        )
-                                                    }
-                                                    placeholder="Per unit"
-                                                    className="deposit-input"
-                                                />
-
-                                            </div>
-
-                                            <div className="line-deposit">
-
-                                                Line Deposit: Rs.{" "}
-
-                                                {(
-                                                    item.quantity *
-                                                    (
-                                                        Number(
-                                                            item.securityDepositPerUnit
-                                                        ) || 0
-                                                    )
-                                                ).toLocaleString()}
-
-                                            </div>
-
+                                            Rs. {Number(
+                                            item.securityDepositPerUnit
+                                        ).toLocaleString()}
                                         </td>
 
                                         <td>
@@ -877,24 +774,50 @@ function EquipmentSelection({ onBack }) {
 
                 )}
 
-
                 {selectedEquipment.length > 0 && (
-
                     <div className="deposit-summary">
+                        <div>
+                            <label htmlFor="totalSecurityDeposit">
+                                Total Security Deposit (Rs.)
+                            </label>
 
-                        <span>
-                            Total Security Deposit
-                        </span>
+                            <input
+                                id="totalSecurityDeposit"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={totalDeposit}
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    const newOverride = value === ""
+                                        ? 0
+                                        : Math.max(0, Number(value));
 
-                        <strong>
-                            Rs.{" "}
-                            {
-                                totalDeposit.toLocaleString()
-                            }
-                        </strong>
+                                    setDepositOverride(newOverride);
 
+                                    const updatedDraft = {
+                                        ...draft,
+                                        selectedRenter,
+                                        rentalDetails,
+                                        selectedEquipment,
+                                        depositOverride: newOverride,
+                                        totalDeposit: newOverride
+                                    };
+
+                                    sessionStorage.setItem(
+                                        "rentFlowRentalDraft",
+                                        JSON.stringify(updatedDraft)
+                                    );
+                                }}
+                            />
+                        </div>
+
+                        <small>
+                            Automatically calculated from the selected quantities and
+                            hardcoded deposits per unit. You can adjust the total before
+                            reviewing the rental.
+                        </small>
                     </div>
-
                 )}
 
             </div>

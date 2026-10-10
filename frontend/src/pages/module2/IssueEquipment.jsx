@@ -8,6 +8,16 @@ import "./IssueEquipment.css";
 
 const COMPANY_ID = 1000;
 
+// Returns today's date in the browser's local timezone as YYYY-MM-DD.
+function getLocalDateString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
 function IssueEquipment() {
     const [rentals, setRentals] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -15,6 +25,17 @@ function IssueEquipment() {
     const [actionRentalId, setActionRentalId] = useState(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [today, setToday] = useState(getLocalDateString());
+
+    // Refresh the date periodically so the button updates after midnight
+    // even if this page remains open.
+    useEffect(() => {
+        const dateRefresh = window.setInterval(() => {
+            setToday(getLocalDateString());
+        }, 15000);
+
+        return () => window.clearInterval(dateRefresh);
+    }, []);
 
     useEffect(() => {
         loadRentalsForIssue();
@@ -198,6 +219,16 @@ function IssueEquipment() {
                                 const isWorking =
                                     actionRentalId === rental.rentalId;
 
+                                // LocalDate values from Spring Boot normally arrive as YYYY-MM-DD.
+                                // Compare date-only strings to avoid UTC timezone shifts.
+                                const startDate = rental.startDate
+                                    ? String(rental.startDate).slice(0, 10)
+                                    : "";
+                                const isBeforeStartDate =
+                                    Boolean(startDate) && startDate > today;
+                                const isIssueDisabled =
+                                    isWorking || isBeforeStartDate;
+
                                 return (
                                     <tr key={rental.rentalId}>
                                         <td>#{rental.rentalId}</td>
@@ -215,7 +246,12 @@ function IssueEquipment() {
                                                 <button
                                                     type="button"
                                                     className="module2-primary-button"
-                                                    disabled={isWorking}
+                                                    disabled={isIssueDisabled}
+                                                    title={
+                                                        isBeforeStartDate
+                                                            ? `Issuing is available from ${formatDate(startDate)}.`
+                                                            : "Issue all equipment for this rental"
+                                                    }
                                                     onClick={() =>
                                                         handleIssueRental(rental)
                                                     }
