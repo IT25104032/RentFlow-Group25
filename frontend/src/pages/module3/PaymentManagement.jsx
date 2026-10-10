@@ -4,6 +4,7 @@ import InvoicePreviewModal from '../../components/module3/InvoicePreviewModal';
 import PaymentModal from '../../components/module3/PaymentModal';
 import AddChargeModal from '../../components/module3/AddChargeModal';
 import '../../styles/module3/PaymentManagement.css';
+import PaymentHistoryModal from '../../components/module3/PaymentHistoryModal';
 
 export default function PaymentManagement() {
     const [invoices, setInvoices] = useState([]);
@@ -12,7 +13,7 @@ export default function PaymentManagement() {
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [chargeInvoice, setChargeInvoice] = useState(null);
     const [invoicePreview, setInvoicePreview] = useState(null);
-
+    const [historyInvoice, setHistoryInvoice] = useState(null);
     // State for generating invoice
     const [rentalIdInput, setRentalIdInput] = useState('');
     const [generating, setGenerating] = useState(false);
@@ -204,6 +205,7 @@ export default function PaymentManagement() {
                                     )}
                                     <button className="btn-pay" style={{ backgroundColor: '#17a2b8' }} onClick={() => setChargeInvoice(inv)}>+ Fee</button>
                                     <button className="btn-print" onClick={() => handlePrint(inv)}>🖨️️ Print</button>
+                                    <button className="btn-pay" style={{ backgroundColor: '#6f42c1' }} onClick={() => setHistoryInvoice(inv)}>History</button>
                                 </div>
                             </td>
                         </tr>
@@ -233,6 +235,13 @@ export default function PaymentManagement() {
                     preview={invoicePreview}
                     onClose={() => setInvoicePreview(null)}
                     onSuccess={() => { setInvoicePreview(null); setRentalIdInput(''); fetchList(); }}
+                />
+            )}
+
+            {historyInvoice && (
+                <PaymentHistoryModal
+                    invoice={historyInvoice}
+                    onClose={() => setHistoryInvoice(null)}
                 />
             )}
         </div>

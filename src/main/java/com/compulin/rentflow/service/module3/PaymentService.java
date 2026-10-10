@@ -79,4 +79,11 @@ public class PaymentService {
     public List<Payment> getPaymentsByInvoiceId(Integer invoiceId) {
         return paymentRepository.findByInvoice_InvoiceId(invoiceId);
     }
+
+    // Retrieves all payments recorded against an invoice, oldest first
+    public List<Payment> getPaymentsForInvoice(Integer invoiceId) {
+        List<Payment> payments = paymentRepository.findByInvoice_InvoiceId(invoiceId);
+        payments.sort(java.util.Comparator.comparing(Payment::getPaymentDate));
+        return payments;
+    }
 }

@@ -89,3 +89,9 @@ export const previewInvoice = async (rentalId) => {
     }
     return response.json();
 };
+
+export const getPaymentHistory = async (invoiceId) => {
+    const response = await fetch(`http://localhost:8081/api/v1/payments/invoice/${invoiceId}`);
+    if (!response.ok) throw new Error('Failed to load payment history.');
+    return response.json();
+};
