@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getInvoices, getChargesByInvoice } from '../../services/module3/paymentApi';
+import { getInvoices, getChargesByInvoice, generateInvoice } from '../../services/module3/paymentApi';
 import PaymentModal from '../../components/module3/PaymentModal';
 import AddChargeModal from '../../components/module3/AddChargeModal';
 import '../../styles/module3/PaymentManagement.css';
@@ -10,6 +10,10 @@ export default function PaymentManagement() {
     const [error, setError] = useState(null);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [chargeInvoice, setChargeInvoice] = useState(null);
+
+    // State for generating invoice
+    const [rentalIdInput, setRentalIdInput] = useState('');
+    const [generating, setGenerating] = useState(false);
 
     const fetchList = async () => {
         setLoading(true);
@@ -25,6 +29,23 @@ export default function PaymentManagement() {
 
     useEffect(() => { fetchList(); }, []);
 
+    const handleGenerateInvoice = async (e) => {
+        e.preventDefault();
+        if (!rentalIdInput.trim()) return;
+
+        setGenerating(true);
+        setError(null);
+        try {
+            await generateInvoice(rentalIdInput.trim());
+            setRentalIdInput('');
+            await fetchList(); // Refresh table to show the new invoice
+        } catch (err) {
+            setError(err.message || 'Error generating invoice');
+        } finally {
+            setGenerating(false);
+        }
+    };
+
     const getBadgeClass = (status) => {
         if (status === 'PAID') return 'badge-paid';
         if (status === 'PARTIALLY_PAID') return 'badge-partial';
@@ -33,10 +54,8 @@ export default function PaymentManagement() {
 
     const handlePrint = async (inv) => {
         try {
-            // Fetch the itemized charges from the backend
             const charges = await getChargesByInvoice(inv.invoiceId, inv.rentalId);
 
-            // Generate table rows dynamically based on the charges
             const chargeRows = charges.map(charge => `
             <tr>
                 <td>${charge.chargeType} ${charge.chargeDescription ? `- ${charge.chargeDescription}` : ''}</td>
@@ -117,12 +136,31 @@ export default function PaymentManagement() {
 
     return (
         <div className="payment-container">
-            <div className="header-bar">
+            <div className="header-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h2>Billing & Payment Management</h2>
-                <button className="btn-refresh" onClick={fetchList}>↻ Refresh</button>
+
+                {/* NEW INVOICE GENERATION BAR INJECTED HERE */}
+                <form onSubmit={handleGenerateInvoice} style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                        type="number"
+                        placeholder="Enter Rental ID"
+                        value={rentalIdInput}
+                        onChange={(e) => setRentalIdInput(e.target.value)}
+                        style={{ padding: '8px 12px', borderRadius: '4px', border: '1px solid #ccc' }}
+                        required
+                    />
+                    <button
+                        type="submit"
+                        disabled={generating}
+                        style={{ backgroundColor: '#28a745', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}
+                    >
+                        {generating ? 'Generating...' : '+ Generate Invoice'}
+                    </button>
+                    <button type="button" className="btn-refresh" onClick={fetchList}>↻ Refresh</button>
+                </form>
             </div>
 
-            {error && <div className="error-banner">{error}</div>}
+            {error && <div className="error-banner" style={{ color: 'red', marginBottom: '15px' }}>{error}</div>}
 
             {!loading && (
                 <table className="invoice-table">
@@ -156,11 +194,11 @@ export default function PaymentManagement() {
                             <td><span className={`badge ${getBadgeClass(inv.invoiceStatus)}`}>{inv.invoiceStatus}</span></td>
                             <td className="action-cell">
                                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                                    {inv.invoiceStatus !== 'PAID' ? (
+                                    {inv.invoiceStatus !== 'PAID' && (
                                         <button className="btn-pay" onClick={() => setSelectedInvoice(inv)}>Pay</button>
-                                    ) : <span style={{ color: '#888', fontSize: '13px' }}>Paid</span>}
+                                    )}
                                     <button className="btn-pay" style={{ backgroundColor: '#17a2b8' }} onClick={() => setChargeInvoice(inv)}>+ Fee</button>
-                                    <button className="btn-print" onClick={() => handlePrint(inv)}>🖨️ Print</button>
+                                    <button className="btn-print" onClick={() => handlePrint(inv)}>🖨️️ Print</button>
                                 </div>
                             </td>
                         </tr>

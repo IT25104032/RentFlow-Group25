@@ -21,13 +21,16 @@ export const recordPayment = async (payload) => {
 
 // Post a new line item charge
 export const addCharge = async (chargeData) => {
-    const response = await fetch('http://localhost:8081/api/v1/charges', {
+    const baseUrl = 'http://localhost:8081/api/v1'; // Ensure this port is correct!
+    const response = await fetch(`${baseUrl}/charges`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(chargeData),
     });
+
     if (!response.ok) {
-        throw new Error('Failed to add charge');
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to add charge');
     }
     return response.json();
 };
@@ -64,3 +67,16 @@ export const getChargesByInvoice = async (invoiceId, rentalId) => {
     return response.json();
 };
 
+export const generateInvoice = async (rentalId) => {
+    const baseUrl = 'http://localhost:8081/api/v1';
+    const response = await fetch(`${baseUrl}/invoices/generate/${rentalId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `Failed to generate invoice for Rental #${rentalId}`);
+    }
+    return response.json();
+};

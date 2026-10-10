@@ -17,11 +17,15 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final InvoiceRepository invoiceRepository;
+    private final InvoiceService invoiceService;
 
     @Autowired
-    public PaymentService(PaymentRepository paymentRepository, InvoiceRepository invoiceRepository) {
+    public PaymentService(PaymentRepository paymentRepository,
+                          InvoiceRepository invoiceRepository,
+                          InvoiceService invoiceService) {
         this.paymentRepository = paymentRepository;
         this.invoiceRepository = invoiceRepository;
+        this.invoiceService = invoiceService;
     }
 
     @Transactional
@@ -29,41 +33,50 @@ public class PaymentService {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found with ID: " + invoiceId));
 
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Payment amount must be greater than zero.");
         }
 
-        if (amount.compareTo(invoice.getBalanceDue()) > 0) {
-            throw new RuntimeException("Payment exceeds remaining balance. Due: " + invoice.getBalanceDue());
+        BigDecimal currentBalance = invoice.getBalanceDue() != null ? invoice.getBalanceDue() : BigDecimal.ZERO;
+        if (amount.compareTo(currentBalance) > 0) {
+            throw new RuntimeException("Payment exceeds remaining balance. Due: " + currentBalance);
         }
 
+        // 1. Record the new payment transaction
         Payment payment = new Payment();
         payment.setInvoice(invoice);
         payment.setAmount(amount);
         payment.setPaymentDate(LocalDateTime.now());
         payment.setPaymentMethod(paymentMethod);
-        payment.setReferenceNo(referenceNo != null ? referenceNo : "TXN-" + System.currentTimeMillis());
+        payment.setReferenceNo(referenceNo != null && !referenceNo.trim().isEmpty()
+                ? referenceNo
+                : "TXN-" + System.currentTimeMillis());
         payment.setPaymentStatus(Payment.PaymentStatus.COMPLETED);
 
         Payment savedPayment = paymentRepository.save(payment);
 
-        BigDecimal newAmountPaid = invoice.getAmountPaid().add(amount);
-        BigDecimal newBalanceDue = invoice.getTotalAmount().subtract(newAmountPaid);
-
-        invoice.setAmountPaid(newAmountPaid);
-        invoice.setBalanceDue(newBalanceDue);
-
-        if (newBalanceDue.compareTo(BigDecimal.ZERO) == 0) {
-            invoice.setInvoiceStatus(Invoice.InvoiceStatus.PAID);
-        } else {
-            invoice.setInvoiceStatus(Invoice.InvoiceStatus.PARTIALLY_PAID);
-        }
-
+        // 2. Update total amount paid on the invoice (with null check)
+        BigDecimal existingPaid = invoice.getAmountPaid() != null ? invoice.getAmountPaid() : BigDecimal.ZERO;
+        invoice.setAmountPaid(existingPaid.add(amount));
         invoiceRepository.save(invoice);
+
+        // 3. Delegate balance and status recalculation to InvoiceService
+        invoiceService.recalculateInvoiceTotals(invoiceId);
+
         return savedPayment;
     }
 
+
+     //Get all payment records in the system
+
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
+    }
+
+
+     //Get payment history for a specific invoice
+
+    public List<Payment> getPaymentsByInvoiceId(Integer invoiceId) {
+        return paymentRepository.findByInvoice_InvoiceId(invoiceId);
     }
 }
