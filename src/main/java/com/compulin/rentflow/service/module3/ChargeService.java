@@ -36,36 +36,4 @@ public class ChargeService {
     }
 
 
-     //Add a new additional charge to an invoice and trigger total recalculation
-
-    @Transactional
-    public Charge addChargeToInvoice(Integer invoiceId, Charge charge) {
-        Invoice invoice = invoiceService.getInvoiceById(invoiceId);
-        charge.setInvoice(invoice);
-        charge.setRentalId(invoice.getRentalId());
-
-        Charge savedCharge = chargeRepository.save(charge);
-
-        // Recalculate parent invoice totals and balance due
-        invoiceService.recalculateInvoiceTotals(invoiceId);
-
-        return savedCharge;
-    }
-
-
-     //Delete a charge and update the parent invoice total
-
-    @Transactional
-    public void deleteCharge(Integer chargeId) {
-        Charge charge = chargeRepository.findById(chargeId)
-                .orElseThrow(() -> new RuntimeException("Charge not found with ID: " + chargeId));
-
-        Integer invoiceId = charge.getInvoice() != null ? charge.getInvoice().getInvoiceId() : null;
-
-        chargeRepository.delete(charge);
-
-        if (invoiceId != null) {
-            invoiceService.recalculateInvoiceTotals(invoiceId);
-        }
-    }
 }

@@ -24,12 +24,6 @@ public class ChargeController {
         this.chargeRepository = chargeRepository;
     }
 
-    // Save a new charge
-    @PostMapping
-    public ResponseEntity<Charge> createCharge(@RequestBody Charge charge) {
-        Charge savedCharge = chargeRepository.save(charge);
-        return new ResponseEntity<>(savedCharge, HttpStatus.CREATED);
-    }
 
     // Get all charges for a specific invoice
     @GetMapping("/invoice/{invoiceId}")
