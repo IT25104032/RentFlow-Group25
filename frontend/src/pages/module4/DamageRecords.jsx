@@ -13,7 +13,7 @@ import {
 import "../../styles/module4/module4.css";
 
 
-function DamageAssessment() {
+function DamageRecords() {
 
     const { returnId } =
         useParams();
@@ -499,4 +499,4 @@ function DamageAssessment() {
     );
 }
 
-export default DamageAssessment;
+export default DamageRecords;
