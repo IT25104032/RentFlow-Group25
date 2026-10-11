@@ -121,10 +121,6 @@ function RentalHistory() {
      * Select renter and load
      * their rental history.
      */
-    /*
- * Select renter and load
- * their rental history.
- */
     async function handleSelectRenter(
         renter,
         targetRentalId = null
@@ -368,19 +364,34 @@ function RentalHistory() {
         );
     }
 
-    // Calculate the total security deposit separately.
+    // Return the final agreed deposit saved in rental notes, if present.
+    // Fall back to the item-level calculation for older rentals.
     function getTotalSecurityDeposit(rental) {
-        return (rental.rentalItems || []).reduce(
+        if (rental?.totalDeposit !== null && rental?.totalDeposit !== undefined) {
+            return Number(rental.totalDeposit);
+        }
+
+        const notes = rental?.rental?.notes || "";
+        const markerMatches = [...notes.matchAll(/\[FINAL_DEPOSIT=(-?\d+(?:\.\d+)?)\]/g)];
+        if (markerMatches.length > 0) {
+            return Number(markerMatches[markerMatches.length - 1][1]);
+        }
+
+        return (rental?.rentalItems || []).reduce(
             (total, item) =>
-                total +
-                Number(item.quantity || 0) *
-                Number(
-                    item.securityDepositPerUnit ??
-                    item.depositPerUnit ??
-                    0
+                total + Number(
+                    item.lineDeposit ??
+                    (Number(item.quantity || 0) * Number(item.securityDepositPerUnit ?? item.depositPerUnit ?? 0))
                 ),
             0
         );
+    }
+
+    // Hide the internal storage marker from the Notes section.
+    function getDisplayNotes(notes) {
+        return (notes || "")
+            .replace(/\s*\[FINAL_DEPOSIT=-?\d+(?:\.\d+)?\]/g, "")
+            .trim();
     }
 
 
@@ -963,6 +974,19 @@ function RentalHistory() {
                                 </div>
 
                                 <div>
+                                    <span>Final Security Deposit</span>
+                                    <strong>
+                                        Rs. {Number(
+                                        selectedRental.totalDeposit ??
+                                        (selectedRental.rentalItems || []).reduce(
+                                            (sum, item) => sum + Number(item.lineDeposit || 0),
+                                            0
+                                        )
+                                    ).toLocaleString()}
+                                    </strong>
+                                </div>
+
+                                <div>
                                     <span>Status</span>
 
                                     <strong>
@@ -1090,7 +1114,7 @@ function RentalHistory() {
                             <p className="rental-details-notes">
 
                                 {
-                                    selectedRental.rental.notes ||
+                                    getDisplayNotes(selectedRental.rental.notes) ||
                                     "No notes recorded."
                                 }
 

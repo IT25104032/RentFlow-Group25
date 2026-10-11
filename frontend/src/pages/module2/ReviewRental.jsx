@@ -210,7 +210,10 @@ function ReviewRental() {
 
 
                 rentalItems:
-                rentalItems
+                rentalItems,
+
+                // Send the officer's final agreed deposit to the backend.
+                totalDeposit: Number(totalDeposit)
             };
 
 

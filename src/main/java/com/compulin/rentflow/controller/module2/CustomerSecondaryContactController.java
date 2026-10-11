@@ -4,6 +4,7 @@ package com.compulin.rentflow.controller.module2;
 import com.compulin.rentflow.dto.module2.CustomerSecondaryContactRequest;
 import com.compulin.rentflow.dto.module2.CustomerSecondaryContactResponse;
 import com.compulin.rentflow.service.module2.CustomerSecondaryContactService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class CustomerSecondaryContactController {
 
     @PostMapping
     public ResponseEntity<CustomerSecondaryContactResponse> createContact(
-            @RequestBody CustomerSecondaryContactRequest request) {
+            @Valid @RequestBody CustomerSecondaryContactRequest request) {
 
         CustomerSecondaryContactResponse response =
                 service.createContact(request);
@@ -54,7 +55,7 @@ public class CustomerSecondaryContactController {
     public ResponseEntity<CustomerSecondaryContactResponse> updateContact(
             @PathVariable Integer secondaryContactId,
             @RequestParam Integer customerId,
-            @RequestBody CustomerSecondaryContactRequest request) {
+            @Valid @RequestBody CustomerSecondaryContactRequest request) {
 
         CustomerSecondaryContactResponse response =
                 service.updateContact(

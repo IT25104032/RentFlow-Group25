@@ -24,17 +24,12 @@ public class RentalConfirmationService {
 
     private final RentalItemRepository rentalItemRepository;
 
-
     public RentalConfirmationService(
             RentalRepository rentalRepository,
             RentalItemRepository rentalItemRepository
     ) {
-
-        this.rentalRepository =
-                rentalRepository;
-
-        this.rentalItemRepository =
-                rentalItemRepository;
+        this.rentalRepository = rentalRepository;
+        this.rentalItemRepository = rentalItemRepository;
     }
 
 
@@ -82,7 +77,10 @@ public class RentalConfirmationService {
         );
 
         rental.setNotes(
-                request.getRental().getNotes()
+                appendFinalDepositMarker(
+                        request.getRental().getNotes(),
+                        request.getTotalDeposit()
+                )
         );
 
 
@@ -183,6 +181,10 @@ public class RentalConfirmationService {
         }
 
 
+        // The final agreed deposit is already stored in the rental notes marker.
+        // Module 2 deliberately does not write to Module 3's security_deposit table.
+
+
         /*
          * Build the rental response.
          */
@@ -216,6 +218,25 @@ public class RentalConfirmationService {
     }
 
 
+    /**
+     * Stores the final agreed deposit in the existing notes column without
+     * changing the database schema. The marker is parsed by RentalService and
+     * hidden from the ordinary Notes display in RentalHistory.jsx.
+     */
+    private String appendFinalDepositMarker(String notes, BigDecimal totalDeposit) {
+        String cleanNotes = notes == null ? "" : notes;
+        cleanNotes = cleanNotes.replaceAll("\\s*\\[FINAL_DEPOSIT=-?\\d+(?:\\.\\d+)?\\]", "").trim();
+        String marker = "[FINAL_DEPOSIT=" + totalDeposit.toPlainString() + "]";
+        String combined = cleanNotes.isEmpty() ? marker : cleanNotes + "\n" + marker;
+        if (combined.length() > 500) {
+            throw new IllegalArgumentException(
+                    "Rental notes are too long to store the final deposit marker. Shorten the notes and try again."
+            );
+        }
+        return combined;
+    }
+
+
     /*
      * Validate the complete confirmation request.
      */
@@ -237,6 +258,19 @@ public class RentalConfirmationService {
                     "Rental details are required."
             );
         }
+
+        if (request.getTotalDeposit() == null) {
+            throw new IllegalArgumentException(
+                    "Total security deposit is required."
+            );
+        }
+
+        if (request.getTotalDeposit().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException(
+                    "Total security deposit cannot be negative."
+            );
+        }
+
 
 
         if (
