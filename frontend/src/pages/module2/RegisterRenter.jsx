@@ -29,6 +29,9 @@ import "./RegisterRenter.css";
 const COMPANY_ID = 1000;
 const USER_ID = 3;
 
+// Sri Lankan phone numbers must contain exactly 10 digits.
+const isValidPhoneNumber = (value) => /^\d{10}$/.test((value || "").trim());
+
 
 function RegisterRenter() {
 
@@ -38,6 +41,8 @@ function RegisterRenter() {
      */
 
     const documentFileInputRef = useRef(null);
+    // Synchronous lock: React state alone cannot stop two rapid submit events.
+    const saveLockRef = useRef(false);
 
     const [searchType, setSearchType] = useState("name");
 
@@ -642,41 +647,17 @@ function RegisterRenter() {
     async function saveIdentification(customerId) {
 
         /*
-         * If the identification section is
-         * collapsed, identification is optional.
-         */
-        if (!identificationOpen) {
-            return;
-        }
-
-
-        /*
          * Validate the required identification
          * fields before sending data to the backend.
          */
         if (
             !documentForm.documentType ||
-            !documentForm.documentNumber
+            !documentForm.documentNumber?.trim()
         ) {
             throw new Error(
                 "Please complete the identification document details."
             );
         }
-
-
-        /*
-         * If this renter already has an identification
-         * document and the user did not select a new file,
-         * keep the existing document unchanged.
-         */
-        if (
-            selectedRenter &&
-            existingDocumentId &&
-            !documentForm.documentCopy
-        ) {
-            return;
-        }
-
 
         /*
          * Prepare the identification data that will
@@ -744,11 +725,6 @@ function RegisterRenter() {
     async function saveSecondaryContact(
         customerId
     ) {
-
-        if (!secondaryOpen) {
-            return;
-        }
-
 
         if (
             !secondaryForm.contactName
@@ -844,11 +820,75 @@ function RegisterRenter() {
 
         event.preventDefault();
 
+        // Prevent duplicate submissions synchronously, including rapid double-clicks.
+        if (saveLockRef.current) return;
+
         setError("");
         setSuccess("");
 
-        setSaving(true);
+        // Validate every section BEFORE creating/updating the customer.
+        // Collapsing an accordion must never bypass validation.
+        if (
+            !renterForm.customerName?.trim() ||
+            !renterForm.phone?.trim() ||
+            !renterForm.customerType ||
+            !renterForm.customerStatus
+        ) {
+            setError("Please complete the mandatory renter details.");
+            return;
+        }
 
+        if (!isValidPhoneNumber(renterForm.phone)) {
+            setError("Renter phone number must contain exactly 10 digits.");
+            return;
+        }
+
+        if (
+            !documentForm.documentType ||
+            !documentForm.documentNumber?.trim()
+        ) {
+            setIdentificationOpen(true);
+            setError("Please enter the identification document type and number.");
+            return;
+        }
+
+        // New identification records require a file. Existing renters can
+        // keep their previously uploaded file without uploading it again.
+        if (
+            !documentForm.documentCopy &&
+            !existingDocumentFile
+        ) {
+            setIdentificationOpen(true);
+            setError("Please upload an identification document copy.");
+            return;
+        }
+
+        if (
+            !secondaryForm.contactName?.trim() ||
+            !secondaryForm.phoneNumber?.trim()
+        ) {
+            setSecondaryOpen(true);
+            setError("Please enter the mandatory secondary contact name and phone number.");
+            return;
+        }
+
+        if (!isValidPhoneNumber(secondaryForm.phoneNumber)) {
+            setSecondaryOpen(true);
+            setError("Secondary contact phone number must contain exactly 10 digits.");
+            return;
+        }
+
+        if (
+            secondaryForm.alternatePhone?.trim() &&
+            !isValidPhoneNumber(secondaryForm.alternatePhone)
+        ) {
+            setSecondaryOpen(true);
+            setError("Alternate phone number must contain exactly 10 digits, or be left blank.");
+            return;
+        }
+
+        saveLockRef.current = true;
+        setSaving(true);
 
         try {
 
@@ -967,6 +1007,7 @@ function RegisterRenter() {
 
         } finally {
 
+            saveLockRef.current = false;
             setSaving(false);
         }
     }
@@ -1381,6 +1422,11 @@ function RegisterRenter() {
                                         </label>
 
                                         <input
+                                            type="tel"
+                                            inputMode="numeric"
+                                            maxLength={10}
+                                            pattern="[0-9]{10}"
+                                            title="Enter exactly 10 digits"
                                             name="phone"
                                             value={
                                                 renterForm.phone
@@ -1764,6 +1810,11 @@ function RegisterRenter() {
                                                 </label>
 
                                                 <input
+                                                    type="tel"
+                                                    inputMode="numeric"
+                                                    maxLength={10}
+                                                    pattern="[0-9]{10}"
+                                                    title="Enter exactly 10 digits"
                                                     name="phoneNumber"
                                                     value={
                                                         secondaryForm.phoneNumber
@@ -1783,6 +1834,11 @@ function RegisterRenter() {
                                                 </label>
 
                                                 <input
+                                                    type="tel"
+                                                    inputMode="numeric"
+                                                    maxLength={10}
+                                                    pattern="[0-9]{10}"
+                                                    title="Enter exactly 10 digits"
                                                     name="alternatePhone"
                                                     value={
                                                         secondaryForm.alternatePhone

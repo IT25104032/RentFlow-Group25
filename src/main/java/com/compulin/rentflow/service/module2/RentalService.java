@@ -14,6 +14,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 
+import java.math.BigDecimal;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -89,6 +92,7 @@ public class RentalService {
                             new RentalHistoryResponse();
 
                     history.setRental(convertToResponse(rental));
+                    history.setTotalDeposit(extractFinalDeposit(rental.getNotes()));
 
                     List<RentalItemResponse> rentalItems =
                             rentalItemRepository
@@ -266,6 +270,20 @@ public class RentalService {
                 .stream()
                 .map(this::convertToResponse)
                 .toList();
+    }
+
+    private BigDecimal extractFinalDeposit(String notes) {
+        if (notes == null || notes.isBlank()) {
+            return null;
+        }
+
+        Matcher matcher = Pattern.compile("\\[FINAL_DEPOSIT=(-?\\d+(?:\\.\\d+)?)\\]")
+                .matcher(notes);
+        BigDecimal finalDeposit = null;
+        while (matcher.find()) {
+            finalDeposit = new BigDecimal(matcher.group(1));
+        }
+        return finalDeposit;
     }
 
     private RentalResponse convertToResponse(Rental rental) {

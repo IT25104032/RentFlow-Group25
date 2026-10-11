@@ -3,6 +3,7 @@ package com.compulin.rentflow.controller.module2;
 import com.compulin.rentflow.dto.module2.CustomerRequest;
 import com.compulin.rentflow.dto.module2.CustomerResponse;
 import com.compulin.rentflow.service.module2.CustomerService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class CustomerController {
 
     @PostMapping
     public ResponseEntity<CustomerResponse> createCustomer(
-            @RequestBody CustomerRequest request) {
+            @Valid @RequestBody CustomerRequest request) {
 
         CustomerResponse response = customerService.createCustomer(request);
 
@@ -79,7 +80,7 @@ public class CustomerController {
     public ResponseEntity<CustomerResponse> updateCustomer(
             @PathVariable Integer customerId,
             @RequestParam Integer companyId,
-            @RequestBody CustomerRequest request) {
+            @Valid @RequestBody CustomerRequest request) {
 
         CustomerResponse response =
                 customerService.updateCustomer(
