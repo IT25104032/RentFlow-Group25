@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { getInvoices, getChargesByInvoice, previewInvoice, previewExtension } from '../../services/module3/paymentApi';
 import InvoicePreviewModal from '../../components/module3/InvoicePreviewModal';
 import PaymentModal from '../../components/module3/PaymentModal';
-import AddChargeModal from '../../components/module3/AddChargeModal';
 import '../../styles/module3/PaymentManagement.css';
 import PaymentHistoryModal from '../../components/module3/PaymentHistoryModal';
 import ExtensionUpdateModal from '../../components/module3/ExtensionUpdateModal';
@@ -12,7 +11,6 @@ export default function PaymentManagement() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
-    const [chargeInvoice, setChargeInvoice] = useState(null);
     const [invoicePreview, setInvoicePreview] = useState(null);
     const [historyInvoice, setHistoryInvoice] = useState(null);
     const [extensionPreview, setExtensionPreview] = useState(null);
@@ -214,7 +212,6 @@ export default function PaymentManagement() {
                                     {inv.invoiceStatus !== 'PAID' && (
                                         <button className="btn-pay" onClick={() => setSelectedInvoice(inv)}>Pay</button>
                                     )}
-                                    <button className="btn-pay" style={{ backgroundColor: '#17a2b8' }} onClick={() => setChargeInvoice(inv)}>+ Fee</button>
                                     <button className="btn-print" onClick={() => handlePrint(inv)}>🖨️️ Print</button>
                                     <button className="btn-pay" style={{ backgroundColor: '#6f42c1' }} onClick={() => setHistoryInvoice(inv)}>History</button>
                                     {inv.invoiceStatus !== 'CANCELLED' && (
@@ -233,14 +230,6 @@ export default function PaymentManagement() {
                     invoice={selectedInvoice}
                     onClose={() => setSelectedInvoice(null)}
                     onSuccess={() => { setSelectedInvoice(null); fetchList(); }}
-                />
-            )}
-
-            {chargeInvoice && (
-                <AddChargeModal
-                    invoice={chargeInvoice}
-                    onClose={() => setChargeInvoice(null)}
-                    onSuccess={() => { setChargeInvoice(null); fetchList(); }}
                 />
             )}
 
