@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
+/*
+ * A damage record: units of a rental line that's damaged.
+ */@Entity
 @Table(name = "damage_record")
 public class DamageRecord {
 

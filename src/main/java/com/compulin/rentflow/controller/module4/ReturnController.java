@@ -1,20 +1,24 @@
 package com.compulin.rentflow.controller.module4;
 
-import com.compulin.rentflow.dto.module4.ProcessReturnRequest;
-import com.compulin.rentflow.dto.module4.ProcessReturnResponse;
-import com.compulin.rentflow.dto.module4.RentalReturnDetailsDTO;
-import com.compulin.rentflow.dto.module4.RentalSearchResultDTO;
-import com.compulin.rentflow.entity.module4.RentalReturn;
-import com.compulin.rentflow.entity.module4.ReturnItem;
+import com.compulin.rentflow.dto.module4.ReturnDtos.Module4Counts;
+import com.compulin.rentflow.dto.module4.ReturnDtos.OpenRental;
+import com.compulin.rentflow.dto.module4.ReturnDtos.ProcessReturnRequest;
+import com.compulin.rentflow.dto.module4.ReturnDtos.ProcessReturnResponse;
+import com.compulin.rentflow.dto.module4.ReturnDtos.RentalForReturn;
+import com.compulin.rentflow.dto.module4.ReturnDtos.ReturnDetails;
+import com.compulin.rentflow.dto.module4.ReturnDtos.ReturnSummary;
 import com.compulin.rentflow.service.module4.RentalReturnService;
 
+import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/*
+ * MODULE 4 (IT25104066) - returns.
+ */
 @RestController
 @RequestMapping("/api/returns")
-@CrossOrigin(origins = "http://localhost:5173")
 public class ReturnController {
 
     private final RentalReturnService returnService;
@@ -23,44 +27,42 @@ public class ReturnController {
         this.returnService = returnService;
     }
 
-    @GetMapping
-    public List<RentalReturn> getAllReturns() {
-        return returnService.getAllReturns();
+    @GetMapping("/overview")
+    public Module4Counts overview(HttpSession session) {
+        return returnService.counts(Module4Session.companyId(session));
     }
 
-    @GetMapping("/{returnId}")
-    public RentalReturn getReturnById(
-            @PathVariable Integer returnId) {
-
-        return returnService.getReturnById(returnId);
-    }
-
-    @GetMapping("/{returnId}/items")
-    public List<ReturnItem> getReturnItems(
-            @PathVariable Integer returnId) {
-
-        return returnService.getReturnItems(returnId);
-    }
-
-    @GetMapping("/search")
-    public List<RentalSearchResultDTO> searchRentals(
-            @RequestParam String search) {
-
-        return returnService.searchRentals(search);
+    @GetMapping("/open-rentals")
+    public List<OpenRental> openRentals(@RequestParam(required = false) String search,
+                                        HttpSession session) {
+        return returnService.openRentals(Module4Session.companyId(session), search);
     }
 
     @GetMapping("/rental/{rentalId}")
-    public RentalReturnDetailsDTO getRentalForReturn(
-            @PathVariable Integer rentalId) {
-
-        return returnService.getRentalForReturn(rentalId);
+    public RentalForReturn rentalForReturn(@PathVariable Integer rentalId,
+                                           @RequestParam(required = false) String returnDate,
+                                           HttpSession session) {
+        return returnService.rentalForReturn(rentalId, Module4Session.companyId(session), returnDate);
     }
 
     @PostMapping("/process")
-    public ProcessReturnResponse processReturn(
-            @RequestBody ProcessReturnRequest request) {
+    public ProcessReturnResponse processReturn(@RequestBody ProcessReturnRequest request,
+                                               HttpSession session) {
+        return returnService.processReturn(
+                request,
+                Module4Session.userId(session, request == null ? null : request.processedBy()),
+                Module4Session.companyId(session));
+    }
 
-        return returnService.processReturn(request);
+    @GetMapping
+    public List<ReturnSummary> history(@RequestParam(required = false) String search,
+                                       @RequestParam(required = false) Integer rentalId,
+                                       HttpSession session) {
+        return returnService.history(Module4Session.companyId(session), search, rentalId);
+    }
+
+    @GetMapping("/{returnId}")
+    public ReturnDetails details(@PathVariable Integer returnId, HttpSession session) {
+        return returnService.details(Module4Session.companyId(session), returnId);
     }
 }
-

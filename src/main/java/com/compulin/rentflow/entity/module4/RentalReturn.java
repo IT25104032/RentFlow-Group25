@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+
+/*
+ * A rental returns where an item of a rental is returned (either partial or full return)
+ */
 @Entity
 @Table(name = "rental_return")
 public class RentalReturn {
