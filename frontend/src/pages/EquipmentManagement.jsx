@@ -1,3 +1,4 @@
+#frontend
 import { useEffect, useState } from 'react'
 import './EquipmentManagement.css'
 

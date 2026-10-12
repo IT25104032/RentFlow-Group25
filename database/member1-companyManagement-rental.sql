@@ -1,3 +1,4 @@
+#script
 drop database module1_test;
 CREATE DATABASE module1_test;
 USE module1_test;

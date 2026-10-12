@@ -1,4 +1,5 @@
 #=========Inserting data to tables============
+ #testing
 INSERT INTO company
 (company_name, registration_no, email, phone, address, registered_by)
 VALUES

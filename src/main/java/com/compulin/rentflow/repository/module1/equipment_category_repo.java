@@ -1,3 +1,5 @@
+//equipment category
+
 package com.compulin.rentflow.repository.module1;
 
 import com.compulin.rentflow.entity.module1.equipment_category;

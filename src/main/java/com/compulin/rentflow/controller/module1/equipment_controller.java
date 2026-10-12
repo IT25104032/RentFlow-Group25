@@ -1,3 +1,5 @@
+//equipment
+
 package com.compulin.rentflow.controller.module1;
 
 import com.compulin.rentflow.entity.module1.equipment;

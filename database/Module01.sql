@@ -1,3 +1,5 @@
+//creating tables
+
 DROP DATABASE IF EXISTS compulin_rental_db;
 CREATE DATABASE compulin_rental_db;
 USE compulin_rental_db;

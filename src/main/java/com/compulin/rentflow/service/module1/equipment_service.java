@@ -1,3 +1,4 @@
+//equipment service
 package com.compulin.rentflow.service.module1;
 
 import com.compulin.rentflow.entity.module1.company;

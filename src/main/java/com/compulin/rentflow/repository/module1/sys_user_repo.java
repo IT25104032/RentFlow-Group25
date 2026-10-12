@@ -1,4 +1,4 @@
-
+//sys_user
 package com.compulin.rentflow.repository.module1;
 
 import com.compulin.rentflow.entity.module1.sys_user;
