@@ -1,3 +1,5 @@
+//equipment category
+
 package com.compulin.rentflow.repository.module1;
 
 import com.compulin.rentflow.entity.module1.equipment_category;
@@ -70,6 +72,16 @@ public interface equipment_category_repo
             nativeQuery = true
     )
     Optional<equipment_category> findOwnedCategory(
+            @Param("categoryId") Integer categoryId,
+            @Param("companyId") Integer companyId
+    );
+
+    @Query(value = """
+    SELECT * FROM equipment_category
+    WHERE category_id = :categoryId
+      AND company_id = :companyId
+    """, nativeQuery = true)
+    Optional<equipment_category> findModule1CategoryOwnedByCompany(
             @Param("categoryId") Integer categoryId,
             @Param("companyId") Integer companyId
     );

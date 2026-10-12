@@ -1,18 +1,28 @@
+//sys_user
+
 package com.compulin.rentflow.controller.module1;
 
 import com.compulin.rentflow.entity.module1.company;
 import com.compulin.rentflow.entity.module1.sys_user;
 import com.compulin.rentflow.repository.module1.CompanyRepo;
 import com.compulin.rentflow.repository.module1.sys_user_repo;
+import com.compulin.rentflow.security.Module1SessionAccess;
+
 import jakarta.servlet.http.HttpSession;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/module1/users")
@@ -26,386 +36,539 @@ public class sys_user_controller {
     private final CompanyRepo companyRepo;
     private final PasswordEncoder passwordEncoder;
 
+    private static final Set<String> ALLOWED_ROLES =
+            Set.of("COMPANY_ADMIN", "RENTAL_OFFICER");
+
+    private static final Set<String> ALLOWED_STATUSES =
+            Set.of("ACTIVE", "INACTIVE");
+
     public sys_user_controller(
             sys_user_repo userRepo,
             CompanyRepo companyRepo,
-            PasswordEncoder passwordEncoder
-    ) {
+            PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.companyRepo = companyRepo;
         this.passwordEncoder = passwordEncoder;
     }
 
-    private boolean isCompanyAdmin(HttpSession session) {
+    private ResponseEntity<?> checkLogin(HttpSession session) {
+        String role = Module1SessionAccess.getRole(session);
 
-        String role =
-                (String) session.getAttribute("RENTFLOW_ROLE");
+        if (role.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Please log in first."));
+        }
 
-        return "COMPANY_ADMIN".equalsIgnoreCase(role);
+        if (!Set.of(
+                "COMPULIN_ADMIN",
+                "COMPANY_ADMIN",
+                "RENTAL_OFFICER"
+        ).contains(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "Access denied."));
+        }
+
+        if (!role.equals("COMPULIN_ADMIN")
+                && Module1SessionAccess.getCompanyId(session) == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Company session is missing."));
+        }
+
+        return null;
     }
 
-    private Integer getCompanyId(HttpSession session) {
+    private ResponseEntity<?> checkCompanyAdmin(HttpSession session) {
+        ResponseEntity<?> error = checkLogin(session);
 
-        return (Integer) session.getAttribute(
-                "RENTFLOW_COMPANY_ID"
-        );
+        if (error != null) {
+            return error;
+        }
+
+        if (!Module1SessionAccess.hasAnyRole(
+                session, "COMPANY_ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of(
+                            "message",
+                            "Only a Company Administrator can manage users."
+                    ));
+        }
+
+        return null;
+    }
+
+    private boolean canAccessUser(
+            sys_user user, HttpSession session) {
+
+        if (Module1SessionAccess.hasAnyRole(
+                session, "COMPULIN_ADMIN")) {
+            return true;
+        }
+
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
+
+        return user.getCompany() != null
+                && companyId != null
+                && companyId.equals(
+                user.getCompany().getCompany_id());
+    }
+
+    private Optional<sys_user> findAccessibleUser(
+            Integer userId, HttpSession session) {
+
+        if (Module1SessionAccess.hasAnyRole(
+                session, "COMPULIN_ADMIN")) {
+            return userRepo.findById(userId);
+        }
+
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
+
+        if (companyId == null) {
+            return Optional.empty();
+        }
+
+        return userRepo.findByUserIdAndCompanyId(
+                userId, companyId);
+    }
+
+    private Map<String, Object> toResponse(sys_user user) {
+        Map<String, Object> data = new HashMap<>();
+
+        data.put("user_id", user.getUser_id());
+        data.put("userId", user.getUser_id());
+
+        data.put("full_name", user.getFull_name());
+        data.put("fullName", user.getFull_name());
+
+        data.put("email", user.getEmail());
+        data.put("phone", user.getPhone());
+
+        data.put("user_role", user.getUser_role());
+        data.put("userRole", user.getUser_role());
+
+        data.put("user_status", user.getUser_status());
+        data.put("userStatus", user.getUser_status());
+
+        data.put("created_at", user.getCreated_at());
+        data.put("createdAt", user.getCreated_at());
+
+        Integer companyId = user.getCompany() == null
+                ? null
+                : user.getCompany().getCompany_id();
+
+        data.put("company_id", companyId);
+        data.put("companyId", companyId);
+
+        return data;
+    }
+
+    private List<Map<String, Object>> toResponses(
+            List<sys_user> users) {
+
+        List<Map<String, Object>> response = new ArrayList<>();
+
+        for (sys_user user : users) {
+            response.add(toResponse(user));
+        }
+
+        return response;
+    }
+
+    private String normalizeRole(String role) {
+        if (role == null) {
+            throw new IllegalArgumentException("User role is required.");
+        }
+
+        String value = role.trim().toUpperCase(Locale.ROOT);
+
+        if (!ALLOWED_ROLES.contains(value)) {
+            throw new IllegalArgumentException(
+                    "Role must be COMPANY_ADMIN or RENTAL_OFFICER."
+            );
+        }
+
+        return value;
+    }
+
+    private String normalizeStatus(String status) {
+        if (status == null) {
+            throw new IllegalArgumentException("User status is required.");
+        }
+
+        String value = status.trim().toUpperCase(Locale.ROOT);
+
+        if (!ALLOWED_STATUSES.contains(value)) {
+            throw new IllegalArgumentException(
+                    "Status must be ACTIVE or INACTIVE."
+            );
+        }
+
+        return value;
+    }
+
+    private ResponseEntity<?> badRequest(String message) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("message", message));
     }
 
     @GetMapping
-    public ResponseEntity<?> getCompanyUsers(
-            HttpSession session
-    ) {
+    public ResponseEntity<?> getCompanyUsers(HttpSession session) {
+        ResponseEntity<?> error = checkLogin(session);
 
-        if (!isCompanyAdmin(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Only Company Admin can manage users"
-                    ));
+        if (error != null) {
+            return error;
         }
 
-        Integer companyId = getCompanyId(session);
+        if (Module1SessionAccess.hasAnyRole(
+                session, "COMPULIN_ADMIN")) {
+            return ResponseEntity.ok(
+                    toResponses(userRepo.findAll()));
+        }
 
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
+        Integer companyId =
+                Module1SessionAccess.getCompanyId(session);
+
+        return ResponseEntity.ok(
+                toResponses(
+                        userRepo.findByCompanyCompanyId(companyId)));
+    }
+
+    @GetMapping("/company/{companyId}")
+    public ResponseEntity<?> getUsersByCompany(
+            @PathVariable Integer companyId,
+            HttpSession session) {
+
+        ResponseEntity<?> error = checkLogin(session);
+
+        if (error != null) {
+            return error;
+        }
+
+        if (!Module1SessionAccess.hasAnyRole(
+                session, "COMPULIN_ADMIN")) {
+
+            Integer sessionCompanyId =
+                    Module1SessionAccess.getCompanyId(session);
+
+            if (sessionCompanyId == null
+                    || !sessionCompanyId.equals(companyId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of(
+                                "message",
+                                "You cannot access another company's users."
+                        ));
+            }
         }
 
         return ResponseEntity.ok(
-                userRepo.findByCompanyId(companyId)
-        );
+                toResponses(
+                        userRepo.findByCompanyCompanyId(companyId)));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(
             @PathVariable Integer id,
-            HttpSession session
-    ) {
+            HttpSession session) {
 
-        if (!isCompanyAdmin(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Access denied"
-                    ));
-        }
+        ResponseEntity<?> error = checkLogin(session);
 
-        Integer companyId = getCompanyId(session);
-
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
+        if (error != null) {
+            return error;
         }
 
         Optional<sys_user> user =
-                userRepo.findByUserIdAndCompanyId(
-                        id,
-                        companyId
-                );
+                findAccessibleUser(id, session);
 
-        return user.<ResponseEntity<?>>map(
-                        ResponseEntity::ok
-                )
-                .orElseGet(() ->
-                        ResponseEntity.notFound().build()
-                );
+        if (user.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(toResponse(user.get()));
+    }
+
+    @GetMapping("/email/{email}")
+    public ResponseEntity<?> getUserByEmail(
+            @PathVariable String email,
+            HttpSession session) {
+
+        ResponseEntity<?> error = checkLogin(session);
+
+        if (error != null) {
+            return error;
+        }
+
+        Optional<sys_user> user = userRepo.findByEmail(email);
+
+        if (user.isEmpty() || !canAccessUser(user.get(), session)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(toResponse(user.get()));
+    }
+
+    @GetMapping("/role/{role}")
+    public ResponseEntity<?> getUsersByRole(
+            @PathVariable String role,
+            HttpSession session) {
+
+        ResponseEntity<?> error = checkLogin(session);
+
+        if (error != null) {
+            return error;
+        }
+
+        String normalized = role.trim().toUpperCase(Locale.ROOT);
+
+        if (!ALLOWED_ROLES.contains(normalized)
+                && !normalized.equals("COMPULIN_ADMIN")) {
+            return badRequest("Invalid user role.");
+        }
+
+        List<sys_user> users =
+                userRepo.findByUserRole(normalized);
+
+        users.removeIf(user -> !canAccessUser(user, session));
+
+        return ResponseEntity.ok(toResponses(users));
+    }
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<?> getUsersByStatus(
+            @PathVariable String status,
+            HttpSession session) {
+
+        ResponseEntity<?> error = checkLogin(session);
+
+        if (error != null) {
+            return error;
+        }
+
+        try {
+            String normalized = normalizeStatus(status);
+
+            List<sys_user> users =
+                    userRepo.findByUserStatus(normalized);
+
+            users.removeIf(user -> !canAccessUser(user, session));
+
+            return ResponseEntity.ok(toResponses(users));
+
+        } catch (IllegalArgumentException e) {
+            return badRequest(e.getMessage());
+        }
     }
 
     @PostMapping
     public ResponseEntity<?> createUser(
             @RequestBody sys_user newUser,
-            HttpSession session
-    ) {
+            HttpSession session) {
 
-        if (!isCompanyAdmin(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Only Company Admin can create users"
-                    ));
+        ResponseEntity<?> error = checkCompanyAdmin(session);
+
+        if (error != null) {
+            return error;
         }
 
-        Integer companyId = getCompanyId(session);
+        try {
+            if (newUser.getFull_name() == null
+                    || newUser.getFull_name().isBlank()) {
+                return badRequest("Full name is required.");
+            }
 
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
+            if (newUser.getEmail() == null
+                    || newUser.getEmail().isBlank()
+                    || !newUser.getEmail().contains("@")) {
+                return badRequest("A valid email address is required.");
+            }
+
+            String password = newUser.getPassword_hash();
+
+            if (password == null || password.isBlank()) {
+                return badRequest("Password is required.");
+            }
+
+            if (password.length() < 8) {
+                return badRequest(
+                        "Password must be at least 8 characters long.");
+            }
+
+            newUser.setUser_role(
+                    normalizeRole(newUser.getUser_role()));
+
+            if (userRepo.findByEmail(newUser.getEmail()).isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("message", "Email already exists."));
+            }
+
+            Integer companyId =
+                    Module1SessionAccess.getCompanyId(session);
+
+            Optional<company> companyRecord =
+                    companyRepo.findById(companyId);
+
+            if (companyRecord.isEmpty()) {
+                return badRequest("Company not found.");
+            }
+
+            newUser.setCompany(companyRecord.get());
+            newUser.setPassword_hash(
+                    passwordEncoder.encode(password));
+            newUser.setUser_status("ACTIVE");
+            newUser.setCreated_at(LocalDateTime.now());
+
+            sys_user saved = userRepo.save(newUser);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(toResponse(saved));
+
+        } catch (IllegalArgumentException e) {
+            return badRequest(e.getMessage());
         }
-
-        if (newUser.getFull_name() == null ||
-                newUser.getFull_name().isBlank()) {
-
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            "Full name is required"
-                    ));
-        }
-
-        if (newUser.getEmail() == null ||
-                newUser.getEmail().isBlank()) {
-
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            "Email is required"
-                    ));
-        }
-
-        if (newUser.getPassword_hash() == null ||
-                newUser.getPassword_hash().isBlank()) {
-
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            "Password is required"
-                    ));
-        }
-
-        String role = newUser.getUser_role();
-
-        if (!"COMPANY_ADMIN".equalsIgnoreCase(role) &&
-                !"RENTAL_OFFICER".equalsIgnoreCase(role)) {
-
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            "Invalid company user role"
-                    ));
-        }
-
-        if (userRepo.findByEmail(
-                newUser.getEmail()
-        ).isPresent()) {
-
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            "Email already exists"
-                    ));
-        }
-
-        company userCompany =
-                companyRepo.findById(companyId)
-                        .orElse(null);
-
-        if (userCompany == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            "Company not found"
-                    ));
-        }
-
-        newUser.setCompany(userCompany);
-
-        newUser.setPassword_hash(
-                passwordEncoder.encode(
-                        newUser.getPassword_hash()
-                )
-        );
-
-        newUser.setUser_status("ACTIVE");
-        newUser.setCreated_at(
-                LocalDateTime.now()
-        );
-
-        sys_user savedUser =
-                userRepo.save(newUser);
-
-        return ResponseEntity.ok(savedUser);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(
             @PathVariable Integer id,
-            @RequestBody sys_user userDetails,
-            HttpSession session
-    ) {
+            @RequestBody sys_user details,
+            HttpSession session) {
 
-        if (!isCompanyAdmin(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Only Company Admin can update users"
-                    ));
+        ResponseEntity<?> error = checkCompanyAdmin(session);
+
+        if (error != null) {
+            return error;
         }
 
-        Integer companyId = getCompanyId(session);
+        Optional<sys_user> result =
+                findAccessibleUser(id, session);
 
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
-        sys_user existing =
-                userRepo.findByUserIdAndCompanyId(
-                        id,
-                        companyId
-                ).orElse(null);
-
-        if (existing == null) {
+        if (result.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        existing.setFull_name(
-                userDetails.getFull_name()
-        );
+        try {
+            sys_user existing = result.get();
 
-        existing.setPhone(
-                userDetails.getPhone()
-        );
-
-        String role = userDetails.getUser_role();
-
-        if (role != null &&
-                !role.isBlank()) {
-
-            if (!"COMPANY_ADMIN".equalsIgnoreCase(role) &&
-                    !"RENTAL_OFFICER".equalsIgnoreCase(role)) {
-
-                return ResponseEntity.badRequest()
-                        .body(Map.of(
-                                "message",
-                                "Invalid company user role"
-                        ));
+            if (details.getFull_name() != null
+                    && !details.getFull_name().isBlank()) {
+                existing.setFull_name(details.getFull_name().trim());
             }
 
-            existing.setUser_role(role);
+            if (details.getEmail() != null
+                    && !details.getEmail().isBlank()) {
+
+                String email = details.getEmail().trim();
+
+                if (!email.contains("@")) {
+                    return badRequest("Invalid email address.");
+                }
+
+                Optional<sys_user> emailOwner =
+                        userRepo.findByEmail(email);
+
+                if (emailOwner.isPresent()
+                        && !emailOwner.get().getUser_id()
+                        .equals(existing.getUser_id())) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(Map.of("message", "Email already exists."));
+                }
+
+                existing.setEmail(email);
+            }
+
+            if (details.getPhone() != null) {
+                existing.setPhone(details.getPhone());
+            }
+
+            if (details.getUser_role() != null
+                    && !details.getUser_role().isBlank()) {
+                existing.setUser_role(
+                        normalizeRole(details.getUser_role()));
+            }
+
+            if (details.getUser_status() != null
+                    && !details.getUser_status().isBlank()) {
+                existing.setUser_status(
+                        normalizeStatus(details.getUser_status()));
+            }
+
+            String password = details.getPassword_hash();
+
+            if (password != null && !password.isBlank()) {
+                if (password.length() < 8) {
+                    return badRequest(
+                            "Password must be at least 8 characters long.");
+                }
+
+                existing.setPassword_hash(
+                        passwordEncoder.encode(password));
+            }
+
+            sys_user saved = userRepo.save(existing);
+
+            return ResponseEntity.ok(toResponse(saved));
+
+        } catch (IllegalArgumentException e) {
+            return badRequest(e.getMessage());
         }
-
-        if (userDetails.getUser_status() != null &&
-                !userDetails.getUser_status().isBlank()) {
-
-            existing.setUser_status(
-                    userDetails.getUser_status()
-            );
-        }
-
-        String password =
-                userDetails.getPassword_hash();
-
-        if (password != null &&
-                !password.isBlank()) {
-
-            existing.setPassword_hash(
-                    passwordEncoder.encode(password)
-            );
-        }
-
-        sys_user savedUser =
-                userRepo.save(existing);
-
-        return ResponseEntity.ok(savedUser);
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(
             @PathVariable Integer id,
             @RequestBody Map<String, String> body,
-            HttpSession session
-    ) {
+            HttpSession session) {
 
-        if (!isCompanyAdmin(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Only Company Admin can change user status"
-                    ));
+        ResponseEntity<?> error = checkCompanyAdmin(session);
+
+        if (error != null) {
+            return error;
         }
 
-        Integer companyId = getCompanyId(session);
+        Optional<sys_user> result =
+                findAccessibleUser(id, session);
 
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
-        sys_user existing =
-                userRepo.findByUserIdAndCompanyId(
-                        id,
-                        companyId
-                ).orElse(null);
-
-        if (existing == null) {
+        if (result.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        String status = body.get("status");
+        try {
+            String status = normalizeStatus(body.get("status"));
 
-        if (status == null || status.isBlank()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "message",
-                            "Status is required"
-                    ));
+            sys_user user = result.get();
+            user.setUser_status(status);
+
+            return ResponseEntity.ok(
+                    toResponse(userRepo.save(user)));
+
+        } catch (IllegalArgumentException e) {
+            return badRequest(e.getMessage());
         }
-
-        existing.setUser_status(status);
-
-        return ResponseEntity.ok(
-                userRepo.save(existing)
-        );
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deactivateUser(
             @PathVariable Integer id,
-            HttpSession session
-    ) {
+            HttpSession session) {
 
-        if (!isCompanyAdmin(session)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Only Company Admin can deactivate users"
-                    ));
+        ResponseEntity<?> error = checkCompanyAdmin(session);
+
+        if (error != null) {
+            return error;
         }
 
-        Integer companyId = getCompanyId(session);
+        Optional<sys_user> result =
+                findAccessibleUser(id, session);
 
-        if (companyId == null) {
-            return ResponseEntity.status(403)
-                    .body(Map.of(
-                            "message",
-                            "Company information not found"
-                    ));
-        }
-
-        sys_user existing =
-                userRepo.findByUserIdAndCompanyId(
-                        id,
-                        companyId
-                ).orElse(null);
-
-        if (existing == null) {
+        if (result.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        existing.setUser_status("INACTIVE");
-
-        userRepo.save(existing);
+        sys_user user = result.get();
+        user.setUser_status("INACTIVE");
+        userRepo.save(user);
 
         return ResponseEntity.ok(
-                Map.of(
-                        "message",
-                        "User deactivated successfully"
-                )
-        );
+                Map.of("message", "User deactivated successfully."));
     }
 }

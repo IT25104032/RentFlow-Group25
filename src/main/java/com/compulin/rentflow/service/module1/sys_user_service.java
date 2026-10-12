@@ -1,3 +1,5 @@
+//user service
+
 package com.compulin.rentflow.service.module1;
 
 import com.compulin.rentflow.entity.module1.sys_user;
@@ -52,7 +54,7 @@ public class sys_user_service {
     public List<sys_user> getUsersByCompany(
             Integer companyId) {
 
-        return userRepo.findByCompanyId(companyId);
+        return userRepo.findByCompanyCompanyId(companyId);
     }
 
     // Create user

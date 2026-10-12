@@ -1,4 +1,5 @@
 #=========Inserting data to tables============
+ #testing
 INSERT INTO company
 (company_name, registration_no, email, phone, address, registered_by)
 VALUES
@@ -44,7 +45,7 @@ VALUES
 INSERT INTO equipment
 (company_id, category_id, item_name, item_code,
  equ_description, rental_rate, rate_period,
- refundable_deposit_per_unit,
+ security_deposit_per_unit,
  total_quantity, available_quantity)
 VALUES
 
