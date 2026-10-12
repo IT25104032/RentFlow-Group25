@@ -21,7 +21,6 @@ function RentalStepper({ activeStep }) {
         }
     ];
 
-
     return (
         <div className="register-renter-stepper">
 

@@ -21,9 +21,7 @@ function RentalExtension() {
 
     const [searchTerm, setSearchTerm] = useState("");
 
-    // --------------------------------------------------
     // Sorting
-    // --------------------------------------------------
     // No sorting is applied initially. The officer can
     // choose a field and direction from the Sort control.
     const [sortOpen, setSortOpen] = useState(false);
@@ -36,14 +34,13 @@ function RentalExtension() {
 
     const [loading, setLoading] = useState(true);
     const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState("");
     const [saving, setSaving] = useState(false);
 
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
-    // --------------------------------------------------
     // Load rentals
-    // --------------------------------------------------
     useEffect(() => {
         loadRentals();
     }, []);
@@ -64,17 +61,13 @@ function RentalExtension() {
         }
     };
 
-    // --------------------------------------------------
     // Check whether a rental can be extended
-    // --------------------------------------------------
     const isExtendable = (rental) =>
         EXTENDABLE_STATUSES.includes(
             String(rental.rentalStatus || "").toUpperCase()
         );
 
-    // --------------------------------------------------
     // Select rental for extension
-    // --------------------------------------------------
     const handleSelectRental = async (rental) => {
 
         if (!isExtendable(rental)) {
@@ -86,6 +79,8 @@ function RentalExtension() {
         setReason("");
         setSuccess("");
         setError("");
+        setHistoryError("");
+        setExtensionHistory([]);
 
         try {
             setHistoryLoading(true);
@@ -96,16 +91,15 @@ function RentalExtension() {
 
             setExtensionHistory(history || []);
         } catch (err) {
-            console.error(err);
-            setExtensionHistory([]);
+                console.error(err);
+                setExtensionHistory([]);
+                setHistoryError("Unable to load extension history.");
         } finally {
             setHistoryLoading(false);
         }
     };
 
-    // --------------------------------------------------
     // Filter rentals
-    // --------------------------------------------------
     const filteredRentals = rentals.filter((rental) => {
         const search = searchTerm.trim().toLowerCase();
 
@@ -178,9 +172,7 @@ function RentalExtension() {
                     : -comparison;
             });
 
-    // --------------------------------------------------
     // Format date
-    // --------------------------------------------------
     const formatDate = (date) => {
         if (!date) return "-";
 
@@ -191,9 +183,7 @@ function RentalExtension() {
         });
     };
 
-    // --------------------------------------------------
     // Submit extension
-    // --------------------------------------------------
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -238,9 +228,7 @@ function RentalExtension() {
                 reason: reason.trim() || null
             };
 
-            const response = await createRentalExtension(
-                extensionData
-            );
+            const response = await createRentalExtension(extensionData);
 
             // Update selected rental's due date immediately
             setSelectedRental((previous) => ({
@@ -248,25 +236,32 @@ function RentalExtension() {
                 dueDate: response.newDueDate
             }));
 
-            // Refresh rental list
-            await loadRentals();
-
-            // Refresh extension history
-            const updatedHistory =
-                await getRentalExtensionHistory(
-                    selectedRental.rentalId
-                );
-
-            setExtensionHistory(updatedHistory || []);
-
             // Clear form
             setNewDueDate("");
             setExtensionCharge("0");
             setReason("");
 
+            // Show success immediately after the extension is saved
             setSuccess(
                 `Rental #${selectedRental.rentalId} was successfully extended.`
             );
+
+            // Refresh rental list
+            await loadRentals();
+
+            // Refresh extension history separately
+            try {
+                const updatedHistory = await getRentalExtensionHistory(
+                    selectedRental.rentalId
+                );
+
+                setExtensionHistory(updatedHistory || []);
+                setHistoryError("");
+            } catch (historyErr) {
+                console.error("Unable to refresh extension history:", historyErr);
+                setHistoryError("Unable to refresh extension history.");
+            }
+
         } catch (err) {
             console.error(err);
             setError(
@@ -480,15 +475,11 @@ function RentalExtension() {
                                     </td>
 
                                     <td>
-                                        {formatDate(
-                                            rental.startDate
-                                        )}
+                                        {formatDate(rental.startDate)}
                                     </td>
 
                                     <td>
-                                        {formatDate(
-                                            rental.dueDate
-                                        )}
+                                        {formatDate(rental.dueDate)}
                                     </td>
 
                                     <td>
@@ -720,6 +711,10 @@ function RentalExtension() {
                             <div className="module2-empty-state">
                                 Loading extension history...
                             </div>
+                        ) : historyError ? (
+                            <div className="module2-alert module2-alert-error">
+                                {historyError}
+                            </div>
                         ) : extensionHistory.length === 0 ? (
                             <div className="module2-empty-state">
                                 No previous extensions recorded.
@@ -751,21 +746,15 @@ function RentalExtension() {
                                             >
                                                 <td>
                                                     #
-                                                    {
-                                                        extension.extensionId
-                                                    }
+                                                    {extension.extensionId}
                                                 </td>
 
                                                 <td>
-                                                    {formatDate(
-                                                        extension.oldDueDate
-                                                    )}
+                                                    {formatDate(extension.oldDueDate)}
                                                 </td>
 
                                                 <td>
-                                                    {formatDate(
-                                                        extension.newDueDate
-                                                    )}
+                                                    {formatDate(extension.newDueDate)}
                                                 </td>
 
                                                 <td>
@@ -776,9 +765,7 @@ function RentalExtension() {
                                                 </td>
 
                                                 <td>
-                                                    {
-                                                        extension.approvedBy
-                                                    }
+                                                    {extension.approvedBy}
                                                 </td>
 
                                                 <td>
@@ -790,12 +777,9 @@ function RentalExtension() {
                                     )}
 
                                     </tbody>
-
                                 </table>
-
                             </div>
                         )}
-
                     </div>
                 </>
             )}

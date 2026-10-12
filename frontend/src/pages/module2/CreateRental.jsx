@@ -1,14 +1,10 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-
 import RentalStepper from "../../components/module2/RentalStepper";
 
 import "./CreateRental.css";
 
-
 function CreateRental({ onBack }) {
-
-
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -33,63 +29,44 @@ function CreateRental({ onBack }) {
     const previousRentalDetails = draft.rentalDetails || {};
 
     const [startDate, setStartDate] = useState(
-        previousRentalDetails.startDate || draft.startDate || ""
-    );
-
+        previousRentalDetails.startDate || draft.startDate || "");
     const [dueDate, setDueDate] = useState(
-        previousRentalDetails.dueDate || draft.dueDate || ""
-    );
-
+        previousRentalDetails.dueDate || draft.dueDate || "");
     const [notes, setNotes] = useState(
-        previousRentalDetails.notes || draft.notes || ""
-    );
-
+        previousRentalDetails.notes || draft.notes || "");
     const selectedEquipment = draft.selectedEquipment || [];
 
-
-    /*
-     * UI state.
-     */
+     //UI state.
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
 
-    /*
-     * Validate the rental dates.
-     */
+     //Validate the rental dates.
     const validateDates = () => {
 
         if (!startDate) {
-
             setError(
                 "Please select a rental start date."
             );
-
             return false;
         }
 
 
         if (!dueDate) {
-
             setError(
                 "Please select a rental due date."
             );
-
             return false;
         }
 
 
         if (dueDate < startDate) {
-
             setError(
                 "Due date cannot be before the start date."
             );
-
             return false;
         }
-
-
         return true;
     };
 
@@ -152,9 +129,7 @@ function CreateRental({ onBack }) {
     };
 
 
-    /*
-     * Clear only the fields on this page.
-     */
+    //Clear only the fields on this page.
     const handleClear = () => {
 
         setStartDate("");

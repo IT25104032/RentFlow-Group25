@@ -10,16 +10,9 @@ function ReviewRental() {
     const location = useLocation();
     const navigate = useNavigate();
 
-
-    const [confirming, setConfirming] =
-        useState(false);
-
-    const [error, setError] =
-        useState("");
-
-    const [success, setSuccess] =
-        useState("");
-
+    const [confirming, setConfirming] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
     let savedDraft = {};
 
@@ -40,7 +33,6 @@ function ReviewRental() {
     const rentalDetails = draft.rentalDetails || null;
     const selectedEquipment = draft.selectedEquipment || [];
     const totalDeposit = draft.totalDeposit || 0;
-
 
 
     // Calculate the rental duration in days.
@@ -73,10 +65,7 @@ function ReviewRental() {
 
 
 
-    /*
-     * Go back to Equipment Selection while
-     * keeping the current selections.
-     */
+    // Go back to Equipment Selection while keeping the current selections.
     const handleBack = () => {
 
         sessionStorage.setItem(
@@ -104,12 +93,8 @@ function ReviewRental() {
     };
 
 
-    /*
-     * Confirm the complete rental.
-     *
-     * Sends the rental details and selected
-     * equipment to the Spring Boot backend.
-     */
+    // Confirm the complete rental.
+    // Sends the rental details and selected equipment to the Spring Boot backend.
     async function handleConfirmRental() {
 
         if (!selectedRenter || !rentalDetails) {
@@ -126,11 +111,9 @@ function ReviewRental() {
             !selectedEquipment ||
             selectedEquipment.length === 0
         ) {
-
             setError(
                 "Please select at least one equipment item."
             );
-
             return;
         }
 
@@ -142,38 +125,24 @@ function ReviewRental() {
 
         try {
 
-            /*
-             * Convert the selected equipment
-             * into the structure expected by
-             * RentalConfirmationRequest.
-             */
+            // Convert the selected equipment into the structure expected by RentalConfirmationRequest.
             const rentalItems =
                 selectedEquipment.map(
                     (item) => ({
 
-                        equipmentId:
-                        item.equipmentId,
-
-                        quantity:
-                        item.quantity,
-
+                        equipmentId: item.equipmentId,
+                        quantity: item.quantity,
                         ratePerUnit:
                             item.rentalRate ??
                             item.ratePerUnit,
-
                         ratePeriod:
                             item.ratePeriod ??
                             item.rentalPeriod,
 
-                        /*
-                         * IMPORTANT:
-                         * EquipmentSelection stores
-                         * the deposit as
-                         * securityDepositPerUnit.
-                         *
-                         * The backend expects
-                         * depositPerUnit.
-                         */
+
+                        // IMPORTANT:
+                        // EquipmentSelection stores the deposit as securityDepositPerUnit.
+                        // The backend expects depositPerUnit.
                         depositPerUnit:
                             item.securityDepositPerUnit ??
                             item.depositPerUnit
@@ -181,46 +150,29 @@ function ReviewRental() {
                 );
 
 
-            /*
-             * Build the complete confirmation
-             * request.
-             */
+
+            // Build the complete confirmation request.
             const requestBody = {
 
                 rental: {
-
-                    companyId:
-                    rentalDetails.companyId,
-
-                    customerId:
-                    rentalDetails.customerId,
-
-                    createdBy:
-                    rentalDetails.createdBy,
-
-                    startDate:
-                    rentalDetails.startDate,
-
-                    dueDate:
-                    rentalDetails.dueDate,
-
-                    notes:
-                    rentalDetails.notes
+                    companyId: rentalDetails.companyId,
+                    customerId: rentalDetails.customerId,
+                    createdBy: rentalDetails.createdBy,
+                    startDate: rentalDetails.startDate,
+                    dueDate: rentalDetails.dueDate,
+                    notes: rentalDetails.notes
                 },
 
 
-                rentalItems:
-                rentalItems,
+                rentalItems: rentalItems,
 
                 // Send the officer's final agreed deposit to the backend.
                 totalDeposit: Number(totalDeposit)
             };
 
 
-            /*
-             * Send the confirmation request
-             * to Spring Boot.
-             */
+
+            // Send the confirmation request to Spring Boot.
             const response =
                 await fetch(
                     "http://localhost:8081/api/rentals/confirm",
@@ -240,10 +192,7 @@ function ReviewRental() {
                 );
 
 
-            /*
-             * Check whether the backend
-             * returned a successful response.
-             */
+            // Check whether the backend returned a successful response.
             if (!response.ok) {
 
                 const errorText =
@@ -256,17 +205,13 @@ function ReviewRental() {
             }
 
 
-            /*
-             * Convert the backend JSON response
-             * into a JavaScript object.
-             */
+            // Convert the backend JSON response into a JavaScript object.
             const result =
                 await response.json();
 
 
-            /*
-             * Show the generated rental ID.
-             */
+
+            // Show the generated rental ID.
             setSuccess(
                 `Rental ${result.rental.rentalId} confirmed successfully.`
             );
@@ -291,10 +236,8 @@ function ReviewRental() {
 
         } finally {
 
-            /*
-             * Re-enable the Confirm button
-             * after the request finishes.
-             */
+
+            // Re-enable the Confirm button after the request finishes.
             setConfirming(false);
         }
     }
@@ -304,20 +247,15 @@ function ReviewRental() {
 
         <div className="review-rental-page">
 
-
             {/* Page heading */}
-
             <div className="review-page-header">
-
                 <h1>
                     Create Rental
                 </h1>
-
                 <p>
                     Review the rental details
                     before confirmation.
                 </p>
-
             </div>
 
 
@@ -325,58 +263,43 @@ function ReviewRental() {
                 activeStep={4}
             />
 
-
             {/* Renter Information */}
 
             <div className="review-card">
-
                 <div className="review-card-header">
-
                     <div>
-
                         <h2>
                             Renter Information
                         </h2>
-
                         <p>
                             Confirm the renter
                             for this rental.
                         </p>
-
                     </div>
-
                 </div>
 
 
                 {selectedRenter ? (
 
                     <div className="review-info-grid">
-
                         <div className="review-info-item">
-
                             <span>
                                 Renter Name
                             </span>
-
                             <strong>
-                                {
-                                    selectedRenter.customerName
-                                }
+                                {selectedRenter.customerName}
                             </strong>
 
                         </div>
 
 
                         <div className="review-info-item">
-
                             <span>
                                 Phone
                             </span>
 
                             <strong>
-                                {
-                                    selectedRenter.phone
-                                }
+                                {selectedRenter.phone}
                             </strong>
 
                         </div>
@@ -389,30 +312,20 @@ function ReviewRental() {
                             </span>
 
                             <strong>
-                                {
-                                    selectedRenter.email ||
-                                    "Not provided"
-                                }
+                                {selectedRenter.email || "Not provided"}
                             </strong>
 
                         </div>
 
 
                         <div className="review-info-item">
-
                             <span>
                                 Customer Type
                             </span>
-
                             <strong>
-                                {
-                                    selectedRenter.customerType ||
-                                    "Not specified"
-                                }
+                                {selectedRenter.customerType || "Not specified"}
                             </strong>
-
                         </div>
-
                     </div>
 
                 ) : (
@@ -429,125 +342,85 @@ function ReviewRental() {
             {/* Rental Details */}
 
             <div className="review-card">
-
                 <div className="review-card-header">
-
                     <div>
-
                         <h2>
                             Rental Details
                         </h2>
-
                         <p>
                             Confirm the rental period
                             and notes.
                         </p>
-
                     </div>
-
                 </div>
 
 
                 <div className="review-info-grid">
-
                     <div className="review-info-item">
-
                         <span>
                             Start Date
                         </span>
-
                         <strong>
-                            {
-                                rentalDetails?.startDate ||
-                                "Not provided"
-                            }
+                            {rentalDetails?.startDate || "Not provided"}
                         </strong>
 
                     </div>
 
 
                     <div className="review-info-item">
-
                         <span>
                             Due Date
                         </span>
-
                         <strong>
-                            {
-                                rentalDetails?.dueDate ||
-                                "Not provided"
-                            }
+                            {rentalDetails?.dueDate || "Not provided"}
                         </strong>
 
                     </div>
 
 
                     <div className="review-info-item">
-
                         <span>
                             Rental Status
                         </span>
-
                         <strong className="status-badge">
-
-                            {
-                                rentalDetails?.rentalStatus ||
-                                "DRAFT"
-                            }
-
+                            {rentalDetails?.rentalStatus || "DRAFT"}
                         </strong>
 
                     </div>
 
 
                     <div className="review-info-item">
-
                         <span>
                             Notes
                         </span>
-
                         <strong>
-                            {
-                                rentalDetails?.notes ||
-                                "No notes"
-                            }
+                            {rentalDetails?.notes || "No notes"}
                         </strong>
-
                     </div>
-
                 </div>
-
             </div>
 
 
             {/* Equipment */}
 
             <div className="review-card">
-
                 <div className="review-card-header">
-
                     <div>
-
                         <h2>
                             Selected Equipment
                         </h2>
-
                         <p>
                             Review the equipment and
                             requested quantities.
                         </p>
-
                     </div>
-
                 </div>
 
 
                 {selectedEquipment.length > 0 ? (
 
                     <div className="review-equipment-table-wrapper">
-
                         <table className="review-equipment-table">
-
                             <thead>
                             <tr>
                                 <th>Equipment</th>
@@ -572,16 +445,11 @@ function ReviewRental() {
                                         <td>
 
                                             <strong>
-                                                {
-                                                    item.itemName
-                                                }
+                                                {item.itemName}
                                             </strong>
-
                                             <span>
-                                                    {
-                                                        item.categoryName
-                                                    }
-                                                </span>
+                                                {item.categoryName}
+                                            </span>
 
                                         </td>
                                         <td>
@@ -593,17 +461,9 @@ function ReviewRental() {
                                         <td>
                                             Rs.{" "}
 
-                                            {
-                                                item.rentalRate
-                                                    .toLocaleString()
-                                            }
-
+                                            {item.rentalRate.toLocaleString()}
                                             /
-
-                                            {
-                                                item.ratePeriod
-                                                    .toLowerCase()
-                                            }
+                                            {item.ratePeriod.toLowerCase()}
 
                                         </td>
 
@@ -611,9 +471,7 @@ function ReviewRental() {
                                         <td>
 
                                             Rs.{" "}
-
                                             {
-
                                                 (
                                                     item.quantity *
                                                     (
@@ -633,9 +491,7 @@ function ReviewRental() {
                             )}
 
                             </tbody>
-
                         </table>
-
                     </div>
 
                 ) : (
@@ -652,28 +508,20 @@ function ReviewRental() {
             {/* Financial Summary */}
 
             <div className="review-card">
-
                 <div className="review-card-header">
-
                     <div>
-
                         <h2>
                             Rental Summary
                         </h2>
-
                         <p>
                             Summary of the selected
                             equipment and refundable deposit.
                         </p>
-
                     </div>
-
                 </div>
 
 
                 <div className="review-summary">
-
-
                     <div className="summary-row">
                         <span>
                             Total Rental Amount (Excluding Security Deposit)
@@ -685,50 +533,35 @@ function ReviewRental() {
                     </div>
 
                     <div className="summary-row deposit-row">
-
                         <span>
                             Total Security Deposit
                         </span>
-
                         <strong>
 
                             Rs.{" "}
 
-                            {
-                                totalDeposit
-                                    .toLocaleString()
-                            }
+                            {totalDeposit.toLocaleString()}
 
                         </strong>
-
                     </div>
-
                 </div>
-
             </div>
 
 
             {/* Success / Error Messages */}
 
             {error && (
-
                 <div className="error-message">
-
                     {error}
-
                 </div>
 
             )}
 
 
             {success && (
-
                 <div className="success-message">
-
                     {success}
-
                 </div>
-
             )}
 
 
@@ -758,10 +591,7 @@ function ReviewRental() {
                         : "Confirm Rental"}
 
                 </button>
-
             </div>
-
-
         </div>
     );
 }

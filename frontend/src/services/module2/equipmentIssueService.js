@@ -1,8 +1,7 @@
+
 const API_BASE_URL = "http://localhost:8081/api";
 
-/*
- * Get all DRAFT rentals available for the issue stage.
- */
+// Get DRAFT rentals available for issuing.
 export async function getActiveRentalsForIssue(companyId) {
     const response = await fetch(
         `${API_BASE_URL}/rentals/for-issue?companyId=${companyId}`
@@ -15,11 +14,7 @@ export async function getActiveRentalsForIssue(companyId) {
     return response.json();
 }
 
-/*
- * Issue the complete rental.
- * The backend changes the rental from DRAFT to ACTIVE
- * and marks all selected rental items as ISSUED.
- */
+// Issue all selected rental items and activate the rental.
 export async function issueRental(rentalId, companyId) {
     const response = await fetch(
         `${API_BASE_URL}/rentals/${rentalId}/issue?companyId=${companyId}`,
@@ -29,16 +24,14 @@ export async function issueRental(rentalId, companyId) {
     );
 
     if (!response.ok) {
-        throw new Error("Failed to issue rental.");
+        const message = await response.text();
+        throw new Error(message || "Failed to issue rental.");
     }
 
     return response.json();
 }
 
-/*
- * Cancel a DRAFT rental.
- * The rental remains in the database with status CANCELLED.
- */
+// Cancel a DRAFT rental.
 export async function cancelRental(rentalId, companyId) {
     const response = await fetch(
         `${API_BASE_URL}/rentals/${rentalId}/cancel?companyId=${companyId}`,
@@ -48,7 +41,23 @@ export async function cancelRental(rentalId, companyId) {
     );
 
     if (!response.ok) {
-        throw new Error("Failed to cancel rental.");
+        const message = await response.text();
+        throw new Error(message || "Failed to cancel rental.");
+    }
+
+    return response.json();
+}
+
+// Get the equipment items associated with a rental.
+export async function getRentalItemsForIssue(rentalId) {
+    const response = await fetch(
+        `${API_BASE_URL}/rental-items/rental/${rentalId}`
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "Failed to load equipment items for this rental."
+        );
     }
 
     return response.json();

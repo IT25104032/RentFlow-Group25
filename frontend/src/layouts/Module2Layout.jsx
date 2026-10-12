@@ -49,30 +49,18 @@ function Module2Layout() {
     // =====================================================
 
     const COMPANY_ID = 1000;
-
     const [notificationOpen, setNotificationOpen] = useState(false);
-
     const [overdueRentals, setOverdueRentals] = useState([]);
-
     const [dueSoonRentals, setDueSoonRentals] = useState([]);
-
     const [notificationLoading, setNotificationLoading] = useState(true);
-
     const notificationRef = useRef(null);
 
 
-    // =====================================================
     // TOTAL NOTIFICATION COUNT
-    // =====================================================
-
     const notificationCount =
         overdueRentals.length + dueSoonRentals.length;
 
-
-    // =====================================================
     // LOAD RENTAL NOTIFICATIONS
-    // =====================================================
-
     const loadNotifications = async () => {
 
         try {
@@ -117,11 +105,7 @@ function Module2Layout() {
     };
 
 
-    // =====================================================
-    // LOAD NOTIFICATIONS WHEN LAYOUT OPENS
-    // AND REFRESH EVERY 60 SECONDS
-    // =====================================================
-
+    // LOAD NOTIFICATIONS WHEN LAYOUT OPENS AND REFRESH EVERY 60 SECONDS
     useEffect(() => {
 
         loadNotifications();
@@ -141,11 +125,7 @@ function Module2Layout() {
     }, []);
 
 
-    // =====================================================
-    // CLOSE NOTIFICATION DROPDOWN
-    // WHEN USER CLICKS OUTSIDE
-    // =====================================================
-
+    // CLOSE NOTIFICATION DROPDOWN WHEN USE CLICKS OUTSIDE
     useEffect(() => {
 
         const handleOutsideClick = (event) => {
@@ -171,7 +151,6 @@ function Module2Layout() {
 
         }
 
-
         return () => {
 
             document.removeEventListener(
@@ -184,10 +163,7 @@ function Module2Layout() {
     }, [notificationOpen]);
 
 
-    // =====================================================
     // FORMAT DATE
-    // =====================================================
-
     const formatDate = (date) => {
 
         if (!date) {
@@ -207,12 +183,7 @@ function Module2Layout() {
 
     };
 
-
-    // =====================================================
-    // OPEN NOTIFICATION DROPDOWN
-    // ALSO REFRESH DATA
-    // =====================================================
-
+    // OPEN NOTIFICATION DROPDOWN AND ALSO REFRESH DATA
     const handleNotificationClick = () => {
 
         setNotificationOpen(
