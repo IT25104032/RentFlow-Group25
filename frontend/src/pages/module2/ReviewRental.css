@@ -1,0 +1,292 @@
+/* =========================================================
+   RENTFLOW - REVIEW RENTAL
+   ========================================================= */
+
+.review-rental-page {
+    min-height: 100vh;
+    background: #f6f9fc;
+    padding: 34px 40px 60px;
+    box-sizing: border-box;
+}
+
+
+/* Page header */
+
+.review-page-header {
+    max-width: 1180px;
+    margin: 0 auto 24px;
+}
+
+.review-page-header h1 {
+    margin: 0;
+    color: #123b63;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+}
+
+.review-page-header p {
+    margin: 7px 0 0;
+    color: #6b7c8f;
+    font-size: 14px;
+}
+
+
+/* Cards */
+
+.review-card {
+    max-width: 1180px;
+    margin: 0 auto 22px;
+    padding: 26px 28px;
+    background: #ffffff;
+    border: 1px solid #e3ebf3;
+    border-radius: 14px;
+    box-shadow: 0 5px 18px rgba(24, 63, 96, 0.055);
+    box-sizing: border-box;
+}
+
+
+/* Card header */
+
+.review-card-header {
+    margin-bottom: 20px;
+}
+
+.review-card-header h2 {
+    margin: 0;
+    color: #173f64;
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.review-card-header p {
+    margin: 6px 0 0;
+    color: #7a8999;
+    font-size: 13px;
+}
+
+
+/* Information grid */
+
+.review-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.review-info-item {
+    padding: 16px 18px;
+    background: #f8fbfe;
+    border: 1px solid #e2eaf2;
+    border-radius: 9px;
+}
+
+.review-info-item span {
+    display: block;
+    margin-bottom: 6px;
+    color: #8493a2;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+.review-info-item strong {
+    color: #173f64;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+/* Status */
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    background: #eef5fb;
+    border: 1px solid #d4e4f1;
+    border-radius: 20px;
+    color: #3275ad !important;
+    font-size: 11px !important;
+}
+
+
+/* Equipment table */
+
+.review-equipment-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #e2eaf2;
+    border-radius: 11px;
+}
+
+.review-equipment-table {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.review-equipment-table thead {
+    background: #f7fafd;
+}
+
+.review-equipment-table th {
+    padding: 13px 15px;
+    color: #687b8e;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    border-bottom: 1px solid #e2eaf2;
+}
+
+.review-equipment-table td {
+    padding: 15px;
+    color: #44576a;
+    font-size: 13px;
+    border-bottom: 1px solid #edf2f6;
+}
+
+.review-equipment-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.review-equipment-table td strong {
+    display: block;
+    margin-bottom: 3px;
+    color: #173f64;
+    font-size: 14px;
+}
+
+.review-equipment-table td span {
+    color: #8a99a8;
+    font-size: 11px;
+}
+
+
+/* Empty */
+
+.review-empty {
+    padding: 25px;
+    border: 1px dashed #cfdce8;
+    border-radius: 9px;
+    background: #f9fbfd;
+    color: #7b8b9b;
+    text-align: center;
+    font-size: 13px;
+}
+
+
+/* Summary */
+
+.review-summary {
+    overflow: hidden;
+    border: 1px solid #e0e9f1;
+    border-radius: 10px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 17px 20px;
+    color: #587086;
+    font-size: 14px;
+    border-bottom: 1px solid #edf2f6;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+.summary-row strong {
+    color: #173f64;
+    font-size: 17px;
+}
+
+.deposit-row {
+    background: linear-gradient(
+            135deg,
+            #f3f8fd 0%,
+            #edf5fc 100%
+    );
+}
+
+.deposit-row strong {
+    font-size: 21px;
+}
+
+
+/* Actions */
+
+.review-actions {
+    max-width: 1180px;
+    margin: 8px auto 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.review-actions button {
+    height: 42px;
+    min-width: 130px;
+    padding: 0 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+
+/* Back */
+
+.review-back-button {
+    background: #ffffff;
+    border: 1px solid #c8d5e2;
+    color: #4c647b;
+}
+
+.review-back-button:hover {
+    background: #f6f9fc;
+}
+
+
+/* Confirm */
+
+.review-confirm-button {
+    background: #3275ad;
+    border: 1px solid #3275ad;
+    color: #ffffff;
+}
+
+.review-confirm-button:hover {
+    background: #285f91;
+    border-color: #285f91;
+}
+
+
+/* Responsive */
+
+@media (max-width: 750px) {
+
+    .review-rental-page {
+        padding: 25px 18px 45px;
+    }
+
+    .review-card {
+        padding: 21px 18px;
+    }
+
+    .review-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .review-actions {
+        flex-direction: column-reverse;
+    }
+
+    .review-actions button {
+        width: 100%;
+    }
+}
