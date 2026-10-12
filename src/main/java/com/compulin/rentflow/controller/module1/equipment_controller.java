@@ -60,6 +60,25 @@ public class equipment_controller {
         return null;
     }
 
+    // Read-only access is available to Company Admins and Rental Officers.
+    // Only Company Admins may create, edit, change status, or deactivate equipment.
+    private ResponseEntity<?> checkManagementAccess(HttpSession session) {
+        ResponseEntity<?> accessError = checkAccess(session);
+        if (accessError != null) {
+            return accessError;
+        }
+
+        if (!Module1SessionAccess.hasAnyRole(session, "COMPANY_ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of(
+                            "message",
+                            "Only a Company Administrator can manage equipment."
+                    ));
+        }
+
+        return null;
+    }
+
     private Integer getCompanyId(HttpSession session) {
         return Module1SessionAccess.getCompanyId(session);
     }
@@ -422,7 +441,7 @@ public class equipment_controller {
             @RequestBody Map<String, Object> request,
             HttpSession session) {
 
-        ResponseEntity<?> accessError = checkAccess(session);
+        ResponseEntity<?> accessError = checkManagementAccess(session);
 
         if (accessError != null) {
             return accessError;
@@ -493,7 +512,7 @@ public class equipment_controller {
             @RequestBody Map<String, Object> request,
             HttpSession session) {
 
-        ResponseEntity<?> accessError = checkAccess(session);
+        ResponseEntity<?> accessError = checkManagementAccess(session);
 
         if (accessError != null) {
             return accessError;
@@ -574,7 +593,7 @@ public class equipment_controller {
             @RequestParam String status,
             HttpSession session) {
 
-        ResponseEntity<?> accessError = checkAccess(session);
+        ResponseEntity<?> accessError = checkManagementAccess(session);
 
         if (accessError != null) {
             return accessError;
@@ -602,7 +621,7 @@ public class equipment_controller {
             @PathVariable Integer id,
             HttpSession session) {
 
-        ResponseEntity<?> accessError = checkAccess(session);
+        ResponseEntity<?> accessError = checkManagementAccess(session);
 
         if (accessError != null) {
             return accessError;

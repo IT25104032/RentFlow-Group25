@@ -48,6 +48,24 @@ public class equipment_category_controller {
         return null;
     }
 
+    // Rental Officers may view/search categories but cannot change them.
+    private ResponseEntity<?> checkManagementAccess(HttpSession session) {
+        ResponseEntity<?> accessError = checkAccess(session);
+        if (accessError != null) {
+            return accessError;
+        }
+
+        if (!Module1SessionAccess.hasAnyRole(session, "COMPANY_ADMIN")) {
+            return ResponseEntity.status(403)
+                    .body(Map.of(
+                            "message",
+                            "Only a Company Administrator can manage equipment categories."
+                    ));
+        }
+
+        return null;
+    }
+
     private ResponseEntity<Map<String, String>> badRequest(
             Exception exception) {
         String message = exception.getMessage();
@@ -164,7 +182,7 @@ public class equipment_category_controller {
             @RequestBody Map<String, Object> request,
             HttpSession session) {
 
-        ResponseEntity<?> accessError = checkAccess(session);
+        ResponseEntity<?> accessError = checkManagementAccess(session);
         if (accessError != null) {
             return accessError;
         }
@@ -206,7 +224,7 @@ public class equipment_category_controller {
             @RequestBody Map<String, Object> request,
             HttpSession session) {
 
-        ResponseEntity<?> accessError = checkAccess(session);
+        ResponseEntity<?> accessError = checkManagementAccess(session);
         if (accessError != null) {
             return accessError;
         }
@@ -245,7 +263,7 @@ public class equipment_category_controller {
             @RequestParam String status,
             HttpSession session) {
 
-        ResponseEntity<?> accessError = checkAccess(session);
+        ResponseEntity<?> accessError = checkManagementAccess(session);
         if (accessError != null) {
             return accessError;
         }
@@ -273,7 +291,7 @@ public class equipment_category_controller {
             @PathVariable Integer id,
             HttpSession session) {
 
-        ResponseEntity<?> accessError = checkAccess(session);
+        ResponseEntity<?> accessError = checkManagementAccess(session);
         if (accessError != null) {
             return accessError;
         }
@@ -299,7 +317,7 @@ public class equipment_category_controller {
             @PathVariable Integer id,
             HttpSession session) {
 
-        ResponseEntity<?> accessError = checkAccess(session);
+        ResponseEntity<?> accessError = checkManagementAccess(session);
         if (accessError != null) {
             return accessError;
         }

@@ -782,3 +782,29 @@
 .module2-notification-item {
     cursor: pointer;
 }
+
+/* Shared sidebar layout */
+.module2-sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Allow navigation to scroll independently */
+.module2-sidebar-navigation {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Keep user information visible at the bottom */
+.module2-sidebar-user {
+    flex-shrink: 0;
+}
+
+/* Keep logo visible at the top */
+.module2-sidebar-brand {
+    flex-shrink: 0;
+}

@@ -1,4 +1,3 @@
-#frontend
 import { useEffect, useState } from 'react'
 import './EquipmentManagement.css'
 
@@ -9,6 +8,8 @@ const CATEGORY_API =
     'http://localhost:8081/api/module1/equipment-categories/status/ACTIVE'
 
 function EquipmentManagement({ user }) {
+    const role = (user?.role || '').replace('ROLE_', '').toUpperCase()
+    const canManage = role === 'COMPANY_ADMIN'
     const [equipment, setEquipment] = useState([])
     const [categories, setCategories] = useState([])
     const [showForm, setShowForm] = useState(false)
@@ -129,6 +130,12 @@ function EquipmentManagement({ user }) {
     }
 
     const handleAdd = () => {
+        if (!canManage) {
+            setMessage('Only a Company Administrator can add equipment.')
+            setMessageType('error')
+            return
+        }
+
         resetForm()
 
         setMessage('')
@@ -137,6 +144,12 @@ function EquipmentManagement({ user }) {
     }
 
     const handleEdit = (item) => {
+        if (!canManage) {
+            setMessage('Only a Company Administrator can edit equipment.')
+            setMessageType('error')
+            return
+        }
+
         setForm({
             itemName: item.itemName || '',
             itemCode: item.itemCode || '',
@@ -167,6 +180,12 @@ function EquipmentManagement({ user }) {
     }
 
     const handleSubmit = async (e) => {
+        if (!canManage) {
+            setMessage('Only a Company Administrator can modify equipment.')
+            setMessageType('error')
+            return
+        }
+
         e.preventDefault()
 
         setMessage('')
@@ -300,6 +319,12 @@ function EquipmentManagement({ user }) {
         item,
         status
     ) => {
+        if (!canManage) {
+            setMessage('Only a Company Administrator can change equipment status.')
+            setMessageType('error')
+            return
+        }
+
 
         try {
             const response = await fetch(
@@ -343,6 +368,12 @@ function EquipmentManagement({ user }) {
     const handleDeactivate = async (
         item
     ) => {
+        if (!canManage) {
+            setMessage('Only a Company Administrator can deactivate equipment.')
+            setMessageType('error')
+            return
+        }
+
 
         const confirmed = window.confirm(
             `Deactivate "${item.itemName}"?`
@@ -421,16 +452,18 @@ function EquipmentManagement({ user }) {
                     </h2>
 
                     <p>
-                        Register and manage your company's equipment inventory.
+                        {canManage ? "Register and manage your company's equipment inventory." : "Search equipment and check availability before rental selection."}
                     </p>
                 </div>
 
-                <button
-                    className="add-equipment-button"
-                    onClick={handleAdd}
-                >
-                    + Add Equipment
-                </button>
+                {canManage && (
+                    <button
+                        className="add-equipment-button"
+                        onClick={handleAdd}
+                    >
+                        + Add Equipment
+                    </button>
+                )}
 
             </div>
 
@@ -442,7 +475,7 @@ function EquipmentManagement({ user }) {
                 </div>
             )}
 
-            {showForm && (
+            {canManage && showForm && (
                 <div className="equipment-form-card">
 
                     <div className="equipment-form-header">
@@ -753,7 +786,7 @@ function EquipmentManagement({ user }) {
                             <th>Total</th>
                             <th>Available</th>
                             <th>Status</th>
-                            <th>Actions</th>
+                            {canManage && <th>Actions</th>}
                         </tr>
                         </thead>
 
@@ -762,7 +795,7 @@ function EquipmentManagement({ user }) {
                         {filteredEquipment.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan="10"
+                                    colSpan={canManage ? 10 : 9}
                                     className="empty-equipment"
                                 >
                                     No equipment found.
@@ -847,55 +880,57 @@ function EquipmentManagement({ user }) {
                                                     </span>
                                             </td>
 
-                                            <td>
+                                            {canManage && (
+                                                <td>
 
-                                                <div className="equipment-actions">
+                                                    <div className="equipment-actions">
 
-                                                    <button
-                                                        className="edit-equipment-button"
-                                                        onClick={() =>
-                                                            handleEdit(
-                                                                item
-                                                            )
-                                                        }
-                                                    >
-                                                        Edit
-                                                    </button>
+                                                        <button
+                                                            className="edit-equipment-button"
+                                                            onClick={() =>
+                                                                handleEdit(
+                                                                    item
+                                                                )
+                                                            }
+                                                        >
+                                                            Edit
+                                                        </button>
 
-                                                    {status !==
-                                                        'INACTIVE' && (
-                                                            <button
-                                                                className="deactivate-equipment-button"
-                                                                onClick={() =>
-                                                                    handleDeactivate(
-                                                                        item
-                                                                    )
-                                                                }
-                                                            >
-                                                                Deactivate
-                                                            </button>
-                                                        )}
+                                                        {status !==
+                                                            'INACTIVE' && (
+                                                                <button
+                                                                    className="deactivate-equipment-button"
+                                                                    onClick={() =>
+                                                                        handleDeactivate(
+                                                                            item
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    Deactivate
+                                                                </button>
+                                                            )}
 
-                                                    {status !==
-                                                        'AVAILABLE' &&
-                                                        status !==
-                                                        'INACTIVE' && (
-                                                            <button
-                                                                className="available-equipment-button"
-                                                                onClick={() =>
-                                                                    changeStatus(
-                                                                        item,
-                                                                        'AVAILABLE'
-                                                                    )
-                                                                }
-                                                            >
-                                                                Available
-                                                            </button>
-                                                        )}
+                                                        {status !==
+                                                            'AVAILABLE' &&
+                                                            status !==
+                                                            'INACTIVE' && (
+                                                                <button
+                                                                    className="available-equipment-button"
+                                                                    onClick={() =>
+                                                                        changeStatus(
+                                                                            item,
+                                                                            'AVAILABLE'
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    Available
+                                                                </button>
+                                                            )}
 
-                                                </div>
+                                                    </div>
 
-                                            </td>
+                                                </td>
+                                            )}
 
                                         </tr>
                                     )
