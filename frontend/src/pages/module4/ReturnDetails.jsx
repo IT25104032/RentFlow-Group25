@@ -23,27 +23,24 @@ function ReturnDetails() {
     if (!data) return <Loading />;
 
     const s = data.summary;
-    const canSettle = ["RETURNED"].includes(data.rentalStatus);
 
     return (
         <>
             <button className="m4-back" onClick={() => navigate("/returns/history")}>← Return history</button>
             <div className="m4-head">
                 <div>
-                    <h2>Return #{s.returnId} <Badge value={s.returnType} /></h2>
+                    <h2>
+                        Return #{s.returnId}{" "}
+                        <Badge value={s.returnType} />
+                    </h2>
+
                     <p>
-                        Rental #{s.rentalId} · {s.customerName} · returned {dateTime(s.returnDate)}
-                        {s.processedByName && <> · by {s.processedByName}</>}
+                        Rental #{s.rentalId} · {s.customerName} ·
+                        returned {dateTime(s.returnDate)}
+                        {s.processedByName && (
+                            <> · by {s.processedByName}</>
+                        )}
                     </p>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                    {["ACTIVE", "OVERDUE", "PARTIALLY_RETURNED"].includes(data.rentalStatus) && (
-                        <button className="m4-btn" onClick={() => navigate(`/returns/new?rentalId=${s.rentalId}`)}>Return more items</button>
-                    )}
-                    <button className={`m4-btn ${canSettle ? "m4-btn-primary" : ""}`}
-                            onClick={() => navigate(`/returns/settlements/${s.rentalId}`)}>
-                        {canSettle ? "Settle rental →" : "Rental billing"}
-                    </button>
                 </div>
             </div>
 
@@ -75,9 +72,7 @@ function ReturnDetails() {
                 </div>
             </Card>
 
-            <Card title="Damage assessed"
-                  actions={data.damages.length > 0 && <button className="m4-btn m4-btn-sm" onClick={() => navigate("/returns/damages")}>Manage damage</button>}
-                  flush>
+            <Card title="Damage assessed" flush>
                 {data.damages.length === 0 ? <Empty>No damage on this return.</Empty> : (
                     <div className="m4-table-wrap">
                         <table className="m4-table">

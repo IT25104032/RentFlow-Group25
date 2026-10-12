@@ -28,9 +28,11 @@ function ReturnHistory() {
             <div className="m4-head">
                 <div>
                     <h2>Return history</h2>
-                    <p>Every check-in, newest first. Open one to see the items, their condition and any damage.</p>
+                    <p>
+                        Every check-in, newest first. Open one to see
+                        the items, their condition and any damage.
+                    </p>
                 </div>
-                <button className="m4-btn m4-btn-primary" onClick={() => navigate("/returns/new")}>+ Process return</button>
             </div>
             <Alert onClose={() => setError("")}>{error}</Alert>
 
