@@ -4,6 +4,8 @@ import './EquipmentCategories.css'
 const API_URL = 'http://localhost:8081/api/module1/equipment-categories'
 
 function EquipmentCategories({ user }) {
+    const role = (user?.role || '').replace('ROLE_', '').toUpperCase()
+    const canManage = role === 'COMPANY_ADMIN'
     const [categories, setCategories] = useState([])
     const [showForm, setShowForm] = useState(false)
     const [editingId, setEditingId] = useState(null)
@@ -74,6 +76,12 @@ function EquipmentCategories({ user }) {
     }
 
     const handleAdd = () => {
+        if (!canManage) {
+            setMessage('Only a Company Administrator can add categories.')
+            setMessageType('error')
+            return
+        }
+
         setForm({
             categoryName: '',
             catDescription: '',
@@ -87,6 +95,12 @@ function EquipmentCategories({ user }) {
     }
 
     const handleEdit = (category) => {
+        if (!canManage) {
+            setMessage('Only a Company Administrator can edit categories.')
+            setMessageType('error')
+            return
+        }
+
         const id =
             category.category_id ??
             category.categoryId
@@ -121,6 +135,12 @@ function EquipmentCategories({ user }) {
     }
 
     const handleSubmit = async (e) => {
+        if (!canManage) {
+            setMessage('Only a Company Administrator can modify categories.')
+            setMessageType('error')
+            return
+        }
+
         e.preventDefault()
 
         setMessage('')
@@ -188,6 +208,12 @@ function EquipmentCategories({ user }) {
     }
 
     const handleDeactivate = async (category) => {
+        if (!canManage) {
+            setMessage('Only a Company Administrator can deactivate categories.')
+            setMessageType('error')
+            return
+        }
+
         const id =
             category.category_id ??
             category.categoryId
@@ -243,6 +269,12 @@ function EquipmentCategories({ user }) {
     }
 
     const handleActivate = async (category) => {
+        if (!canManage) {
+            setMessage('Only a Company Administrator can activate categories.')
+            setMessageType('error')
+            return
+        }
+
         const id =
             category.category_id ??
             category.categoryId
@@ -312,16 +344,18 @@ function EquipmentCategories({ user }) {
                     <h2>Equipment Categories</h2>
 
                     <p>
-                        Create and manage your company's equipment categories.
+                        {canManage ? "Create and manage your company's equipment categories." : "View and search equipment categories."}
                     </p>
                 </div>
 
-                <button
-                    className="add-category-button"
-                    onClick={handleAdd}
-                >
-                    + Add Category
-                </button>
+                {canManage && (
+                    <button
+                        className="add-category-button"
+                        onClick={handleAdd}
+                    >
+                        + Add Category
+                    </button>
+                )}
             </div>
 
             {message && (
@@ -330,7 +364,7 @@ function EquipmentCategories({ user }) {
                 </div>
             )}
 
-            {showForm && (
+            {canManage && showForm && (
                 <div className="category-form-card">
 
                     <div className="category-form-header">
@@ -459,7 +493,7 @@ function EquipmentCategories({ user }) {
                             <th>Category Name</th>
                             <th>Description</th>
                             <th>Status</th>
-                            <th>Actions</th>
+                            {canManage && <th>Actions</th>}
                         </tr>
                         </thead>
 
@@ -468,7 +502,7 @@ function EquipmentCategories({ user }) {
                         {filteredCategories.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan="5"
+                                    colSpan={canManage ? 5 : 4}
                                     className="empty-table"
                                 >
                                     No equipment categories found.
@@ -525,42 +559,44 @@ function EquipmentCategories({ user }) {
                                                 </span>
                                         </td>
 
-                                        <td>
+                                        {canManage && (
+                                            <td>
 
-                                            <div className="table-actions">
+                                                <div className="table-actions">
 
-                                                <button
-                                                    className="edit-category-button"
-                                                    onClick={() =>
-                                                        handleEdit(category)
-                                                    }
-                                                >
-                                                    Edit
-                                                </button>
-
-                                                {active ? (
                                                     <button
-                                                        className="deactivate-category-button"
+                                                        className="edit-category-button"
                                                         onClick={() =>
-                                                            handleDeactivate(category)
+                                                            handleEdit(category)
                                                         }
                                                     >
-                                                        Deactivate
+                                                        Edit
                                                     </button>
-                                                ) : (
-                                                    <button
-                                                        className="activate-category-button"
-                                                        onClick={() =>
-                                                            handleActivate(category)
-                                                        }
-                                                    >
-                                                        Activate
-                                                    </button>
-                                                )}
 
-                                            </div>
+                                                    {active ? (
+                                                        <button
+                                                            className="deactivate-category-button"
+                                                            onClick={() =>
+                                                                handleDeactivate(category)
+                                                            }
+                                                        >
+                                                            Deactivate
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            className="activate-category-button"
+                                                            onClick={() =>
+                                                                handleActivate(category)
+                                                            }
+                                                        >
+                                                            Activate
+                                                        </button>
+                                                    )}
 
-                                        </td>
+                                                </div>
+
+                                            </td>
+                                        )}
 
                                     </tr>
                                 )

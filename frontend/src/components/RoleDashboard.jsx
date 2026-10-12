@@ -226,7 +226,7 @@ function RoleDashboard({ user, onLogout }) {
                                 'Manage your company, staff and inventory from one place.'}
 
                             {staff &&
-                                'Manage authorized equipment categories and inventory.'}
+                                'Search equipment and categories, and check availability before a rental.'}
                         </p>
                     </section>
 
