@@ -76,6 +76,16 @@ public class equipment_service {
         );
     }
 
+
+    public List<equipment> getAvailableForRental(
+            Integer companyId
+    ) {
+        return equipmentRepo.findAvailableForRentalByCompany(
+                companyId
+        );
+    }
+
+
     public equipment createEquipment(
             Integer companyId,
             Integer categoryId,
@@ -109,9 +119,7 @@ public class equipment_service {
                 newEquipment.getTotal_quantity()
         );
 
-        newEquipment.setEqu_status(
-                "AVAILABLE"
-        );
+        newEquipment.setEqu_status("AVAILABLE");
 
         newEquipment.setCreated_at(
                 LocalDateTime.now()
@@ -210,12 +218,12 @@ public class equipment_service {
         return equipmentRepo.save(existing);
     }
 
+
     public equipment updateStatus(
             Integer equipmentId,
             Integer companyId,
             String status
     ) {
-
         equipment existing =
                 equipmentRepo.findByIdAndCompanyId(
                         equipmentId,
@@ -226,21 +234,13 @@ public class equipment_service {
                         )
                 );
 
-        String newStatus =
-                normalizeStatus(status);
+        String newStatus = normalizeStatus(status);
 
         existing.setEqu_status(newStatus);
 
-        if (newStatus.equals("INACTIVE") ||
-                newStatus.equals("DAMAGED") ||
-                newStatus.equals("LOST") ||
-                newStatus.equals("MAINTENANCE")) {
-
-            existing.setAvailable_quantity(0);
-        }
-
         return equipmentRepo.save(existing);
     }
+
 
     public equipment deactivateEquipment(
             Integer equipmentId,
@@ -300,30 +300,27 @@ public class equipment_service {
         }
     }
 
-    private String normalizeStatus(
-            String status
-    ) {
-
-        if (status == null ||
-                status.trim().isEmpty()) {
-
-            throw new RuntimeException(
-                    "Equipment status is required"
+    private String normalizeStatus(String status) {
+        if (status == null || status.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Equipment status is required."
             );
         }
 
-        String value =
-                status.trim().toUpperCase();
+        String value = status.trim().toUpperCase(
+                java.util.Locale.ROOT
+        );
 
-        if (!value.equals("AVAILABLE") &&
-                !value.equals("RENTED") &&
-                !value.equals("DAMAGED") &&
-                !value.equals("LOST") &&
-                !value.equals("MAINTENANCE") &&
-                !value.equals("INACTIVE")) {
-
-            throw new RuntimeException(
-                    "Invalid equipment status"
+        if (!java.util.Set.of(
+                "AVAILABLE",
+                "RENTED",
+                "DAMAGED",
+                "LOST",
+                "MAINTENANCE",
+                "INACTIVE"
+        ).contains(value)) {
+            throw new IllegalArgumentException(
+                    "Invalid equipment status: " + value
             );
         }
 

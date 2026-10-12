@@ -74,5 +74,15 @@ public interface equipment_category_repo
             @Param("companyId") Integer companyId
     );
 
+    @Query(value = """
+    SELECT * FROM equipment_category
+    WHERE category_id = :categoryId
+      AND company_id = :companyId
+    """, nativeQuery = true)
+    Optional<equipment_category> findModule1CategoryOwnedByCompany(
+            @Param("categoryId") Integer categoryId,
+            @Param("companyId") Integer companyId
+    );
+
 
 }

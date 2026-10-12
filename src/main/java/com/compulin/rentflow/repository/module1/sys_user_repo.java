@@ -1,3 +1,4 @@
+
 package com.compulin.rentflow.repository.module1;
 
 import com.compulin.rentflow.entity.module1.sys_user;
@@ -8,39 +9,49 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface sys_user_repo extends JpaRepository<sys_user, Integer> {
+public interface sys_user_repo
+        extends JpaRepository<sys_user, Integer> {
 
-    Optional<sys_user> findByEmail(String email);
+    @Query(value = """
+        SELECT * FROM sys_user
+        WHERE email = :email
+        LIMIT 1
+        """, nativeQuery = true)
+    Optional<sys_user> findByEmail(
+            @Param("email") String email
+    );
 
-    @Query("""
-        select u from sys_user u
-        where u.userRole = :userRole
-    """)
+    @Query(value = """
+        SELECT * FROM sys_user
+        WHERE user_role = :userRole
+        """, nativeQuery = true)
     List<sys_user> findByUserRole(
             @Param("userRole") String userRole
     );
 
-    @Query("""
-        select u from sys_user u
-        where u.userStatus = :userStatus
-    """)
+    @Query(value = """
+        SELECT * FROM sys_user
+        WHERE user_status = :userStatus
+        """, nativeQuery = true)
     List<sys_user> findByUserStatus(
             @Param("userStatus") String userStatus
     );
 
-    @Query("""
-        select u from sys_user u
-        where u.company.companyId = :companyId
-    """)
-    List<sys_user> findByCompanyId(
+    @Query(value = """
+        SELECT * FROM sys_user
+        WHERE company_id = :companyId
+        ORDER BY full_name
+        """, nativeQuery = true)
+    List<sys_user> findByCompanyCompanyId(
             @Param("companyId") Integer companyId
     );
 
-    @Query("""
-        select u from sys_user u
-        where u.userId = :userId
-        and u.company.companyId = :companyId
-    """)
+    @Query(value = """
+        SELECT * FROM sys_user
+        WHERE user_id = :userId
+          AND company_id = :companyId
+        LIMIT 1
+        """, nativeQuery = true)
     Optional<sys_user> findByUserIdAndCompanyId(
             @Param("userId") Integer userId,
             @Param("companyId") Integer companyId

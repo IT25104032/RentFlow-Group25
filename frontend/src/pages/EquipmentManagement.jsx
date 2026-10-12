@@ -5,7 +5,7 @@ const EQUIPMENT_API =
     'http://localhost:8081/api/module1/equipment'
 
 const CATEGORY_API =
-    'http://localhost:8081/api/module1/equipment-categories'
+    'http://localhost:8081/api/module1/equipment-categories/status/ACTIVE'
 
 function EquipmentManagement({ user }) {
     const [equipment, setEquipment] = useState([])

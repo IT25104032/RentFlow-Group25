@@ -99,7 +99,7 @@ CREATE TABLE equipment (
     equ_description VARCHAR(500),
     rental_rate DECIMAL(12,2) NOT NULL,
     rate_period VARCHAR(20) NOT NULL,
-    refundable_deposit_per_unit DECIMAL(12,2) NOT NULL DEFAULT 0,
+    security_deposit_per_unit DECIMAL(12,2) NOT NULL DEFAULT 0,
     total_quantity INT NOT NULL DEFAULT 0,
     available_quantity INT NOT NULL DEFAULT 0,
     equ_status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
@@ -124,7 +124,7 @@ CREATE TABLE equipment (
         CHECK (rental_rate >= 0),
 
     CONSTRAINT chk_equipment_deposit
-        CHECK (refundable_deposit_per_unit >= 0),
+        CHECK (security_deposit_per_unit >= 0),
 
     CONSTRAINT chk_equipment_total_quantity
         CHECK (total_quantity >= 0),
