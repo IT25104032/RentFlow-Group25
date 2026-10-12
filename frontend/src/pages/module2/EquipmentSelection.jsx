@@ -65,8 +65,6 @@ const EQUIPMENT_DATA = [
 
 
 function EquipmentSelection({ onBack }) {
-
-
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -89,16 +87,10 @@ function EquipmentSelection({ onBack }) {
     const rentalDetails = draft.rentalDetails || null;
 
     const [searchText, setSearchText] = useState("");
-
     const [selectedEquipment, setSelectedEquipment] = useState(
-        draft.selectedEquipment || []
-    );
-
-
+        draft.selectedEquipment || []);
     const [depositOverride, setDepositOverride] = useState(
-        draft.depositOverride ?? null
-    );
-
+        draft.depositOverride ?? null);
     const updateSelectedEquipment = (updatedEquipment) => {
         setSelectedEquipment(updatedEquipment);
         setDepositOverride(null);
@@ -128,10 +120,7 @@ function EquipmentSelection({ onBack }) {
         useState("");
 
 
-    /*
-     * Filter the temporary equipment list
-     * based on the search text.
-     */
+     //Filter the temporary equipment list based on search text
     const filteredEquipment = useMemo(() => {
 
         const search =
@@ -159,9 +148,7 @@ function EquipmentSelection({ onBack }) {
     }, [searchText]);
 
 
-    /*
-     * Add an equipment item to the rental.
-     */
+     //Add an equipment item to the rental.
     const handleAddEquipment = (equipment) => {
 
         setError("");
@@ -196,10 +183,7 @@ function EquipmentSelection({ onBack }) {
     };
 
 
-    /*
-     * Change the quantity of a selected
-     * equipment item.
-     */
+    //Change the quantity of a selected equipment item
     const handleQuantityChange = (equipmentId, quantity) => {
         setError("");
 
@@ -231,10 +215,8 @@ function EquipmentSelection({ onBack }) {
         updateSelectedEquipment(updatedEquipment);
     };
 
-    /*
- * Change the security deposit per unit
- * for a selected equipment item.
- */
+
+    // Remove an equipment item from the rental selection
     const handleRemoveEquipment = (equipmentId) => {
         setError("");
 
@@ -246,12 +228,7 @@ function EquipmentSelection({ onBack }) {
     };
 
 
-    /*
-     * Calculate the total refundable
-     * deposit for all selected items.
-     */
-
-
+    //Calculate the total security deposit for all selected items
     const calculatedTotalDeposit = useMemo(() => {
         return selectedEquipment.reduce((total, item) => {
             return total +
@@ -326,17 +303,10 @@ function EquipmentSelection({ onBack }) {
             "/rentals/review",
             {
                 state: {
-                    selectedRenter:
-                    selectedRenter,
-
-                    rentalDetails:
-                    rentalDetails,
-
-                    selectedEquipment:
-                    selectedEquipment,
-
-                    totalDeposit:
-                    totalDeposit
+                    selectedRenter: selectedRenter,
+                    rentalDetails: rentalDetails,
+                    selectedEquipment: selectedEquipment,
+                    totalDeposit: totalDeposit
                 }
             }
         );
@@ -345,96 +315,67 @@ function EquipmentSelection({ onBack }) {
 
     return (
         <div className="create-rental-page">
-
             <div className="page-header">
-
                 <div>
-
                     <h1>
                         Create Rental
                     </h1>
-
                     <p>
                         Select the equipment
                         required for this rental.
                     </p>
-
                 </div>
-
             </div>
 
 
-            <RentalStepper
-                activeStep={3}
-            />
-
+            <RentalStepper activeStep={3}/>
 
             {/* Selected renter card */}
-
             <div className="rental-card">
-
                 <div className="card-header">
-
                     <div>
-
                         <h2>
                             Selected Renter
                         </h2>
-
                         <p>
                             Equipment will be
                             added to this rental.
                         </p>
-
                     </div>
-
                 </div>
 
-
                 {selectedRenter ? (
-
                     <div className="selected-renter">
-
                         <div className="renter-summary-row">
-
                             <div className="renter-summary-field">
-
                                 <span className="field-label">
                                     Renter Name
                                 </span>
-
                                 <span className="field-value">
                                     {
                                         selectedRenter.customerName
                                     }
                                 </span>
-
                             </div>
 
 
                             <div className="renter-summary-field">
-
                                 <span className="field-label">
                                     Phone
                                 </span>
-
                                 <span className="field-value">
                                     {
                                         selectedRenter.phone
                                     }
                                 </span>
-
                             </div>
 
 
                             <div className="renter-summary-field">
-
                                 <span className="field-label">
                                     Rental Period
                                 </span>
-
                                 <span className="field-value">
-
                                     {
                                         rentalDetails?.startDate
                                     }
@@ -444,13 +385,9 @@ function EquipmentSelection({ onBack }) {
                                     {
                                         rentalDetails?.dueDate
                                     }
-
                                 </span>
-
                             </div>
-
                         </div>
-
                     </div>
 
                 ) : (
@@ -465,29 +402,21 @@ function EquipmentSelection({ onBack }) {
 
 
             {/* Equipment search */}
-
             <div className="rental-card">
-
                 <div className="card-header">
-
                     <div>
-
                         <h2>
                             Available Equipment
                         </h2>
-
                         <p>
                             Search and select
                             equipment for this rental.
                         </p>
-
                     </div>
-
                 </div>
 
 
                 <div className="form-group">
-
                     <label htmlFor="equipmentSearch">
                         Search Equipment
                     </label>
@@ -503,16 +432,12 @@ function EquipmentSelection({ onBack }) {
                         }
                         placeholder="Search by name, code or category"
                     />
-
                 </div>
 
 
                 <div className="equipment-table-wrapper">
-
                     <table className="equipment-table">
-
                         <thead>
-
                         <tr>
                             <th>Equipment</th>
                             <th>Code</th>
@@ -526,7 +451,6 @@ function EquipmentSelection({ onBack }) {
 
 
                         <tbody>
-
                         {filteredEquipment.length > 0 ? (
 
                             filteredEquipment.map(
@@ -539,38 +463,26 @@ function EquipmentSelection({ onBack }) {
                                     >
 
                                         <td>
-                                            {
-                                                equipment.itemName
-                                            }
+                                            {equipment.itemName}
                                         </td>
 
                                         <td>
-                                            {
-                                                equipment.itemCode
-                                            }
+                                            {equipment.itemCode}
                                         </td>
 
                                         <td>
-                                            {
-                                                equipment.categoryName
-                                            }
+                                            {equipment.categoryName}
                                         </td>
 
                                         <td>
-                                            {
-                                                equipment.availableQuantity
-                                            }
+                                            {equipment.availableQuantity}
                                         </td>
 
                                         <td>
                                             Rs.{" "}
-                                            {
-                                                equipment.rentalRate.toLocaleString()
-                                            }
+                                            {equipment.rentalRate.toLocaleString()}
                                             /
-                                            {
-                                                equipment.ratePeriod.toLowerCase()
-                                            }
+                                            {equipment.ratePeriod.toLowerCase()}
                                         </td>
 
                                         <td>
@@ -591,11 +503,8 @@ function EquipmentSelection({ onBack }) {
                                             >
                                                 Add
                                             </button>
-
                                         </td>
-
                                     </tr>
-
                                 )
                             )
 
@@ -626,31 +535,23 @@ function EquipmentSelection({ onBack }) {
             {/* Selected equipment */}
 
             <div className="rental-card">
-
                 <div className="card-header">
-
                     <div>
-
                         <h2>
                             Selected Equipment
                         </h2>
-
                         <p>
                             Set the quantity for
                             each selected item.
                         </p>
-
                     </div>
-
                 </div>
 
 
                 {selectedEquipment.length > 0 ? (
 
                     <div className="equipment-table-wrapper">
-
                         <table className="equipment-table">
-
                             <thead>
                             <tr>
                                 <th>Equipment</th>
@@ -675,25 +576,19 @@ function EquipmentSelection({ onBack }) {
 
                                         <td>
                                             <strong>
-                                                {
-                                                    item.itemName
-                                                }
+                                                {item.itemName}
                                             </strong>
 
                                             <br />
 
                                             <span>
-                                                    {
-                                                        item.itemCode
-                                                    }
+                                                    {item.itemCode}
                                                 </span>
 
                                         </td>
 
                                         <td>
-                                            {
-                                                item.availableQuantity
-                                            }
+                                            {item.availableQuantity}
                                         </td>
 
                                         <td>
@@ -722,16 +617,11 @@ function EquipmentSelection({ onBack }) {
                                             />
 
                                         </td>
-
                                         <td>
                                             Rs.{" "}
-                                            {
-                                                item.rentalRate.toLocaleString()
-                                            }
+                                            {item.rentalRate.toLocaleString()}
                                             /
-                                            {
-                                                item.ratePeriod.toLowerCase()
-                                            }
+                                            {item.ratePeriod.toLowerCase()}
                                         </td>
 
                                         <td>
@@ -752,18 +642,14 @@ function EquipmentSelection({ onBack }) {
                                             >
                                                 Remove
                                             </button>
-
                                         </td>
 
                                     </tr>
-
                                 )
                             )}
 
                             </tbody>
-
                         </table>
-
                     </div>
 
                 ) : (
@@ -843,14 +729,9 @@ function EquipmentSelection({ onBack }) {
                                 "/rentals/create",
                                 {
                                     state: {
-                                        selectedRenter:
-                                        selectedRenter,
-
-                                        rentalDetails:
-                                        rentalDetails,
-
-                                        selectedEquipment:
-                                        selectedEquipment
+                                        selectedRenter: selectedRenter,
+                                        rentalDetails: rentalDetails,
+                                        selectedEquipment: selectedEquipment
                                     }
                                 }
                             )
@@ -858,7 +739,6 @@ function EquipmentSelection({ onBack }) {
                 >
                     Back
                 </button>
-
 
 
                 <button

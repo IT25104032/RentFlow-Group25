@@ -14,41 +14,21 @@ function RentalHistory() {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const notificationRentalId =
-        location.state?.rentalId;
-
-    const notificationCustomerId =
-        location.state?.customerId;
+    const notificationRentalId = location.state?.rentalId;
+    const notificationCustomerId = location.state?.customerId;
 
     const [renters, setRenters] = useState([]);
+    const [selectedRenter, setSelectedRenter] = useState(null);
+    const [rentalHistory, setRentalHistory] = useState([]);
+    const [searchText, setSearchText] = useState("");
+    const [loadingRenters, setLoadingRenters] = useState(false);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+    const [error, setError] = useState("");
+    const [historyError, setHistoryError] = useState("");
+    const [selectedRental, setSelectedRental] = useState(null);
 
-    const [selectedRenter, setSelectedRenter] =
-        useState(null);
 
-    const [rentalHistory, setRentalHistory] =
-        useState([]);
-
-    const [searchText, setSearchText] =
-        useState("");
-
-    const [loadingRenters, setLoadingRenters] =
-        useState(false);
-
-    const [loadingHistory, setLoadingHistory] =
-        useState(false);
-
-    const [error, setError] =
-        useState("");
-
-    const [historyError, setHistoryError] =
-        useState("");
-
-    const [selectedRental, setSelectedRental] =
-        useState(null);
-
-    /*
-     * Load all registered renters.
-     */
+    // Load all registered renters.
     useEffect(() => {
 
         async function loadRenters() {
@@ -57,7 +37,6 @@ function RentalHistory() {
             setError("");
 
             try {
-
                 const data =
                     await getAllCustomers(COMPANY_ID);
 
@@ -73,21 +52,16 @@ function RentalHistory() {
                 );
 
             } finally {
-
                 setLoadingRenters(false);
-
             }
         }
 
         loadRenters();
-
     }, []);
 
 
-    /*
-     * Filter renters using name,
-     * phone or customer ID.
-     */
+
+    // Filter renters using name, phone or customer ID.
     const filteredRenters =
         renters.filter(renter => {
 
@@ -117,21 +91,15 @@ function RentalHistory() {
         });
 
 
-    /*
-     * Select renter and load
-     * their rental history.
-     */
+    // Select renter and load their rental history.
     async function handleSelectRenter(
         renter,
         targetRentalId = null
     ) {
 
         setSelectedRenter(renter);
-
         setRentalHistory([]);
-
         setHistoryError("");
-
         setLoadingHistory(true);
 
         try {
@@ -145,11 +113,7 @@ function RentalHistory() {
             setRentalHistory(history);
 
 
-            /*
-             * If Rental History was opened from a
-             * notification, automatically find
-             * and open the matching rental.
-             */
+            // Open a specific rental when a rental ID is provided.
             if (targetRentalId) {
 
                 const matchingRental =
@@ -168,12 +132,9 @@ function RentalHistory() {
 
                 if (matchingRental) {
 
-                    /*
-                     * Normal history responses already contain
-                     * { rental, rentalItems }. Keep them unchanged.
-                     * If the API ever returns a direct rental object,
-                     * wrap it so the existing modal still works.
-                     */
+
+                    // Normal history responses already contain { rental, rentalItems }. Keep them unchanged.
+                    //If the API ever returns a direct rental object, wrap it so the existing modal still works.
                     setSelectedRental(
                         matchingRental.rental
                             ? matchingRental
@@ -212,17 +173,11 @@ function RentalHistory() {
     }
 
 
-    /*
-     * If Rental History was opened by clicking a
-     * notification, automatically find the renter
-     * and open the selected rental.
-     */
+    // Automatically open a rental passed through navigation state.
     useEffect(() => {
 
-        /*
-         * Do nothing when Rental History was opened
-         * normally from the sidebar.
-         */
+
+        // Do nothing when Rental History was opened normally from the sidebar.
         if (
             notificationRentalId == null ||
             notificationCustomerId == null
@@ -230,10 +185,7 @@ function RentalHistory() {
             return;
         }
 
-
-        /*
-         * Wait until the renter list has loaded.
-         */
+        // Wait until the renter list has loaded.
         if (renters.length === 0) {
             return;
         }
@@ -247,10 +199,8 @@ function RentalHistory() {
             );
 
 
-        /*
-         * The notification points to a customer that
-         * is not in the current company/renter list.
-         */
+
+        // The notification points to a customer that is not in the current company/renter list.
         if (!renter) {
 
             console.error(
@@ -262,10 +212,8 @@ function RentalHistory() {
         }
 
 
-        /*
-         * Load that customer's rentals and let
-         * handleSelectRenter open the exact rental.
-         */
+
+        // Load that customer's rentals and let handleSelectRenter open the exact rental.
         async function openNotificationRental() {
 
             await handleSelectRenter(
@@ -273,10 +221,8 @@ function RentalHistory() {
                 notificationRentalId
             );
 
-            /*
-             * Clear the navigation state only AFTER
-             * the rental history has been loaded.
-             */
+
+            // Clear the navigation state only AFTER the rental history has been loaded.
             navigate(
                 "/rental-history",
                 {
@@ -295,23 +241,17 @@ function RentalHistory() {
         notificationCustomerId
     ]);
 
-    /*
-     * Clear the selected renter.
-     */
+
+    // Clear the selected renter.
     function handleClearSelection() {
-
         setSelectedRenter(null);
-
         setRentalHistory([]);
-
         setHistoryError("");
-
+        setSelectedRental(null);
     }
 
 
-    /*
-     * Format date values.
-     */
+    // Format date values.
     function formatDate(date) {
 
         if (!date) {
@@ -395,9 +335,7 @@ function RentalHistory() {
     }
 
 
-    /*
-     * Format rental status.
-     */
+    // Format rental status.
     function getStatusClass(status) {
 
         if (!status) {
@@ -408,14 +346,11 @@ function RentalHistory() {
             "history-status " +
             status.toLowerCase()
         );
-
     }
 
 
     return (
-
         <div className="rental-history-page">
-
 
             {/* PAGE HEADER */}
 
@@ -424,34 +359,26 @@ function RentalHistory() {
                 <h1>
                     Rental History
                 </h1>
-
                 <p>
                     View previous and current
                     rentals for registered renters.
                 </p>
-
             </div>
 
 
             {/* RENTER SELECTION */}
 
             <div className="history-card">
-
                 <div className="history-card-header">
-
                     <div>
-
                         <h2>
                             Select Renter
                         </h2>
-
                         <p>
                             Search for a renter to
                             view their rental history.
                         </p>
-
                     </div>
-
                 </div>
 
 
@@ -481,11 +408,9 @@ function RentalHistory() {
 
 
                 {error && (
-
                     <div className="history-error">
                         {error}
                     </div>
-
                 )}
 
 
@@ -498,19 +423,14 @@ function RentalHistory() {
                             <table className="history-renter-table">
 
                                 <thead>
-
                                 <tr>
-
                                     <th>Customer ID</th>
                                     <th>Renter Name</th>
                                     <th>Phone</th>
                                     <th>Type</th>
                                     <th>Actions</th>
-
                                 </tr>
-
                                 </thead>
-
 
                                 <tbody>
 
@@ -518,9 +438,7 @@ function RentalHistory() {
                                     renter => (
 
                                         <tr
-                                            key={
-                                                renter.customerId
-                                            }
+                                            key={renter.customerId}
                                         >
 
                                             <td>
@@ -529,24 +447,16 @@ function RentalHistory() {
 
                                             <td>
                                                 <strong>
-                                                    {
-                                                        renter.customerName
-                                                    }
+                                                    {renter.customerName}
                                                 </strong>
                                             </td>
 
                                             <td>
-                                                {
-                                                    renter.phone ||
-                                                    "-"
-                                                }
+                                                {renter.phone || "-"}
                                             </td>
 
                                             <td>
-                                                {
-                                                    renter.customerType ||
-                                                    "-"
-                                                }
+                                                {renter.customerType || "-"}
                                             </td>
 
                                             <td>
@@ -562,17 +472,12 @@ function RentalHistory() {
                                                 >
                                                     View History
                                                 </button>
-
                                             </td>
-
                                         </tr>
 
                                     ))}
-
                                 </tbody>
-
                             </table>
-
                         </div>
 
                     )}
@@ -600,19 +505,14 @@ function RentalHistory() {
                 <div className="history-card">
 
                     <div className="history-card-header selected-renter-header">
-
                         <div>
-
                             <h2>
                                 Rental History
                             </h2>
-
                             <p>
                                 Rental records for{" "}
                                 <strong>
-                                    {
-                                        selectedRenter.customerName
-                                    }
+                                    {selectedRenter.customerName}
                                 </strong>
                             </p>
 
@@ -641,12 +541,9 @@ function RentalHistory() {
                             <span>
                                 Customer ID
                             </span>
-
                             <strong>
                                 #
-                                {
-                                    selectedRenter.customerId
-                                }
+                                {selectedRenter.customerId}
                             </strong>
 
                         </div>
@@ -657,11 +554,8 @@ function RentalHistory() {
                             <span>
                                 Renter
                             </span>
-
                             <strong>
-                                {
-                                    selectedRenter.customerName
-                                }
+                                {selectedRenter.customerName}
                             </strong>
 
                         </div>
@@ -674,10 +568,7 @@ function RentalHistory() {
                             </span>
 
                             <strong>
-                                {
-                                    selectedRenter.phone ||
-                                    "-"
-                                }
+                                {selectedRenter.phone || "-"}
                             </strong>
 
                         </div>
@@ -688,13 +579,10 @@ function RentalHistory() {
                             <span>
                                 Total Rentals
                             </span>
-
                             <strong>
                                 {rentalHistory.length}
                             </strong>
-
                         </div>
-
                     </div>
 
 
@@ -731,7 +619,6 @@ function RentalHistory() {
                                 <table className="rental-history-table">
 
                                     <thead>
-
                                     <tr>
                                         <th>Rental ID</th>
                                         <th>Rental Date</th>
@@ -741,7 +628,6 @@ function RentalHistory() {
                                         <th>Equipment</th>
                                         <th>Action</th>
                                     </tr>
-
                                     </thead>
 
 
@@ -749,11 +635,9 @@ function RentalHistory() {
 
                                     {rentalHistory.map(record => {
 
-                                        const rental =
-                                            record.rental;
+                                        const rental = record.rental;
 
-                                        const items =
-                                            record.rentalItems || [];
+                                        const items = record.rentalItems || [];
 
 
                                         return (
@@ -766,38 +650,24 @@ function RentalHistory() {
 
                                                     <strong>
                                                         #
-                                                        {
-                                                            rental.rentalId
-                                                        }
+                                                        {rental.rentalId}
                                                     </strong>
 
                                                 </td>
 
 
                                                 <td>
-                                                    {
-                                                        formatDate(
-                                                            rental.rentalDate
-                                                        )
-                                                    }
+                                                    {formatDate(rental.rentalDate)}
                                                 </td>
 
 
                                                 <td>
-                                                    {
-                                                        formatDate(
-                                                            rental.startDate
-                                                        )
-                                                    }
+                                                    {formatDate(rental.startDate)}
                                                 </td>
 
 
                                                 <td>
-                                                    {
-                                                        formatDate(
-                                                            rental.dueDate
-                                                        )
-                                                    }
+                                                    {formatDate(rental.dueDate)}
                                                 </td>
 
 
@@ -810,9 +680,7 @@ function RentalHistory() {
                                                             )
                                                         }
                                                     >
-                                                        {
-                                                            rental.rentalStatus
-                                                        }
+                                                        {rental.rentalStatus}
                                                     </span>
 
                                                 </td>
@@ -852,13 +720,9 @@ function RentalHistory() {
                                                     >
                                                         View Details
                                                     </button>
-
                                                 </td>
-
                                             </tr>
-
                                         );
-
                                     })}
 
                                     </tbody>
@@ -906,9 +770,7 @@ function RentalHistory() {
 
                                 <h2>
                                     Rental #
-                                    {
-                                        selectedRental.rental.rentalId
-                                    }
+                                    {selectedRental.rental.rentalId}
                                 </h2>
 
                                 <p>
@@ -943,11 +805,7 @@ function RentalHistory() {
                                 <div>
                                     <span>Rental Date</span>
                                     <strong>
-                                        {
-                                            formatDate(
-                                                selectedRental.rental.rentalDate
-                                            )
-                                        }
+                                        {formatDate(selectedRental.rental.rentalDate)}
                                     </strong>
                                 </div>
 
@@ -965,11 +823,7 @@ function RentalHistory() {
                                 <div>
                                     <span>Due Date</span>
                                     <strong>
-                                        {
-                                            formatDate(
-                                                selectedRental.rental.dueDate
-                                            )
-                                        }
+                                        {formatDate(selectedRental.rental.dueDate)}
                                     </strong>
                                 </div>
 
@@ -995,9 +849,7 @@ function RentalHistory() {
                                     selectedRental.rental.rentalStatus
                                 )}
                             >
-                                {
-                                    selectedRental.rental.rentalStatus
-                                }
+                                {selectedRental.rental.rentalStatus}
                             </span>
                                     </strong>
                                 </div>
@@ -1032,7 +884,6 @@ function RentalHistory() {
 
 
                                     <tbody>
-
                                     {(
                                         selectedRental.rentalItems ||
                                         []
@@ -1046,15 +897,11 @@ function RentalHistory() {
 
                                             <td>
                                                 #
-                                                {
-                                                    item.equipmentId
-                                                }
+                                                {item.equipmentId}
                                             </td>
 
                                             <td>
-                                                {
-                                                    item.quantity
-                                                }
+                                                {item.quantity}
                                             </td>
 
                                             <td>
@@ -1067,9 +914,7 @@ function RentalHistory() {
                                             </td>
 
                                             <td>
-                                                {
-                                                    item.ratePeriod
-                                                }
+                                                {item.ratePeriod}
                                             </td>
 
                                             <td>
@@ -1097,9 +942,7 @@ function RentalHistory() {
                                     </tbody>
 
                                 </table>
-
                             </div>
-
                         </div>
 
 
@@ -1162,9 +1005,7 @@ function RentalHistory() {
                             </button>
 
                         </div>
-
                     </div>
-
                 </div>
 
             )}

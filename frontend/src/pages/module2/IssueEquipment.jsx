@@ -1,20 +1,20 @@
+
 import { useEffect, useMemo, useState } from "react";
 import {
     getActiveRentalsForIssue,
     issueRental,
-    cancelRental
+    cancelRental,
+    getRentalItemsForIssue
 } from "../../services/module2/equipmentIssueService";
 import "./IssueEquipment.css";
 
 const COMPANY_ID = 1000;
 
-// Returns today's date in the browser's local timezone as YYYY-MM-DD.
 function getLocalDateString() {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
-
     return `${year}-${month}-${day}`;
 }
 
@@ -25,16 +25,17 @@ function IssueEquipment() {
     const [actionRentalId, setActionRentalId] = useState(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [pendingRental, setPendingRental] = useState(null);
+    const [pendingItems, setPendingItems] = useState([]);
+    const [loadingItems, setLoadingItems] = useState(false);
     const [today, setToday] = useState(getLocalDateString());
 
-    // Refresh the date periodically so the button updates after midnight
-    // even if this page remains open.
     useEffect(() => {
-        const dateRefresh = window.setInterval(() => {
+        const interval = window.setInterval(() => {
             setToday(getLocalDateString());
         }, 15000);
 
-        return () => window.clearInterval(dateRefresh);
+        return () => window.clearInterval(interval);
     }, []);
 
     useEffect(() => {
@@ -57,11 +58,33 @@ function IssueEquipment() {
     }
 
     async function handleIssueRental(rental) {
-        const confirmed = window.confirm(
-            `Issue all equipment for rental #${rental.rentalId} to customer #${rental.customerId}?\n\nThe rental will change from DRAFT to ACTIVE.`
-        );
+        setError("");
+        setSuccess("");
+        setLoadingItems(true);
+        setActionRentalId(rental.rentalId);
 
-        if (!confirmed) return;
+        try {
+            const items = await getRentalItemsForIssue(rental.rentalId);
+
+            if (!Array.isArray(items) || items.length === 0) {
+                throw new Error("No equipment items were found for this rental.");
+            }
+
+            setPendingItems(items);
+            setPendingRental(rental);
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "Unable to load rental equipment.");
+        } finally {
+            setLoadingItems(false);
+            setActionRentalId(null);
+        }
+    }
+
+    async function confirmIssueRental() {
+        if (!pendingRental || actionRentalId !== null) return;
+
+        const rental = pendingRental;
 
         try {
             setActionRentalId(rental.rentalId);
@@ -70,20 +93,19 @@ function IssueEquipment() {
 
             await issueRental(rental.rentalId, COMPANY_ID);
 
+            setPendingRental(null);
+            setPendingItems([]);
+
             setSuccess(
                 `Rental #${rental.rentalId} was successfully issued. The rental is now ACTIVE.`
             );
 
             setRentals(previous =>
-                previous.filter(
-                    item => item.rentalId !== rental.rentalId
-                )
+                previous.filter(item => item.rentalId !== rental.rentalId)
             );
         } catch (err) {
             console.error(err);
-            setError(
-                `Unable to issue rental #${rental.rentalId}. Please check the rental equipment and try again.`
-            );
+            setError(err.message || `Unable to issue rental #${rental.rentalId}.`);
         } finally {
             setActionRentalId(null);
         }
@@ -108,15 +130,11 @@ function IssueEquipment() {
             );
 
             setRentals(previous =>
-                previous.filter(
-                    item => item.rentalId !== rental.rentalId
-                )
+                previous.filter(item => item.rentalId !== rental.rentalId)
             );
         } catch (err) {
             console.error(err);
-            setError(
-                `Unable to cancel rental #${rental.rentalId}.`
-            );
+            setError(`Unable to cancel rental #${rental.rentalId}.`);
         } finally {
             setActionRentalId(null);
         }
@@ -173,9 +191,9 @@ function IssueEquipment() {
                     <div>
                         <h2>Draft Rentals</h2>
                         <p>
-                            All rentals currently in DRAFT status are shown
-                            here. A cancelled rental is removed from this
-                            operational list but remains in Rental History.
+                            All rentals currently in DRAFT status are shown here.
+                            A cancelled rental is removed from this operational
+                            list but remains in Rental History.
                         </p>
                     </div>
                 </div>
@@ -185,9 +203,7 @@ function IssueEquipment() {
                         type="text"
                         placeholder="Search by rental ID or customer ID..."
                         value={searchTerm}
-                        onChange={event =>
-                            setSearchTerm(event.target.value)
-                        }
+                        onChange={event => setSearchTerm(event.target.value)}
                     />
                 </div>
 
@@ -219,15 +235,17 @@ function IssueEquipment() {
                                 const isWorking =
                                     actionRentalId === rental.rentalId;
 
-                                // LocalDate values from Spring Boot normally arrive as YYYY-MM-DD.
-                                // Compare date-only strings to avoid UTC timezone shifts.
                                 const startDate = rental.startDate
                                     ? String(rental.startDate).slice(0, 10)
                                     : "";
+
                                 const isBeforeStartDate =
                                     Boolean(startDate) && startDate > today;
+
                                 const isIssueDisabled =
-                                    isWorking || isBeforeStartDate;
+                                    actionRentalId !== null ||
+                                    loadingItems ||
+                                    isBeforeStartDate;
 
                                 return (
                                     <tr key={rental.rentalId}>
@@ -237,9 +255,9 @@ function IssueEquipment() {
                                         <td>{formatDate(rental.startDate)}</td>
                                         <td>{formatDate(rental.dueDate)}</td>
                                         <td>
-                                                <span className="rental-status-badge draft">
-                                                    {rental.rentalStatus}
-                                                </span>
+                                            <span className="rental-status-badge draft">
+                                              {rental.rentalStatus}
+                                            </span>
                                         </td>
                                         <td>
                                             <div className="issue-action-group">
@@ -250,11 +268,9 @@ function IssueEquipment() {
                                                     title={
                                                         isBeforeStartDate
                                                             ? `Issuing is available from ${formatDate(startDate)}.`
-                                                            : "Issue all equipment for this rental"
+                                                            : "Review equipment for this rental"
                                                     }
-                                                    onClick={() =>
-                                                        handleIssueRental(rental)
-                                                    }
+                                                    onClick={() => handleIssueRental(rental)}
                                                 >
                                                     {isWorking
                                                         ? "Processing..."
@@ -264,10 +280,10 @@ function IssueEquipment() {
                                                 <button
                                                     type="button"
                                                     className="module2-danger-button"
-                                                    disabled={isWorking}
-                                                    onClick={() =>
-                                                        handleCancelRental(rental)
+                                                    disabled={
+                                                        actionRentalId !== null || loadingItems
                                                     }
+                                                    onClick={() => handleCancelRental(rental)}
                                                 >
                                                     Cancel
                                                 </button>
@@ -281,6 +297,96 @@ function IssueEquipment() {
                     </div>
                 )}
             </div>
+
+            {pendingRental && (
+                <div
+                    role="presentation"
+                    className="issue-review-overlay"
+                >
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="issue-review-title"
+                        className="issue-review-dialog"
+                    >
+                        <h2 id="issue-review-title">
+                            Confirm equipment handover
+                        </h2>
+
+                        <p>
+                            Rental #{pendingRental.rentalId} · Customer #
+                            {pendingRental.customerId}
+                        </p>
+
+                        <p>
+                            Review the equipment and quantities before issuing.
+                            This operation issues the{" "}
+                            <strong>entire requested quantity</strong>{" "}
+                            for every item.
+                        </p>
+
+                        <div className="module2-table-wrapper">
+                            <table className="module2-table">
+                                <thead>
+                                <tr>
+                                    <th>Equipment ID</th>
+                                    <th>Requested / to issue</th>
+                                    <th>Item status</th>
+                                </tr>
+                                </thead>
+
+                                <tbody>
+                                {pendingItems.map(item => (
+                                    <tr key={item.rentalItemId}>
+                                        <td>#{item.equipmentId}</td>
+                                        <td>{item.quantity}</td>
+                                        <td>{item.itemStatus}</td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <p className="issue-review-note">
+                            Current inventory stock is not revalidated by this
+                            screen. Confirm availability with the equipment
+                            module before physical handover.
+                        </p>
+
+                        <div className="issue-review-actions">
+                            <button
+                                type="button"
+                                className="issue-review-back-button"
+                                disabled={actionRentalId !== null}
+                                onClick={() => {
+                                    setPendingRental(null);
+                                    setPendingItems([]);
+                                }}
+                            >
+                                Back
+                            </button>
+
+                            <button
+                                type="button"
+                                className="module2-primary-button"
+                                disabled={
+                                    actionRentalId !== null ||
+                                    pendingItems.some(
+                                        item =>
+                                            item.itemStatus !== "SELECTED" ||
+                                            !(item.quantity > 0)
+                                    )
+                                }
+                                onClick={confirmIssueRental}
+                            >
+                                {actionRentalId !== null
+                                    ? "Processing..."
+                                    : "Confirm issue all equipment"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

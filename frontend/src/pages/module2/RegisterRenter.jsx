@@ -43,29 +43,17 @@ function RegisterRenter() {
     const documentFileInputRef = useRef(null);
     // Synchronous lock: React state alone cannot stop two rapid submit events.
     const saveLockRef = useRef(false);
-
     const [searchType, setSearchType] = useState("name");
-
     const [searchName, setSearchName] = useState("");
-
     const [searchPhone, setSearchPhone] = useState("");
-
     const [searchResults, setSearchResults] = useState([]);
-
     const [hasSearched, setHasSearched] = useState(false);
-
     const [allRenters, setAllRenters] = useState([]);
-
     const [loadingRenters, setLoadingRenters] = useState(false);
-
     const [renterLoadError, setRenterLoadError] = useState("");
-
     const [renterSearch, setRenterSearch] = useState("");
-
     const [renterSort, setRenterSort] = useState("newest");
-
     const [currentPage, setCurrentPage] = useState(1);
-
     const rentersPerPage = 5;
 
     async function loadRenters() {
@@ -73,7 +61,7 @@ function RegisterRenter() {
         setRenterLoadError("");
 
         try {
-            const renters = await getAllCustomers(1000);
+            const renters = await getAllCustomers(COMPANY_ID);
             setAllRenters(renters);
         } catch (error) {
             setRenterLoadError(
@@ -137,43 +125,27 @@ function RegisterRenter() {
             startIndex + rentersPerPage
         );
 
-    /*
-     * Selected renter
-     */
-    const [selectedRenter, setSelectedRenter] =
-        useState(null);
 
-    const [savedRenter, setSavedRenter] =
-        useState(null);
+    //Selected renter
+    const [selectedRenter, setSelectedRenter] = useState(null);
 
+    const [savedRenter, setSavedRenter] = useState(null);
 
-    /*
-     * Controls whether the registration
-     * section is displayed.
-     */
-    const [showRenterForm, setShowRenterForm] =
-        useState(false);
+    //Controls whether the registration section is displayed.
+    const [showRenterForm, setShowRenterForm] = useState(false);
 
 
-    /*
-     * Loading / messages
-     */
-    const [loading, setLoading] =
-        useState(false);
+    //Loading / messages
+    const [loading, setLoading] = useState(false);
 
-    const [saving, setSaving] =
-        useState(false);
+    const [saving, setSaving] = useState(false);
 
-    const [error, setError] =
-        useState("");
+    const [error, setError] = useState("");
 
-    const [success, setSuccess] =
-        useState("");
+    const [success, setSuccess] = useState("");
 
 
-    /*
-     * Renter details
-     */
+    // Renter details
     const [renterForm, setRenterForm] =
         useState({
 
@@ -187,9 +159,7 @@ function RegisterRenter() {
         });
 
 
-    /*
-     * Identification
-     */
+    //Identification
     const [documentForm, setDocumentForm] =
         useState({
 
@@ -204,9 +174,8 @@ function RegisterRenter() {
     const [existingDocumentFile, setExistingDocumentFile] = useState(null);
     const [existingDocumentId, setExistingDocumentId] = useState(null);
 
-    /*
-     * Secondary contact
-     */
+
+    //Secondary contact
     const [secondaryForm, setSecondaryForm] =
         useState({
 
@@ -221,39 +190,27 @@ function RegisterRenter() {
         });
 
 
-    /*
-     * Accordion state
-     */
-    const [identificationOpen, setIdentificationOpen] =
-        useState(false);
 
-    const [secondaryOpen, setSecondaryOpen] =
-        useState(false);
+    // Accordion state
+    const [identificationOpen, setIdentificationOpen] = useState(false);
+    const [secondaryOpen, setSecondaryOpen] = useState(false);
 
-
-    /*
-     * Change search type.
-     */
+    // Change search type.
     function handleSearchTypeChange(event) {
 
         const type = event.target.value;
 
         setSearchType(type);
-
         setSearchName("");
         setSearchPhone("");
-
         setSearchResults([]);
         setHasSearched(false);
-
         setError("");
         setSuccess("");
     }
 
 
-    /*
-     * Search existing renters.
-     */
+    //Search existing renters.
     async function handleSearch(event) {
 
         event.preventDefault();
@@ -268,9 +225,7 @@ function RegisterRenter() {
             searchPhone.trim();
 
 
-        /*
-         * Validate the search fields.
-         */
+        // Validate the search fields.
         if (
             searchType === "name"
             && !name
@@ -311,8 +266,6 @@ function RegisterRenter() {
 
 
         setLoading(true);
-
-
         try {
 
             const results =
@@ -336,7 +289,6 @@ function RegisterRenter() {
 
 
             setSearchResults(results);
-
             setHasSearched(true);
 
         } catch (err) {
@@ -354,12 +306,8 @@ function RegisterRenter() {
     }
 
 
-    /*
-     * Select an existing renter.
-     *
-     * The renter information is copied
-     * into the editable form.
-     */
+    // Select an existing renter.
+    // The renter information is copied into the editable form
     async function handleSelectRenter(renter) {
         setSelectedRenter(renter);
         setShowRenterForm(true);
@@ -463,9 +411,7 @@ function RegisterRenter() {
     }
 
 
-    /*
-     * Start registering a brand-new renter.
-     */
+    //Start registering a brand-new renter.
     function handleRegisterNewRenter() {
 
         setSelectedRenter(null);
@@ -508,7 +454,6 @@ function RegisterRenter() {
 
         });
 
-
         setIdentificationOpen(false);
         setSecondaryOpen(false);
 
@@ -516,14 +461,10 @@ function RegisterRenter() {
         setSuccess("");
     }
 
-
-    /*
-     * Change renter.
-     */
+    // Change renter.
     function handleChangeRenter() {
 
         setSelectedRenter(null);
-
         setShowRenterForm(false);
 
         setIdentificationOpen(false);
@@ -533,10 +474,7 @@ function RegisterRenter() {
         setSuccess("");
     }
 
-
-    /*
-     * Change renter form fields.
-     */
+    // Change renter form fields.
     function handleRenterChange(event) {
 
         const {
@@ -556,17 +494,14 @@ function RegisterRenter() {
         );
     }
 
+    // Change identification fields.
 
-    /*
-     * Change identification fields.
-     */
     function handleDocumentChange(event) {
 
         const {
             name,
             value
         } = event.target;
-
 
         setDocumentForm(
             previous => ({
@@ -579,10 +514,7 @@ function RegisterRenter() {
         );
     }
 
-
-    /*
-     * Select identification file.
-     */
+    // Select identification file.
     function handleDocumentFileChange(event) {
 
         const file =
@@ -601,9 +533,7 @@ function RegisterRenter() {
     }
 
 
-    /*
-    * Remove the currently selected identification file.
-    */
+    // Remove the currently selected identification file.
     function handleRemoveDocumentFile() {
 
         setDocumentForm(
@@ -618,16 +548,13 @@ function RegisterRenter() {
         }
     }
 
-    /*
-     * Change secondary contact fields.
-     */
+    // Change secondary contact fields.
     function handleSecondaryChange(event) {
 
         const {
             name,
             value
         } = event.target;
-
 
         setSecondaryForm(
             previous => ({
@@ -640,16 +567,10 @@ function RegisterRenter() {
         );
     }
 
-
-    /*
-     * Save identification document.
-     */
+    // Save identification document.
     async function saveIdentification(customerId) {
 
-        /*
-         * Validate the required identification
-         * fields before sending data to the backend.
-         */
+        // Validate the required identification fields before sending data to the backend.
         if (
             !documentForm.documentType ||
             !documentForm.documentNumber?.trim()
@@ -659,10 +580,7 @@ function RegisterRenter() {
             );
         }
 
-        /*
-         * Prepare the identification data that will
-         * be sent to Spring Boot.
-         */
+        // Prepare the identification data that will be sent to Spring Boot.
         const documentData = {
             customerId,
 
@@ -686,10 +604,7 @@ function RegisterRenter() {
         };
 
 
-        /*
-         * If this renter already has an identification
-         * document, update that existing document.
-         */
+        // If this renter already has an identification document, update that existing document.
         if (
             selectedRenter &&
             existingDocumentId
@@ -705,23 +620,16 @@ function RegisterRenter() {
         }
 
 
-        /*
-         * If there is no existing identification document,
-         * create a new one.
-         */
+        // If there is no existing identification document, create a new one.
         await createDocument(
             documentData
         );
     }
 
-    /*
- * Save secondary contact.
- *
- * If the customer does not have a secondary
- * contact yet, create one.
- *
- * If the customer already has one, update it.
- */
+
+    // Save secondary contact.
+    // If the customer does not have a secondary contact yet, create one.
+    // f the customer already has one, update it.
     async function saveSecondaryContact(
         customerId
     ) {
@@ -737,10 +645,7 @@ function RegisterRenter() {
         }
 
 
-        /*
-         * Prepare the contact information
-         * entered by the staff user.
-         */
+        // Prepare the contact information entered by the staff user.
         const contactData = {
 
             customerId,
@@ -768,20 +673,14 @@ function RegisterRenter() {
         };
 
 
-        /*
-         * First check whether this renter
-         * already has a secondary contact.
-         */
+        // First check whether this renter already has a secondary contact.
         const existingContact =
             await getSecondaryContact(
                 customerId
             );
 
 
-        /*
-         * No existing contact:
-         * create a new record.
-         */
+        // No existing contact: create a new record.
         if (!existingContact) {
 
             await createSecondaryContact(
@@ -792,10 +691,7 @@ function RegisterRenter() {
         }
 
 
-        /*
-         * Existing contact:
-         * update that existing record.
-         */
+        // Existing contact: update that existing record.
         await updateSecondaryContact(
 
             existingContact.secondaryContactId,
@@ -807,15 +703,9 @@ function RegisterRenter() {
     }
 
 
-    /*
-     * Save renter.
-     *
-     * New renter:
-     *   create customer
-     *
-     * Existing renter:
-     *   update customer
-     */
+    // Save renter.
+    // New renter: create customer
+    // Existing renter: update customer
     async function handleSaveRenter(event) {
 
         event.preventDefault();
@@ -905,31 +795,14 @@ function RegisterRenter() {
                         COMPANY_ID,
 
                         {
-
-                            companyId:
-                            COMPANY_ID,
-
-                            customerName:
-                            renterForm.customerName,
-
-                            email:
-                            renterForm.email,
-
-                            phone:
-                            renterForm.phone,
-
-                            address:
-                            renterForm.address,
-
-                            customerType:
-                            renterForm.customerType,
-
-                            customerStatus:
-                            renterForm.customerStatus,
-
-                            createdBy:
-                            selectedRenter.createdBy
-
+                            companyId: COMPANY_ID,
+                            customerName: renterForm.customerName,
+                            email: renterForm.email,
+                            phone: renterForm.phone,
+                            address: renterForm.address,
+                            customerType: renterForm.customerType,
+                            customerStatus: renterForm.customerStatus,
+                            createdBy: selectedRenter.createdBy
                         }
                     );
 
@@ -938,54 +811,33 @@ function RegisterRenter() {
                 customer =
                     await createCustomer({
 
-                        companyId:
-                        COMPANY_ID,
-
-                        customerName:
-                        renterForm.customerName,
-
-                        email:
-                        renterForm.email,
-
-                        phone:
-                        renterForm.phone,
-
-                        address:
-                        renterForm.address,
-
-                        customerType:
-                        renterForm.customerType,
-
-                        customerStatus:
-                        renterForm.customerStatus,
-
-                        createdBy:
-                        USER_ID
+                        companyId: COMPANY_ID,
+                        customerName: renterForm.customerName,
+                        email: renterForm.email,
+                        phone: renterForm.phone,
+                        address: renterForm.address,
+                        customerType: renterForm.customerType,
+                        customerStatus: renterForm.customerStatus,
+                        createdBy: USER_ID
 
                     });
             }
 
 
-            /*
-             * Save manually entered identification.
-             */
+            // Save manually entered identification.
             await saveIdentification(
                 customer.customerId
             );
 
 
-            /*
-             * Save manually entered secondary contact.
-             */
+            // Save manually entered secondary contact.
             await saveSecondaryContact(
                 customer.customerId
             );
 
             await loadRenters();
 
-            /*
-             * Keep the renter selected.
-             */
+            // Keep the renter selected.
             setSelectedRenter(customer);
             setSavedRenter(customer);
             setShowRenterForm(true);
