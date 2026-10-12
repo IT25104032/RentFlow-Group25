@@ -1,11 +1,13 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { getReturnDetails } from "../../services/module4/module4Api";
 import { Alert, Badge, Card, Empty, Loading, date, dateTime, money } from "../../components/module4/m4ui";
 
-
-// one return: items, condition, damage assessed.
+// =========================================================
+// MODULE 4 - one return: items, condition, damage assessed. - PROCESS RETURN
+// =========================================================
 
 function ReturnDetails() {
     const { returnId } = useParams();
