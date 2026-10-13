@@ -21,13 +21,13 @@ export default function ExtensionUpdateModal({ preview, onClose, onSuccess }) {
         }
     };
 
-    const cell = { padding: '6px 8px', borderBottom: '1px solid #eee', fontSize: '0.85rem' };
+    const cell = { padding: '6px 8px', borderBottom: '1px solid var(--rf-border)', fontSize: '0.85rem' };
     const right = { ...cell, textAlign: 'right', whiteSpace: 'nowrap' };
 
     const row = (label, before, after, bold) => (
         <tr>
             <td style={{ ...cell, fontWeight: bold ? 'bold' : 'normal' }}>{label}</td>
-            <td style={{ ...right, color: '#888' }}>{before}</td>
+            <td style={{ ...right, color: 'var(--rf-muted)' }}>{before}</td>
             <td style={{ ...right, fontWeight: bold ? 'bold' : 'normal' }}>{after}</td>
         </tr>
     );
@@ -36,7 +36,7 @@ export default function ExtensionUpdateModal({ preview, onClose, onSuccess }) {
         <div className="modal-overlay">
             <div className="modal-content" style={{ width: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
                 <h3>Update Charges for Invoice #{preview.invoiceId}</h3>
-                <p style={{ fontSize: '0.9rem', color: '#555' }}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--rf-muted)' }}>
                     Revised rental period: {preview.startDate} to {preview.dueDate} ({preview.rentalDays} days)
                 </p>
 

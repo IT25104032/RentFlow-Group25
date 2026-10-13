@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { generateInvoice } from '../../services/module3/paymentApi';
 
-// Shows the invoice breakdown for review before it is saved
+// Shows the invoice breakdown for review before it is saved (UC-M3-01, steps 9 and 10)
 export default function InvoicePreviewModal({ preview, onClose, onSuccess }) {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
@@ -21,14 +21,14 @@ export default function InvoicePreviewModal({ preview, onClose, onSuccess }) {
         }
     };
 
-    const cell = { padding: '6px 8px', borderBottom: '1px solid #eee', fontSize: '0.85rem' };
+    const cell = { padding: '6px 8px', borderBottom: '1px solid var(--rf-border)', fontSize: '0.85rem' };
     const right = { ...cell, textAlign: 'right', whiteSpace: 'nowrap' };
 
     return (
         <div className="modal-overlay">
             <div className="modal-content" style={{ width: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
                 <h3>Invoice Preview for Rental #{preview.rentalId}</h3>
-                <p style={{ fontSize: '0.9rem', color: '#555' }}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--rf-muted)' }}>
                     Rental period: {preview.startDate} to {preview.dueDate} ({preview.rentalDays} days)
                 </p>
 

@@ -213,9 +213,9 @@ export default function PaymentManagement() {
                                         <button className="btn-pay" onClick={() => setSelectedInvoice(inv)}>Pay</button>
                                     )}
                                     <button className="btn-print" onClick={() => handlePrint(inv)}>🖨️️ Print</button>
-                                    <button className="btn-pay" style={{ backgroundColor: '#6f42c1' }} onClick={() => setHistoryInvoice(inv)}>History</button>
+                                    <button className="btn-print" onClick={() => setHistoryInvoice(inv)}>History</button>
                                     {inv.invoiceStatus !== 'CANCELLED' && (
-                                        <button className="btn-pay" style={{ backgroundColor: '#fd7e14' }} onClick={() => handleExtension(inv)}>Extend</button>
+                                        <button className="btn-print" onClick={() => handleExtension(inv)}>Extend</button>
                                     )}
                                 </div>
                             </td>
