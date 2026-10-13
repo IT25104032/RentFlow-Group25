@@ -308,23 +308,20 @@ public class equipment_service {
             );
         }
 
-        String value = status.trim().toUpperCase(
+        String normalized = status.trim().toUpperCase(
                 java.util.Locale.ROOT
         );
 
         if (!java.util.Set.of(
-                "AVAILABLE",
-                "RENTED",
-                "DAMAGED",
-                "LOST",
-                "MAINTENANCE",
-                "INACTIVE"
-        ).contains(value)) {
+                "ACTIVE",
+                "INACTIVE",
+                "OUT_OF_SERVICE"
+        ).contains(normalized)) {
             throw new IllegalArgumentException(
-                    "Invalid equipment status: " + value
+                    "Invalid equipment status: " + normalized
             );
         }
 
-        return value;
+        return normalized;
     }
 }

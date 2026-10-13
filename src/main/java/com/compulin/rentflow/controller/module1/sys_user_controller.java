@@ -393,8 +393,15 @@ public class sys_user_controller {
                         "Password must be at least 8 characters long.");
             }
 
-            newUser.setUser_role(
-                    normalizeRole(newUser.getUser_role()));
+            // A Company Admin may create Rental Officers only.
+            // Company Admin accounts are created through Compulin onboarding.
+            if (!"RENTAL_OFFICER".equals(
+                    normalizeRole(newUser.getUser_role()))) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("message",
+                                "Company Administrators may create Rental Officers only."));
+            }
+            newUser.setUser_role("RENTAL_OFFICER");
 
             if (userRepo.findByEmail(newUser.getEmail()).isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -449,6 +456,13 @@ public class sys_user_controller {
         try {
             sys_user existing = result.get();
 
+            // Company Admins must not edit other administrators.
+            if (!"RENTAL_OFFICER".equals(existing.getUser_role())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("message",
+                                "Only Rental Officer accounts can be managed here."));
+            }
+
             if (details.getFull_name() != null
                     && !details.getFull_name().isBlank()) {
                 existing.setFull_name(details.getFull_name().trim());
@@ -482,8 +496,13 @@ public class sys_user_controller {
 
             if (details.getUser_role() != null
                     && !details.getUser_role().isBlank()) {
-                existing.setUser_role(
-                        normalizeRole(details.getUser_role()));
+                if (!"RENTAL_OFFICER".equals(
+                        normalizeRole(details.getUser_role()))) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Map.of("message",
+                                    "Rental Officers cannot be promoted to Company Admins here."));
+                }
+                existing.setUser_role("RENTAL_OFFICER");
             }
 
             if (details.getUser_status() != null
@@ -536,6 +555,11 @@ public class sys_user_controller {
             String status = normalizeStatus(body.get("status"));
 
             sys_user user = result.get();
+            if (!"RENTAL_OFFICER".equals(user.getUser_role())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("message",
+                                "Only Rental Officer accounts can be managed here."));
+            }
             user.setUser_status(status);
 
             return ResponseEntity.ok(
@@ -565,6 +589,11 @@ public class sys_user_controller {
         }
 
         sys_user user = result.get();
+        if (!"RENTAL_OFFICER".equals(user.getUser_role())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message",
+                            "Only Rental Officer accounts can be managed here."));
+        }
         user.setUser_status("INACTIVE");
         userRepo.save(user);
 

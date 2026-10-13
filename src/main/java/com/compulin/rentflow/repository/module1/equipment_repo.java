@@ -86,7 +86,7 @@ public interface equipment_repo extends JpaRepository<equipment, Integer> {
     @Query("""
     select e from equipment e
     where e.company.companyId = :companyId
-      and upper(e.equStatus) = 'AVAILABLE'
+      and upper(e.equStatus) = 'ACTIVE'
       and e.availableQuantity > 0
     order by e.itemName
     """)
@@ -123,7 +123,7 @@ public interface equipment_repo extends JpaRepository<equipment, Integer> {
     @Query(value = """
     SELECT * FROM equipment
     WHERE equipment_id = :equipmentId
-      AND company_id = :companyId
+      AND company_id = :companyId   
     """, nativeQuery = true)
     Optional<equipment> findModule1EquipmentOwnedByCompany(
             @Param("equipmentId") Integer equipmentId,

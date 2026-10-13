@@ -9,6 +9,7 @@ import com.compulin.rentflow.entity.module2.Rental;
 import com.compulin.rentflow.entity.module2.RentalItem;
 import com.compulin.rentflow.repository.module2.RentalItemRepository;
 import com.compulin.rentflow.repository.module2.RentalRepository;
+import com.compulin.rentflow.service.module3.SecurityDepositService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,13 +24,16 @@ public class RentalConfirmationService {
     private final RentalRepository rentalRepository;
 
     private final RentalItemRepository rentalItemRepository;
+    private final SecurityDepositService securityDepositService;
 
     public RentalConfirmationService(
             RentalRepository rentalRepository,
-            RentalItemRepository rentalItemRepository
+            RentalItemRepository rentalItemRepository,
+            SecurityDepositService securityDepositService
     ) {
         this.rentalRepository = rentalRepository;
         this.rentalItemRepository = rentalItemRepository;
+        this.securityDepositService = securityDepositService;
     }
 
 
@@ -181,8 +185,12 @@ public class RentalConfirmationService {
         }
 
 
-        // The final agreed deposit is already stored in the rental notes marker.
-        // Module 2 deliberately does not write to Module 3's security_deposit table.
+        // Module 3 records the final agreed deposit as PENDING until it is collected.
+        // This uses the same transaction as the rental and its items.
+        securityDepositService.initializeDeposit(
+                savedRental.getRentalId(),
+                request.getTotalDeposit()
+        );
 
 
         /*
