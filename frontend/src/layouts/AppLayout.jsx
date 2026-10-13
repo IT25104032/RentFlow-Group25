@@ -10,9 +10,19 @@ import "./Module2Layout.css";
 
 const COMPANY_ID = 1000;
 
-function AppLayout() {
+function AppLayout({ user, onLogout }) {
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Normalize the logged-in user's role
+    const role = (user?.role || "")
+        .replace("ROLE_", "")
+        .toUpperCase();
+
+    const isCompulinAdmin = role === "COMPULIN_ADMIN";
+    const isCompanyAdmin = role === "COMPANY_ADMIN";
+    const isRentalOfficer = role === "RENTAL_OFFICER";
+    const canViewRentalNotifications = isCompanyAdmin || isRentalOfficer;
 
     // Sidebar active page
     const isCreateRental = [
@@ -63,6 +73,12 @@ function AppLayout() {
 
     // Load notifications and refresh every 60 seconds
     useEffect(() => {
+        if (!canViewRentalNotifications) {
+            setOverdueRentals([]);
+            setDueSoonRentals([]);
+            setNotificationOpen(false);
+            return;
+        }
         loadNotifications();
 
         const interval = setInterval(() => {
@@ -70,7 +86,7 @@ function AppLayout() {
         }, 60000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [canViewRentalNotifications]);
 
     // Close notification dropdown when clicking outside
     useEffect(() => {
@@ -203,95 +219,194 @@ function AppLayout() {
 
                 <div className="module2-sidebar-divider" />
 
+
                 <nav className="module2-sidebar-navigation">
 
-                    {/* MODULE 2 */}
-                    <div className="module2-sidebar-section-title">
-                        RENTAL MANAGEMENT
-                    </div>
-
-                    {renderNavigationItem(
-                        "Create Rental",
-                        "📋",
-                        "/renters",
-                        isCreateRental
+                    {/* MODULE 1 — COMPANY AND INVENTORY */}
+                    {(isCompulinAdmin || isCompanyAdmin || isRentalOfficer) && (
+                        <>
+                            <div className="module2-sidebar-section-title">COMPANY & INVENTORY</div>
+                            {renderNavigationItem(
+                                "Dashboard", "📊", "/dashboard", location.pathname === "/dashboard"
+                            )}
+                            {isCompulinAdmin && renderNavigationItem(
+                                "Companies", "🏢", "/companies", location.pathname === "/companies"
+                            )}
+                            {isCompanyAdmin && renderNavigationItem(
+                                "Company Profile", "🏢", "/company-profile", location.pathname === "/company-profile"
+                            )}
+                            {isCompanyAdmin && renderNavigationItem(
+                                "Users", "👥", "/users", location.pathname === "/users"
+                            )}
+                            {(isCompanyAdmin || isRentalOfficer) && renderNavigationItem(
+                                "Equipment Categories", "📁", "/equipment-categories", location.pathname === "/equipment-categories"
+                            )}
+                            {(isCompanyAdmin || isRentalOfficer) && renderNavigationItem(
+                                "Equipment", "🔧", "/equipment", location.pathname === "/equipment"
+                            )}
+                        </>
                     )}
 
-                    {renderNavigationItem(
-                        "Rental History",
-                        "📄",
-                        "/rental-history",
-                        isRentalHistory
+                    {/* MODULE 2 — RENTAL MANAGEMENT */}
+                    {(isRentalOfficer || isCompanyAdmin) && (
+                        <>
+                            <div className="module2-sidebar-section-title">
+                                RENTAL MANAGEMENT
+                            </div>
+
+                            {isRentalOfficer && renderNavigationItem(
+                                "Create Rental",
+                                "📋",
+                                "/renters",
+                                isCreateRental
+                            )}
+
+                            {renderNavigationItem(
+                                "Rental History",
+                                "📄",
+                                "/rental-history",
+                                isRentalHistory
+                            )}
+                        </>
                     )}
 
-                    <div className="module2-sidebar-section-title operations">
-                        RENTAL OPERATIONS
-                    </div>
+                    {/* MODULE 2 — RENTAL OPERATIONS */}
+                    {isRentalOfficer && (
+                        <>
+                            <div className="module2-sidebar-section-title operations">
+                                RENTAL OPERATIONS
+                            </div>
 
-                    {renderNavigationItem(
-                        "Issue Equipment",
-                        "📦",
-                        "/issue-equipment",
-                        isIssueEquipment
+                            {renderNavigationItem(
+                                "Issue Equipment",
+                                "📦",
+                                "/issue-equipment",
+                                isIssueEquipment
+                            )}
+
+                            {renderNavigationItem(
+                                "Extend Rental",
+                                "📅",
+                                "/rental-extension",
+                                isRentalExtension
+                            )}
+                        </>
                     )}
 
-                    {renderNavigationItem(
-                        "Extend Rental",
-                        "📅",
-                        "/rental-extension",
-                        isRentalExtension
+                    {/* MODULE 3 — BILLING & PAYMENTS */}
+                    {(isRentalOfficer || isCompanyAdmin) && (
+                        <>
+                            <div className="module2-sidebar-section-title operations">
+                                BILLING & PAYMENTS
+                            </div>
+
+                            {isRentalOfficer && (
+                                <>
+                                    {renderNavigationItem(
+                                        "Payment Management",
+                                        "💳",
+                                        "/payments",
+                                        location.pathname === "/payments"
+                                    )}
+
+                                    {renderNavigationItem(
+                                        "Security Deposits",
+                                        "💰",
+                                        "/security-deposits",
+                                        location.pathname === "/security-deposits"
+                                    )}
+                                </>
+                            )}
+
+                            {renderNavigationItem(
+                                "Financial Reports",
+                                "📊",
+                                "/financial-reports",
+                                location.pathname === "/financial-reports"
+                            )}
+                        </>
                     )}
 
-                    {/* MODULE 3 */}
-                    <div className="module2-sidebar-section-title operations">
-                        BILLING & PAYMENTS
-                    </div>
+                    {/* MODULE 4 — RETURNS */}
+                    {(isRentalOfficer || isCompanyAdmin) && (
+                        <>
+                            <div className="module2-sidebar-section-title operations">
+                                RETURNS & SETTLEMENTS
+                            </div>
 
-                    {renderNavigationItem(
-                        "Payment Management",
-                        "💳",
-                        "/payments",
-                        location.pathname === "/payments"
+                            {isRentalOfficer && renderNavigationItem(
+                                "Process Returns",
+                                "↩️",
+                                "/returns",
+                                location.pathname === "/returns" ||
+                                location.pathname === "/returns/new"
+                            )}
+
+                            {renderNavigationItem(
+                                "Return History",
+                                "📜",
+                                "/returns/history",
+                                location.pathname === "/returns/history"
+                            )}
+                        </>
                     )}
 
-                    {renderNavigationItem(
-                        "Security Deposits",
-                        "💰",
-                        "/security-deposits",
-                        location.pathname === "/security-deposits"
-                    )}
 
-                    {renderNavigationItem(
-                        "Financial Reports",
-                        "📊",
-                        "/financial-reports",
-                        location.pathname === "/financial-reports"
-                    )}
 
-                    {/* MODULE 4 */}
-                    <div className="module2-sidebar-section-title operations">
-                        RETURNS & SETTLEMENTS
-                    </div>
-
-                    {renderNavigationItem(
-                        "Process Returns",
-                        "↩️",
-                        "/returns",
-                        location.pathname.startsWith("/returns")
-                    )}
                 </nav>
 
-                {/* TEMPORARY DEVELOPMENT USER */}
-                <div className="module2-sidebar-user">
-                    <div className="module2-sidebar-user-avatar">
-                        R
+
+                {/* AUTHENTICATED USER */}
+                <div
+                    className="module2-sidebar-user"
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "12px"
+                    }}
+                >
+                    <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px"
+                    }}>
+                        <div className="module2-sidebar-user-avatar">
+                            {user?.fullName?.charAt(0).toUpperCase() || "U"}
+                        </div>
+
+                        <div className="module2-sidebar-user-details">
+                            <strong>{user?.fullName || "User"}</strong>
+                            <span>
+                {isCompulinAdmin
+                    ? "Compulin Admin"
+                    : isCompanyAdmin
+                        ? "Rental Company Admin"
+                        : isRentalOfficer
+                            ? "Rental Officer"
+                            : "Unknown Role"}
+            </span>
+                        </div>
                     </div>
 
-                    <div className="module2-sidebar-user-details">
-                        <strong>Rental Officer</strong>
-                        <span>Staff User</span>
-                    </div>
+                    <button
+                        type="button"
+                        onClick={onLogout}
+                        style={{
+                            width: "100%",
+                            padding: "10px 12px",
+                            background: "#28364d",
+                            color: "#ffffff",
+                            border: "1px solid #45546b",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            textAlign: "center"
+                        }}
+                    >
+                        ↪ Logout
+                    </button>
                 </div>
+
 
             </aside>
 
@@ -303,118 +418,120 @@ function AppLayout() {
                     <div className="module2-topbar-spacer" />
 
                     {/* NOTIFICATION BELL */}
-                    <div
-                        className="module2-notification-wrapper"
-                        ref={notificationRef}
-                    >
-                        <button
-                            type="button"
-                            className="module2-notification-button"
-                            onClick={handleNotificationClick}
-                            aria-label="Rental notifications"
-                            aria-expanded={notificationOpen}
+                    {canViewRentalNotifications && (
+                        <div
+                            className="module2-notification-wrapper"
+                            ref={notificationRef}
                         >
+                            <button
+                                type="button"
+                                className="module2-notification-button"
+                                onClick={handleNotificationClick}
+                                aria-label="Rental notifications"
+                                aria-expanded={notificationOpen}
+                            >
                             <span className="module2-notification-bell">
                                 🔔
                             </span>
 
-                            {notificationCount > 0 && (
-                                <span className="module2-notification-badge">
+                                {notificationCount > 0 && (
+                                    <span className="module2-notification-badge">
                                     {notificationCount > 99
                                         ? "99+"
                                         : notificationCount}
                                 </span>
-                            )}
-                        </button>
+                                )}
+                            </button>
 
-                        {/* NOTIFICATION DROPDOWN */}
-                        {notificationOpen && (
-                            <div className="module2-notification-dropdown">
+                            {/* NOTIFICATION DROPDOWN */}
+                            {notificationOpen && (
+                                <div className="module2-notification-dropdown">
 
-                                <div className="module2-notification-header">
-                                    <div>
-                                        <h3>Notifications</h3>
-                                        <span>Rental status alerts</span>
-                                    </div>
+                                    <div className="module2-notification-header">
+                                        <div>
+                                            <h3>Notifications</h3>
+                                            <span>Rental status alerts</span>
+                                        </div>
 
-                                    {notificationCount > 0 && (
-                                        <span className="module2-notification-total">
+                                        {notificationCount > 0 && (
+                                            <span className="module2-notification-total">
                                             {notificationCount}
                                         </span>
-                                    )}
-                                </div>
+                                        )}
+                                    </div>
 
-                                {notificationLoading ? (
-                                    <div className="module2-notification-empty">
+                                    {notificationLoading ? (
+                                        <div className="module2-notification-empty">
                                         <span className="module2-notification-loading-icon">
                                             ⟳
                                         </span>
 
-                                        <span>
+                                            <span>
                                             Checking rental notifications...
                                         </span>
-                                    </div>
-                                ) : (
-                                    <>
-                                        {/* OVERDUE RENTALS */}
-                                        <div className="module2-notification-section">
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* OVERDUE RENTALS */}
+                                            <div className="module2-notification-section">
 
-                                            <div className="module2-notification-section-title overdue">
-                                                <span>⚠️</span>
-                                                <span>Overdue Rentals</span>
+                                                <div className="module2-notification-section-title overdue">
+                                                    <span>⚠️</span>
+                                                    <span>Overdue Rentals</span>
 
-                                                <span className="module2-notification-section-count">
+                                                    <span className="module2-notification-section-count">
                                                     {overdueRentals.length}
                                                 </span>
+                                                </div>
+
+                                                {overdueRentals.length === 0 ? (
+                                                    <div className="module2-notification-no-items">
+                                                        No overdue rentals
+                                                    </div>
+                                                ) : (
+                                                    overdueRentals.map(rental =>
+                                                        renderNotificationItem(
+                                                            rental,
+                                                            "overdue"
+                                                        )
+                                                    )
+                                                )}
+
                                             </div>
 
-                                            {overdueRentals.length === 0 ? (
-                                                <div className="module2-notification-no-items">
-                                                    No overdue rentals
-                                                </div>
-                                            ) : (
-                                                overdueRentals.map(rental =>
-                                                    renderNotificationItem(
-                                                        rental,
-                                                        "overdue"
-                                                    )
-                                                )
-                                            )}
+                                            {/* DUE SOON RENTALS */}
+                                            <div className="module2-notification-section">
 
-                                        </div>
+                                                <div className="module2-notification-section-title due-soon">
+                                                    <span>⏰</span>
+                                                    <span>Due Soon</span>
 
-                                        {/* DUE SOON RENTALS */}
-                                        <div className="module2-notification-section">
-
-                                            <div className="module2-notification-section-title due-soon">
-                                                <span>⏰</span>
-                                                <span>Due Soon</span>
-
-                                                <span className="module2-notification-section-count">
+                                                    <span className="module2-notification-section-count">
                                                     {dueSoonRentals.length}
                                                 </span>
-                                            </div>
-
-                                            {dueSoonRentals.length === 0 ? (
-                                                <div className="module2-notification-no-items">
-                                                    No rentals due soon
                                                 </div>
-                                            ) : (
-                                                dueSoonRentals.map(rental =>
-                                                    renderNotificationItem(
-                                                        rental,
-                                                        "due-soon"
+
+                                                {dueSoonRentals.length === 0 ? (
+                                                    <div className="module2-notification-no-items">
+                                                        No rentals due soon
+                                                    </div>
+                                                ) : (
+                                                    dueSoonRentals.map(rental =>
+                                                        renderNotificationItem(
+                                                            rental,
+                                                            "due-soon"
+                                                        )
                                                     )
-                                                )
-                                            )}
+                                                )}
 
-                                        </div>
-                                    </>
-                                )}
+                                            </div>
+                                        </>
+                                    )}
 
-                            </div>
-                        )}
-                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* CURRENT ROUTED PAGE */}

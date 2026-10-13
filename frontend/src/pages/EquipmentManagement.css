@@ -240,8 +240,12 @@
 }
 
 .edit-equipment-button {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.edit-equipment-button:hover {
+    background: #1d4ed8;
 }
 
 .deactivate-equipment-button {
@@ -262,34 +266,19 @@
     font-weight: 700;
 }
 
-.equipment-status.available {
+.equipment-status.active {
     background: #dcfce7;
     color: #166534;
 }
 
-.equipment-status.rented {
-    background: #dbeafe;
-    color: #1d4ed8;
-}
-
-.equipment-status.damaged {
+.equipment-status.inactive {
     background: #fee2e2;
     color: #b91c1c;
 }
 
-.equipment-status.lost {
+.equipment-status.out_of_service {
     background: #fef3c7;
     color: #92400e;
-}
-
-.equipment-status.maintenance {
-    background: #f3e8ff;
-    color: #7e22ce;
-}
-
-.equipment-status.inactive {
-    background: #e2e8f0;
-    color: #475569;
 }
 
 .empty-equipment {
