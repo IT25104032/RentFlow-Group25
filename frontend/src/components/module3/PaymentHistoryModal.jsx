@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getPaymentHistory } from '../../services/module3/paymentApi';
 
-// Lists every payment recorded against an invoice
+// Lists every payment recorded against an invoice (FR48)
 export default function PaymentHistoryModal({ invoice, onClose }) {
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -20,13 +20,13 @@ export default function PaymentHistoryModal({ invoice, onClose }) {
     const completed = payments.filter((p) => p.paymentStatus === 'COMPLETED');
     const totalPaid = completed.reduce((sum, p) => sum + Number(p.amount), 0);
 
-    const cell = { padding: '6px 8px', borderBottom: '1px solid #eee', fontSize: '0.85rem', textAlign: 'left' };
+    const cell = { padding: '6px 8px', borderBottom: '1px solid var(--rf-border)', fontSize: '0.85rem', textAlign: 'left' };
 
     return (
         <div className="modal-overlay">
             <div className="modal-content" style={{ width: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
                 <h3>Payment History for Invoice #{invoice.invoiceId}</h3>
-                <p style={{ fontSize: '0.9rem', color: '#555' }}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--rf-muted)' }}>
                     Total: {money(invoice.totalAmount)} &nbsp;|&nbsp; Paid: {money(invoice.amountPaid)} &nbsp;|&nbsp; Balance: {money(invoice.balanceDue)}
                 </p>
 

@@ -20,7 +20,7 @@ const getBadgeClass = (status) => {
     return 'badge-unpaid';
 };
 
-// Opens the given HTML in a new window and prints it
+// Opens the given HTML in a new window and prints it (same approach as the invoice receipt)
 const printHtml = (title, bodyHtml) => {
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
@@ -33,7 +33,7 @@ const printHtml = (title, bodyHtml) => {
                 h2 { font-size: 18px; margin-top: 28px; }
                 .sub { color: #666; margin-bottom: 20px; }
                 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
+                th, td { border: 1px solid var(--rf-border); padding: 8px; text-align: left; font-size: 13px; }
                 th { background-color: #f8f9fa; }
                 .total td { font-weight: bold; background-color: #f8f9fa; }
             </style>
@@ -63,13 +63,13 @@ const exportCsv = (fileName, headers, rows) => {
 };
 
 export default function FinancialReports() {
-    // Rental summary
+    // Scenario A: rental summary
     const [rentalIdInput, setRentalIdInput] = useState('');
     const [summary, setSummary] = useState(null);
     const [summaryError, setSummaryError] = useState(null);
     const [summaryLoading, setSummaryLoading] = useState(false);
 
-    // Company reports
+    // Scenario B: company reports
     const [reportType, setReportType] = useState('OUTSTANDING');
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
@@ -111,6 +111,8 @@ export default function FinancialReports() {
         if (r.to) return `Up to ${r.to}`;
         return 'All dates';
     };
+
+    // ---------- Print / export ----------
 
     const printSummary = () => {
         const s = summary;
@@ -183,10 +185,11 @@ export default function FinancialReports() {
         }
     };
 
+    // ---------- Render ----------
 
-    const inputStyle = { padding: '8px 12px', borderRadius: '4px', border: '1px solid #ccc' };
-    const sectionStyle = { background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '30px' };
-    const totalRow = { fontWeight: 'bold', backgroundColor: '#f4f6f8' };
+    const inputStyle = { padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--rf-border)' };
+    const sectionStyle = { background: 'var(--rf-card)', padding: '20px', borderRadius: '8px', border: '1px solid var(--rf-border)', marginBottom: '30px' };
+    const totalRow = { fontWeight: 'bold', backgroundColor: 'var(--rf-card-2)' };
 
     return (
         <div className="payment-container">
@@ -211,7 +214,7 @@ export default function FinancialReports() {
 
                 {summary && (
                     <>
-                        <p style={{ color: '#555' }}>
+                        <p style={{ color: 'var(--rf-muted)' }}>
                             <strong>Rental #{summary.rentalId}</strong> | Customer: {summary.customerName || '-'}
                             {summary.customerPhone ? ` (${summary.customerPhone})` : ''} | Period: {summary.startDate} to {summary.dueDate}
                             {' '}| Invoice #{summary.invoiceId}{' '}
@@ -301,10 +304,10 @@ export default function FinancialReports() {
 
                 {report && (
                     <>
-                        <p style={{ color: '#555' }}><strong>{report.title}</strong> | {periodText(report)} | {report.recordCount} record(s)</p>
+                        <p style={{ color: 'var(--rf-muted)' }}><strong>{report.title}</strong> | {periodText(report)} | {report.recordCount} record(s)</p>
 
                         {report.recordCount === 0 ? (
-                            <div className="error-banner" style={{ backgroundColor: '#fff3cd', color: '#856404' }}>
+                            <div className="error-banner" style={{ backgroundColor: 'rgba(250, 204, 21, 0.12)', color: '#facc15', borderColor: 'rgba(250, 204, 21, 0.3)' }}>
                                 No records found for these filters. Try a different report type or date range.
                             </div>
                         ) : report.reportType === 'PAYMENTS_BY_METHOD' ? (

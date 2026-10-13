@@ -3,63 +3,93 @@ package com.compulin.rentflow.service.module3;
 import com.compulin.rentflow.entity.module3.SecurityDeposit;
 import com.compulin.rentflow.repository.module3.SecurityDepositRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class SecurityDepositService {
 
     private final SecurityDepositRepository securityDepositRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public SecurityDepositService(SecurityDepositRepository securityDepositRepository) {
+    public SecurityDepositService(SecurityDepositRepository securityDepositRepository, JdbcTemplate jdbcTemplate) {
         this.securityDepositRepository = securityDepositRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    /**
-     * Retrieve all security deposit records
-     */
+
+     // Retrieve all security deposit records.
+
+    @Transactional
     public List<SecurityDeposit> getAllDeposits() {
+        syncFromRentals();
         return securityDepositRepository.findAll();
     }
 
-    /**
-     * Retrieve deposit record by primary key
-     */
+    @Transactional
+    public void syncFromRentals() {
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                "SELECT rental_id, SUM(line_deposit) AS total_deposit " +
+                        "FROM rental_item GROUP BY rental_id HAVING SUM(line_deposit) > 0");
+
+        for (Map<String, Object> row : rows) {
+            Integer rentalId = ((Number) row.get("rental_id")).intValue();
+            BigDecimal total = new BigDecimal(row.get("total_deposit").toString());
+
+            Optional<SecurityDeposit> existing = securityDepositRepository.findByRentalId(rentalId);
+            if (existing.isEmpty()) {
+                initializeDeposit(rentalId, total);
+            } else if (existing.get().getDepositStatus() == SecurityDeposit.DepositStatus.PENDING
+                    && existing.get().getCalculatedDeposit().compareTo(total) != 0) {
+                existing.get().setCalculatedDeposit(total);
+                securityDepositRepository.save(existing.get());
+            }
+        }
+    }
+
+
+     // Retrieve deposit record by primary key
+
     public SecurityDeposit getDepositById(Integer depositId) {
         return securityDepositRepository.findById(depositId)
                 .orElseThrow(() -> new RuntimeException("Security deposit not found with ID: " + depositId));
     }
 
-    /**
-     * Retrieve deposit record linked to a specific rental ID
-     */
+
+     // Retrieve deposit record linked to a specific rental ID
+
+     @Transactional
     public SecurityDeposit getDepositByRentalId(Integer rentalId) {
+        syncFromRentals();
         return securityDepositRepository.findByRentalId(rentalId)
                 .orElseThrow(() -> new RuntimeException("No security deposit found for Rental ID: " + rentalId));
     }
 
-    /**
-     * Retrieve deposits filtered by status
-     */
+
+     // Retrieve deposits filtered by status
+
     public List<SecurityDeposit> getDepositsByStatus(SecurityDeposit.DepositStatus status) {
         return securityDepositRepository.findByDepositStatus(status);
     }
 
-    /**
-     * Retrieve deposits processed by a specific staff member
-     */
+
+     // Retrieve deposits processed by a specific staff member
+
     public List<SecurityDeposit> getDepositsByStaff(Integer staffId) {
         return securityDepositRepository.findByReceivedBy(staffId);
     }
 
-    /**
-     * Initial record creation when a rental booking is placed
-     */
+
+     // Creates the PENDING row for a rental
+
     @Transactional
     public SecurityDeposit initializeDeposit(Integer rentalId, BigDecimal calculatedDeposit) {
         if (rentalId == null || calculatedDeposit == null
@@ -89,9 +119,9 @@ public class SecurityDepositService {
         return securityDepositRepository.save(deposit);
     }
 
-    /**
-     * Record deposit collection from customer (transitions status to HELD)
-     */
+
+     // Record deposit collection from customer (transitions status to HELD)
+
     @Transactional
     public SecurityDeposit receiveDeposit(Integer depositId, BigDecimal amountReceived, Integer receivedByStaffId) {
         SecurityDeposit deposit = getDepositById(depositId);
@@ -108,10 +138,10 @@ public class SecurityDepositService {
         return securityDepositRepository.save(deposit);
     }
 
-    /**
-     * Process deposit return/refund upon equipment return and inspection.
-     * amountDeducted is any extra deduction now; amounts already deducted are kept.
-     */
+
+     // Process deposit refund upon equipment return and inspection
+     // amountDeducted is any extra deduction now; amounts already deducted are kept
+
     @Transactional
     public SecurityDeposit processDepositReturn(Integer depositId, BigDecimal amountDeducted) {
         SecurityDeposit deposit = getDepositById(depositId);
