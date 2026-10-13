@@ -7,6 +7,24 @@ const EQUIPMENT_API =
 const CATEGORY_API =
     'http://localhost:8081/api/module1/equipment-categories/status/ACTIVE'
 
+const displayEquipmentStatus = (status) => {
+    const normalized = String(status || 'ACTIVE').trim().toUpperCase()
+
+    if (normalized === 'OUT_OF_SERVICE') {
+        return 'Out of Service'
+    }
+
+    if (normalized === 'INACTIVE') {
+        return 'Inactive'
+    }
+
+    if (normalized === 'ACTIVE') {
+        return 'Active'
+    }
+
+    return normalized
+}
+
 function EquipmentManagement({ user }) {
     const role = (user?.role || '').replace('ROLE_', '').toUpperCase()
     const canManage = role === 'COMPANY_ADMIN'
@@ -28,7 +46,7 @@ function EquipmentManagement({ user }) {
         securityDepositPerUnit: '',
         totalQuantity: '',
         availableQuantity: '',
-        equStatus: 'AVAILABLE'
+        equStatus: 'ACTIVE'
     })
 
     const loadEquipment = async () => {
@@ -122,7 +140,7 @@ function EquipmentManagement({ user }) {
             securityDepositPerUnit: '',
             totalQuantity: '',
             availableQuantity: '',
-            equStatus: 'AVAILABLE'
+            equStatus: 'ACTIVE'
         })
 
         setEditingId(null)
@@ -164,7 +182,7 @@ function EquipmentManagement({ user }) {
             availableQuantity:
                 item.availableQuantity ?? '',
             equStatus:
-                item.equStatus || 'AVAILABLE'
+                item.equStatus || 'ACTIVE'
         })
 
         setEditingId(item.equipmentId)
@@ -309,113 +327,6 @@ function EquipmentManagement({ user }) {
             setMessage(
                 error.message ||
                 'Failed to save equipment'
-            )
-
-            setMessageType('error')
-        }
-    }
-
-    const changeStatus = async (
-        item,
-        status
-    ) => {
-        if (!canManage) {
-            setMessage('Only a Company Administrator can change equipment status.')
-            setMessageType('error')
-            return
-        }
-
-
-        try {
-            const response = await fetch(
-                `${EQUIPMENT_API}/${item.equipmentId}/status?status=${status}`,
-                {
-                    method: 'PUT',
-                    credentials: 'include'
-                }
-            )
-
-            const data = await response.json()
-                .catch(() => ({}))
-
-            if (!response.ok) {
-                throw new Error(
-                    data.message ||
-                    'Failed to update equipment status'
-                )
-            }
-
-            setMessage(
-                `Equipment status changed to ${status}`
-            )
-
-            setMessageType('success')
-
-            await loadEquipment()
-
-        } catch (error) {
-            console.error(error)
-
-            setMessage(
-                error.message ||
-                'Failed to update equipment status'
-            )
-
-            setMessageType('error')
-        }
-    }
-
-    const handleDeactivate = async (
-        item
-    ) => {
-        if (!canManage) {
-            setMessage('Only a Company Administrator can deactivate equipment.')
-            setMessageType('error')
-            return
-        }
-
-
-        const confirmed = window.confirm(
-            `Deactivate "${item.itemName}"?`
-        )
-
-        if (!confirmed) {
-            return
-        }
-
-        try {
-            const response = await fetch(
-                `${EQUIPMENT_API}/${item.equipmentId}/deactivate`,
-                {
-                    method: 'PUT',
-                    credentials: 'include'
-                }
-            )
-
-            const data = await response.json()
-                .catch(() => ({}))
-
-            if (!response.ok) {
-                throw new Error(
-                    data.message ||
-                    'Failed to deactivate equipment'
-                )
-            }
-
-            setMessage(
-                'Equipment deactivated successfully'
-            )
-
-            setMessageType('success')
-
-            await loadEquipment()
-
-        } catch (error) {
-            console.error(error)
-
-            setMessage(
-                error.message ||
-                'Failed to deactivate equipment'
             )
 
             setMessageType('error')
@@ -676,28 +587,16 @@ function EquipmentManagement({ user }) {
                                     value={form.equStatus}
                                     onChange={handleChange}
                                 >
-                                    <option value="AVAILABLE">
-                                        AVAILABLE
-                                    </option>
-
-                                    <option value="RENTED">
-                                        RENTED
-                                    </option>
-
-                                    <option value="DAMAGED">
-                                        DAMAGED
-                                    </option>
-
-                                    <option value="LOST">
-                                        LOST
-                                    </option>
-
-                                    <option value="MAINTENANCE">
-                                        MAINTENANCE
+                                    <option value="ACTIVE">
+                                        Active
                                     </option>
 
                                     <option value="INACTIVE">
-                                        INACTIVE
+                                        Inactive
+                                    </option>
+
+                                    <option value="OUT_OF_SERVICE">
+                                        Out of Service
                                     </option>
                                 </select>
                             </div>
@@ -876,7 +775,7 @@ function EquipmentManagement({ user }) {
                                                     <span
                                                         className={`equipment-status ${status.toLowerCase()}`}
                                                     >
-                                                        {status}
+                                                        {displayEquipmentStatus(status)}
                                                     </span>
                                             </td>
 
@@ -884,49 +783,13 @@ function EquipmentManagement({ user }) {
                                                 <td>
 
                                                     <div className="equipment-actions">
-
                                                         <button
+                                                            type="button"
                                                             className="edit-equipment-button"
-                                                            onClick={() =>
-                                                                handleEdit(
-                                                                    item
-                                                                )
-                                                            }
+                                                            onClick={() => handleEdit(item)}
                                                         >
                                                             Edit
                                                         </button>
-
-                                                        {status !==
-                                                            'INACTIVE' && (
-                                                                <button
-                                                                    className="deactivate-equipment-button"
-                                                                    onClick={() =>
-                                                                        handleDeactivate(
-                                                                            item
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    Deactivate
-                                                                </button>
-                                                            )}
-
-                                                        {status !==
-                                                            'AVAILABLE' &&
-                                                            status !==
-                                                            'INACTIVE' && (
-                                                                <button
-                                                                    className="available-equipment-button"
-                                                                    onClick={() =>
-                                                                        changeStatus(
-                                                                            item,
-                                                                            'AVAILABLE'
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    Available
-                                                                </button>
-                                                            )}
-
                                                     </div>
 
                                                 </td>

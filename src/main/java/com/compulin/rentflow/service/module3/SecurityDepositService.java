@@ -62,6 +62,22 @@ public class SecurityDepositService {
      */
     @Transactional
     public SecurityDeposit initializeDeposit(Integer rentalId, BigDecimal calculatedDeposit) {
+        if (rentalId == null || calculatedDeposit == null
+                || calculatedDeposit.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Valid rental ID and non-negative deposit amount are required.");
+        }
+
+        // Do not create a second deposit or overwrite a deposit that has been paid.
+        SecurityDeposit existing = securityDepositRepository.findByRentalId(rentalId).orElse(null);
+        if (existing != null) {
+            if (existing.getCalculatedDeposit().compareTo(calculatedDeposit) != 0) {
+                throw new IllegalStateException(
+                        "Rental already has a security deposit with a different amount: " + rentalId
+                );
+            }
+            return existing;
+        }
+
         SecurityDeposit deposit = new SecurityDeposit();
         deposit.setRentalId(rentalId);
         deposit.setCalculatedDeposit(calculatedDeposit != null ? calculatedDeposit : BigDecimal.ZERO);

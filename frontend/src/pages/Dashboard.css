@@ -1,0 +1,46 @@
+/* Copied from the original Module 1 App.css, scoped to the dashboard so it
+   cannot modify the shared RentFlow sidebar, topbar, or other modules. */
+.module1-dashboard-original .welcome-card {
+    margin-bottom: 30px;
+    padding: 30px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+}
+.module1-dashboard-original .welcome-card h2 { margin: 0 0 10px; }
+.module1-dashboard-original .welcome-card p { margin: 0; color: #dbeafe; }
+.module1-dashboard-original .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 35px;
+}
+.module1-dashboard-original .stat-card {
+    padding: 22px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.module1-dashboard-original .stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    background: #eff6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+.module1-dashboard-original .stat-card span { display: block; color: #6b7280; font-size: 13px; }
+.module1-dashboard-original .stat-card strong { display: block; margin-top: 5px; font-size: 28px; }
+.module1-dashboard-original .dashboard-stats-error { color: #b91c1c; }
+@media (max-width: 1000px) {
+    .module1-dashboard-original .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+    .module1-dashboard-original .stats-grid { grid-template-columns: 1fr; }
+}

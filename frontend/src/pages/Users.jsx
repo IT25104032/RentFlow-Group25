@@ -25,6 +25,9 @@ async function readResponse(response) {
 }
 
 function Users({ user }) {
+    const role = String(user?.role || "").replace(/^ROLE_/, "").toUpperCase();
+    const canManageOfficers = role === "COMPANY_ADMIN";
+    const managedRole = "RENTAL_OFFICER";
     const [users, setUsers] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -82,6 +85,7 @@ function Users({ user }) {
     const handleSubmit = async (event) => {
         event.preventDefault();
         if (saving) return;
+        if (!canManageOfficers) return;
 
         setSaving(true);
         setMessage("");
@@ -107,7 +111,7 @@ function Users({ user }) {
                 full_name: form.full_name.trim(),
                 email: form.email.trim(),
                 phone: form.phone.trim(),
-                user_role: form.user_role
+                user_role: managedRole
             };
 
             if (form.password_hash) payload.password_hash = form.password_hash;
@@ -142,6 +146,7 @@ function Users({ user }) {
     };
 
     const editUser = (selectedUser) => {
+        if (!canManageOfficers || String(selectedUser.user_role ?? selectedUser.userRole) !== managedRole) return;
         setForm({
             full_name: selectedUser.full_name ?? selectedUser.fullName ?? "",
             email: selectedUser.email ?? "",
@@ -158,6 +163,7 @@ function Users({ user }) {
     };
 
     const changeStatus = async (id, currentStatus) => {
+        if (!canManageOfficers) return;
         const newStatus = String(currentStatus).toUpperCase() === "ACTIVE"
             ? "INACTIVE"
             : "ACTIVE";
@@ -199,9 +205,11 @@ function Users({ user }) {
                     <h2>Users</h2>
                     <p>Manage staff accounts and permissions.</p>
                 </div>
-                <button type="button" className="add-user-button" onClick={openCreateForm}>
-                    + Add User
-                </button>
+                {canManageOfficers && (
+                    <button type="button" className="add-user-button" onClick={openCreateForm}>
+                        + Add Rental Officer
+                    </button>
+                )}
             </div>
 
             {message && (
@@ -210,7 +218,7 @@ function Users({ user }) {
                 </div>
             )}
 
-            {showForm && (
+            {canManageOfficers && showForm && (
                 <section className="users-form-card">
                     <div className="users-form-header">
                         <h3>{editingId ? "Edit User" : "Create New User"}</h3>
@@ -288,7 +296,6 @@ function Users({ user }) {
                                 <label htmlFor="user-role">Role *</label>
                                 <select id="user-role" name="user_role" value={form.user_role} onChange={handleChange} required>
                                     <option value="RENTAL_OFFICER">Rental Officer</option>
-                                    <option value="COMPANY_ADMIN">Company Administrator</option>
                                 </select>
                             </div>
 
@@ -336,7 +343,7 @@ function Users({ user }) {
                                 <th>Phone</th>
                                 <th>Role</th>
                                 <th>Status</th>
-                                <th>Actions</th>
+                                {canManageOfficers && <th>Actions</th>}
                             </tr>
                             </thead>
                             <tbody>
@@ -358,8 +365,8 @@ function Users({ user }) {
                                                     {status}
                                                 </span>
                                         </td>
-                                        <td>
-                                            <div className="users-actions">
+                                        {canManageOfficers && <td>
+                                            {role === managedRole && <div className="users-actions">
                                                 <button type="button" className="edit-user-button" onClick={() => editUser(item)}>
                                                     Edit
                                                 </button>
@@ -370,15 +377,15 @@ function Users({ user }) {
                                                 >
                                                     {status === "ACTIVE" ? "Deactivate" : "Activate"}
                                                 </button>
-                                            </div>
-                                        </td>
+                                            </div>}
+                                        </td>}
                                     </tr>
                                 );
                             })}
 
                             {!loading && users.length === 0 && (
                                 <tr>
-                                    <td colSpan="7" className="empty-users">
+                                    <td colSpan={canManageOfficers ? 7 : 6} className="empty-users">
                                         No users found for this company.
                                     </td>
                                 </tr>

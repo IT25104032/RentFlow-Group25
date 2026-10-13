@@ -27,12 +27,9 @@ public class equipment_controller {
     private final equipment_service equipmentService;
 
     private static final Set<String> ALLOWED_STATUSES = Set.of(
-            "AVAILABLE",
-            "RENTED",
-            "DAMAGED",
-            "LOST",
-            "MAINTENANCE",
-            "INACTIVE"
+            "ACTIVE",
+            "INACTIVE",
+            "OUT_OF_SERVICE"
     );
 
     public equipment_controller(equipment_service equipmentService) {
@@ -90,13 +87,14 @@ public class equipment_controller {
             );
         }
 
-        String normalized = status.trim().toUpperCase();
+        String normalized = status.trim().toUpperCase(
+                java.util.Locale.ROOT
+        );
 
         if (!ALLOWED_STATUSES.contains(normalized)) {
             throw new IllegalArgumentException(
                     "Invalid equipment status. Allowed values: "
-                            + "AVAILABLE, RENTED, DAMAGED, LOST, "
-                            + "MAINTENANCE, INACTIVE."
+                            + "ACTIVE, INACTIVE, OUT_OF_SERVICE."
             );
         }
 
@@ -462,7 +460,7 @@ public class equipment_controller {
             equipment item = fromRequest(request);
 
             if (item.getEqu_status() == null) {
-                item.setEqu_status("AVAILABLE");
+                item.setEqu_status("ACTIVE");
             }
 
             String quantityError = validateQuantities(item);
