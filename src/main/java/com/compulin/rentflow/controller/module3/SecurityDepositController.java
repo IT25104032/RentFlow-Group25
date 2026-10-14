@@ -2,7 +2,6 @@ package com.compulin.rentflow.controller.module3;
 
 import com.compulin.rentflow.entity.module3.SecurityDeposit;
 import com.compulin.rentflow.service.module3.SecurityDepositService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,15 +30,6 @@ public class SecurityDepositController {
     @GetMapping("/rental/{rentalId}")
     public ResponseEntity<SecurityDeposit> getDepositByRentalId(@PathVariable Integer rentalId) {
         return ResponseEntity.ok(securityDepositService.getDepositByRentalId(rentalId));
-    }
-
-    // Creates a PENDING deposit record for a rental
-    // Body: { "rentalId": 4, "calculatedDeposit": 6000 }
-    @PostMapping
-    public ResponseEntity<SecurityDeposit> initializeDeposit(@RequestBody Map<String, Object> body) {
-        Integer rentalId = Integer.valueOf(body.get("rentalId").toString());
-        BigDecimal calculatedDeposit = new BigDecimal(body.get("calculatedDeposit").toString());
-        return new ResponseEntity<>(securityDepositService.initializeDeposit(rentalId, calculatedDeposit), HttpStatus.CREATED);
     }
 
     // Records the deposit being collected from the customer (PENDING -> HELD)

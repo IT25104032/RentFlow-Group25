@@ -6,15 +6,25 @@ import {
 } from "../../services/module2/rentalExtensionService";
 import "./RentalExtension.css";
 
-const COMPANY_ID = 1000;
-const USER_ID = 3;
 const EXTENDABLE_STATUSES = [
     "ACTIVE",
     "OVERDUE",
     "PARTIALLY_RETURNED"
 ];
 
+function getLoggedInUser() {
+    try {
+        return JSON.parse(sessionStorage.getItem("rentflowUser") || "null");
+    } catch {
+        return null;
+    }
+}
+
 function RentalExtension() {
+    const loggedInUser = getLoggedInUser();
+    const COMPANY_ID = loggedInUser?.companyId ?? null;
+    const USER_ID = loggedInUser?.userId ?? null;
+
     const [rentals, setRentals] = useState([]);
     const [selectedRental, setSelectedRental] = useState(null);
     const [extensionHistory, setExtensionHistory] = useState([]);
@@ -91,9 +101,9 @@ function RentalExtension() {
 
             setExtensionHistory(history || []);
         } catch (err) {
-                console.error(err);
-                setExtensionHistory([]);
-                setHistoryError("Unable to load extension history.");
+            console.error(err);
+            setExtensionHistory([]);
+            setHistoryError("Unable to load extension history.");
         } finally {
             setHistoryLoading(false);
         }

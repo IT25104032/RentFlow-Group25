@@ -1,7 +1,6 @@
 const API_BASE_URL =
     "http://localhost:8081/api/customers";
 
-
 /*
  * Create a new renter.
  */
@@ -9,6 +8,7 @@ export async function createCustomer(customerData) {
 
     const response = await fetch(API_BASE_URL, {
         method: "POST",
+        credentials: "include",
 
         headers: {
             "Content-Type": "application/json"
@@ -17,21 +17,23 @@ export async function createCustomer(customerData) {
         body: JSON.stringify(customerData)
     });
 
-
     if (!response.ok) {
-        throw new Error(
-            "Failed to register renter."
-        );
+        throw new Error("Failed to register renter.");
     }
-
 
     return await response.json();
 }
 
-/* Get all customers */
+/*
+ * Get all customers belonging to a company.
+ */
 export async function getAllCustomers(companyId) {
+
     const response = await fetch(
-        `${API_BASE_URL}?companyId=${companyId}`
+        `${API_BASE_URL}?companyId=${companyId}`,
+        {
+            credentials: "include"
+        }
     );
 
     if (!response.ok) {
@@ -43,12 +45,6 @@ export async function getAllCustomers(companyId) {
 
 /*
  * Search for existing renters.
- *
- * name  -> partial name search
- * phone -> exact phone search
- *
- * If both are supplied, the backend must
- * match BOTH conditions.
  */
 export async function searchCustomers({
                                           companyId,
@@ -58,46 +54,29 @@ export async function searchCustomers({
 
     const params = new URLSearchParams();
 
-    params.append(
-        "companyId",
-        companyId
-    );
-
+    params.append("companyId", companyId);
 
     if (name) {
-
-        params.append(
-            "name",
-            name
-        );
+        params.append("name", name);
     }
-
 
     if (phone) {
-
-        params.append(
-            "phone",
-            phone
-        );
+        params.append("phone", phone);
     }
-
 
     const response = await fetch(
-        `${API_BASE_URL}/search?${params.toString()}`
+        `${API_BASE_URL}/search?${params.toString()}`,
+        {
+            credentials: "include"
+        }
     );
 
-
     if (!response.ok) {
-
-        throw new Error(
-            "Failed to search renters."
-        );
+        throw new Error("Failed to search renters.");
     }
-
 
     return await response.json();
 }
-
 
 /*
  * Update an existing renter.
@@ -112,6 +91,7 @@ export async function updateCustomer(
         `${API_BASE_URL}/${customerId}?companyId=${companyId}`,
         {
             method: "PUT",
+            credentials: "include",
 
             headers: {
                 "Content-Type": "application/json"
@@ -121,21 +101,15 @@ export async function updateCustomer(
         }
     );
 
-
     if (!response.ok) {
-
-        throw new Error(
-            "Failed to update renter."
-        );
+        throw new Error("Failed to update renter.");
     }
-
 
     return await response.json();
 }
 
-
 /*
- * Get one renter by ID.
+ * Get a single renter by ID.
  */
 export async function getCustomer(
     customerId,
@@ -143,17 +117,15 @@ export async function getCustomer(
 ) {
 
     const response = await fetch(
-        `${API_BASE_URL}/${customerId}?companyId=${companyId}`
+        `${API_BASE_URL}/${customerId}?companyId=${companyId}`,
+        {
+            credentials: "include"
+        }
     );
 
-
     if (!response.ok) {
-
-        throw new Error(
-            "Failed to get renter."
-        );
+        throw new Error("Failed to get renter.");
     }
-
 
     return await response.json();
 }

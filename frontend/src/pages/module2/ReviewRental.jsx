@@ -178,16 +178,13 @@ function ReviewRental() {
                     "http://localhost:8081/api/rentals/confirm",
                     {
                         method: "POST",
+                        credentials: "include",
 
                         headers: {
-                            "Content-Type":
-                                "application/json"
+                            "Content-Type": "application/json"
                         },
 
-                        body:
-                            JSON.stringify(
-                                requestBody
-                            )
+                        body: JSON.stringify(requestBody)
                     }
                 );
 

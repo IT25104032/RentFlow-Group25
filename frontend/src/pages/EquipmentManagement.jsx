@@ -487,21 +487,11 @@ function EquipmentManagement({ user }) {
                                     value={form.ratePeriod}
                                     onChange={handleChange}
                                 >
-                                    <option value="HOUR">
-                                        HOUR
-                                    </option>
 
                                     <option value="DAY">
                                         DAY
                                     </option>
 
-                                    <option value="WEEK">
-                                        WEEK
-                                    </option>
-
-                                    <option value="MONTH">
-                                        MONTH
-                                    </option>
                                 </select>
                             </div>
 

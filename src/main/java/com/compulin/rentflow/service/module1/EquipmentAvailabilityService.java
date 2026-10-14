@@ -45,4 +45,19 @@ public class EquipmentAvailabilityService {
             );
         }
     }
+    @Transactional
+    public void restoreReservation(
+            Integer companyId, Integer equipmentId, Integer quantity) {
+        if (companyId == null || equipmentId == null ||
+                quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException(
+                    "Company, equipment and a positive quantity are required.");
+        }
+        int updatedRows = equipmentRepo.restoreReservedQuantity(
+                equipmentId, companyId, quantity);
+        if (updatedRows != 1) {
+            throw new IllegalStateException(
+                    "Unable to restore reserved equipment quantity.");
+        }
+    }
 }

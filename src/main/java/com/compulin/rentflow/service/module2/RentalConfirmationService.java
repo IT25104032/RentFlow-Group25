@@ -10,6 +10,7 @@ import com.compulin.rentflow.entity.module2.RentalItem;
 import com.compulin.rentflow.repository.module2.RentalItemRepository;
 import com.compulin.rentflow.repository.module2.RentalRepository;
 import com.compulin.rentflow.service.module3.SecurityDepositService;
+import com.compulin.rentflow.service.module1.EquipmentAvailabilityService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,15 +26,18 @@ public class RentalConfirmationService {
 
     private final RentalItemRepository rentalItemRepository;
     private final SecurityDepositService securityDepositService;
+    private final EquipmentAvailabilityService equipmentAvailabilityService;
 
     public RentalConfirmationService(
             RentalRepository rentalRepository,
             RentalItemRepository rentalItemRepository,
-            SecurityDepositService securityDepositService
+            SecurityDepositService securityDepositService,
+            EquipmentAvailabilityService equipmentAvailabilityService
     ) {
         this.rentalRepository = rentalRepository;
         this.rentalItemRepository = rentalItemRepository;
         this.securityDepositService = securityDepositService;
+        this.equipmentAvailabilityService = equipmentAvailabilityService;
     }
 
 
@@ -108,6 +112,12 @@ public class RentalConfirmationService {
                 RentalItemRequest itemRequest :
                 request.getRentalItems()
         ) {
+
+            // Atomic stock reservation, within this rental transaction.
+            equipmentAvailabilityService.reserveForIssue(
+                    request.getRental().getCompanyId(),
+                    itemRequest.getEquipmentId(),
+                    itemRequest.getQuantity());
 
             RentalItem rentalItem =
                     new RentalItem();

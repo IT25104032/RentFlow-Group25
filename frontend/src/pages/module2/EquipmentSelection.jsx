@@ -1,72 +1,61 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import RentalStepper from "../../components/module2/RentalStepper";
 import "./EquipmentSelection.css";
 
-/*
- * Temporary equipment data.
- *
- * Later, this will come from the real
- * Equipment API provided by Module 1.
- */
-const EQUIPMENT_DATA = [
-    {
-        equipmentId: 1,
-        itemName: "Electric Drill",
-        itemCode: "DRILL001",
-        categoryName: "Power Tools",
-        rentalRate: 1500,
-        ratePeriod: "DAY",
-        depositPerUnit: 250,
-        availableQuantity: 10
-    },
-    {
-        equipmentId: 2,
-        itemName: "Angle Grinder",
-        itemCode: "GRIND001",
-        categoryName: "Power Tools",
-        rentalRate: 1200,
-        ratePeriod: "DAY",
-        depositPerUnit: 500,
-        availableQuantity: 7
-    },
-    {
-        equipmentId: 3,
-        itemName: "Concrete Mixer",
-        itemCode: "MIX001",
-        categoryName: "Construction Equipment",
-        rentalRate: 5000,
-        ratePeriod: "DAY",
-        depositPerUnit: 2500,
-        availableQuantity: 4
-    },
-    {
-        equipmentId: 4,
-        itemName: "Pressure Washer",
-        itemCode: "WASH001",
-        categoryName: "Cleaning Equipment",
-        rentalRate: 2500,
-        ratePeriod: "DAY",
-        depositPerUnit: 1250,
-        availableQuantity: 5
-    },
-    {
-        equipmentId: 10,
-        itemName: "Digital Camera",
-        itemCode: "CAMERA001",
-        categoryName: "Photography Equipment",
-        rentalRate: 2000,
-        ratePeriod: "DAY",
-        depositPerUnit: 1500,
-        availableQuantity: 4
-    }
-];
-
+const EQUIPMENT_API =
+    "http://localhost:8081/api/module1/equipment/available-for-rental";
 
 function EquipmentSelection({ onBack }) {
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Equipment retrieved from Module 1
+    const [equipmentData, setEquipmentData] = useState([]);
+    const [loadingEquipment, setLoadingEquipment] = useState(true);
+    const [equipmentError, setEquipmentError] = useState("");
+
+    // Fetch the logged-in company's available equipment
+    useEffect(() => {
+
+        async function loadEquipment() {
+            setLoadingEquipment(true);
+            setEquipmentError("");
+
+            try {
+                const response = await fetch(EQUIPMENT_API, {
+                    method: "GET",
+                    credentials: "include"
+                });
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Failed to load equipment (${response.status}).`
+                    );
+                }
+
+                const data = await response.json();
+
+                if (!Array.isArray(data)) {
+                    throw new Error("Invalid equipment response.");
+                }
+
+                setEquipmentData(data);
+
+            } catch (err) {
+                console.error("Equipment loading failed:", err);
+                setEquipmentError(err.message);
+                setEquipmentData([]);
+
+            } finally {
+                setLoadingEquipment(false);
+            }
+        }
+
+        loadEquipment();
+
+    }, []);
 
     let savedDraft = {};
 
@@ -127,10 +116,10 @@ function EquipmentSelection({ onBack }) {
             searchText.trim().toLowerCase();
 
         if (!search) {
-            return EQUIPMENT_DATA;
+            return equipmentData;
         }
 
-        return EQUIPMENT_DATA.filter(
+        return equipmentData.filter(
             (equipment) =>
                 equipment.itemName
                     .toLowerCase()
@@ -145,8 +134,7 @@ function EquipmentSelection({ onBack }) {
                     .includes(search)
         );
 
-    }, [searchText]);
-
+    }, [searchText, equipmentData]);
 
      //Add an equipment item to the rental.
     const handleAddEquipment = (equipment) => {
@@ -169,14 +157,13 @@ function EquipmentSelection({ onBack }) {
             return;
         }
 
-
         updateSelectedEquipment([
             ...selectedEquipment,
             {
                 ...equipment,
                 quantity: 1,
                 securityDepositPerUnit:
-                equipment.depositPerUnit
+                    Number(equipment.securityDepositPerUnit)
             }
         ]);
 
@@ -251,6 +238,16 @@ function EquipmentSelection({ onBack }) {
     const handleContinue = () => {
 
         setError("");
+
+        if (loadingEquipment || equipmentError) {
+            setError("Equipment information is not available.");
+            return;
+        }
+
+        if (selectedEquipment.length === 0) {
+            setError("Please select at least one equipment item.");
+            return;
+        }
 
         if (!selectedRenter) {
 
@@ -401,6 +398,16 @@ function EquipmentSelection({ onBack }) {
             </div>
 
 
+            {loadingEquipment && (
+                <p>Loading available equipment...</p>
+            )}
+
+            {equipmentError && (
+                <div className="error-message">
+                    {equipmentError}
+                </div>
+            )}
+
             {/* Equipment search */}
             <div className="rental-card">
                 <div className="card-header">
@@ -487,7 +494,7 @@ function EquipmentSelection({ onBack }) {
 
                                         <td>
                                             Rs. {Number(
-                                            equipment.depositPerUnit
+                                            equipment.securityDepositPerUnit
                                         ).toLocaleString()}
                                         </td>
 

@@ -8,7 +8,6 @@ import {
 } from "../../services/module2/equipmentIssueService";
 import "./IssueEquipment.css";
 
-const COMPANY_ID = 1000;
 
 function getLocalDateString() {
     const now = new Date();
@@ -18,7 +17,18 @@ function getLocalDateString() {
     return `${year}-${month}-${day}`;
 }
 
+function getLoggedInUser() {
+    try {
+        return JSON.parse(sessionStorage.getItem("rentflowUser") || "null");
+    } catch {
+        return null;
+    }
+}
+
 function IssueEquipment() {
+    const loggedInUser = getLoggedInUser();
+    const COMPANY_ID = loggedInUser?.companyId ?? null;
+
     const [rentals, setRentals] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [loadingRentals, setLoadingRentals] = useState(true);

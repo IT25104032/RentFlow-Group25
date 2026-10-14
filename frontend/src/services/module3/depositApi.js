@@ -14,15 +14,6 @@ export const getDeposits = async () => {
     return handleResponse(response, 'Failed to load security deposits.');
 };
 
-export const createDeposit = async (rentalId, calculatedDeposit) => {
-    const response = await fetch(`${API_BASE_URL}/deposits`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rentalId, calculatedDeposit })
-    });
-    return handleResponse(response, `Failed to create deposit for Rental #${rentalId}. Check that the rental exists and has no deposit yet.`);
-};
-
 export const receiveDeposit = async (depositId, amountReceived) => {
     const response = await fetch(`${API_BASE_URL}/deposits/${depositId}/receive`, {
         method: 'PUT',

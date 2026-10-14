@@ -1,5 +1,6 @@
 package com.compulin.rentflow.service.module2;
 
+import com.compulin.rentflow.service.module1.EquipmentAvailabilityService;
 import com.compulin.rentflow.dto.module2.RentalHistoryResponse;
 import com.compulin.rentflow.dto.module2.RentalItemResponse;
 import com.compulin.rentflow.repository.module2.RentalItemRepository;
@@ -27,13 +28,16 @@ public class RentalService {
 
     private final RentalRepository rentalRepository;
     private final RentalItemRepository rentalItemRepository;
+    private final EquipmentAvailabilityService equipmentAvailabilityService;
 
     public RentalService(
             RentalRepository rentalRepository,
-            RentalItemRepository rentalItemRepository
+            RentalItemRepository rentalItemRepository,
+            EquipmentAvailabilityService equipmentAvailabilityService
     ) {
         this.rentalRepository = rentalRepository;
         this.rentalItemRepository = rentalItemRepository;
+        this.equipmentAvailabilityService = equipmentAvailabilityService;
     }
 
     public RentalResponse createRental(RentalRequest request) {
@@ -212,6 +216,14 @@ public class RentalService {
             throw new IllegalArgumentException(
                     "Only DRAFT rentals can be cancelled from the Issue Equipment stage."
             );
+        }
+
+        // Release only reservations belonging to this DRAFT rental.
+        // Do not apply to older DRAFT rentals that never reserved stock.
+        List<RentalItem> items = rentalItemRepository.findByRentalId(rentalId);
+        for (RentalItem item : items) {
+            equipmentAvailabilityService.restoreReservation(
+                    companyId, item.getEquipmentId(), item.getQuantity());
         }
 
         rental.setRentalStatus("CANCELLED");

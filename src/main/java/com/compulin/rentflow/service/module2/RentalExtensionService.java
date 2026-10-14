@@ -7,6 +7,7 @@ import com.compulin.rentflow.entity.module2.Rental;
 import com.compulin.rentflow.entity.module2.RentalExtension;
 import com.compulin.rentflow.repository.module2.RentalExtensionRepository;
 import com.compulin.rentflow.repository.module2.RentalRepository;
+import com.compulin.rentflow.service.module3.InvoiceService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,14 +19,16 @@ public class RentalExtensionService {
 
     private final RentalRepository rentalRepository;
     private final RentalExtensionRepository rentalExtensionRepository;
+    private final InvoiceService invoiceService;
 
     public RentalExtensionService(
             RentalRepository rentalRepository,
-            RentalExtensionRepository rentalExtensionRepository) {
+            RentalExtensionRepository rentalExtensionRepository,
+            InvoiceService invoiceService) {
 
         this.rentalRepository = rentalRepository;
-        this.rentalExtensionRepository =
-                rentalExtensionRepository;
+        this.rentalExtensionRepository = rentalExtensionRepository;
+        this.invoiceService = invoiceService;
     }
 
     @Transactional
@@ -141,7 +144,12 @@ public class RentalExtensionService {
 
         rentalRepository.save(rental);
 
+        // Connect Module 2 rental extension with Module 3 billing.
+        invoiceService.recordRentalExtension(savedExtension);
+
         return mapToResponse(savedExtension);
+
+
     }
 
     public List<RentalExtensionResponse>

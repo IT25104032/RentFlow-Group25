@@ -24,11 +24,6 @@ import RentalStepper from "../../components/module2/RentalStepper";
 
 import "./RegisterRenter.css";
 
-
-
-const COMPANY_ID = 1000;
-const USER_ID = 3;
-
 // Sri Lankan phone numbers must contain exactly 10 digits.
 const isValidPhoneNumber = (value) => /^\d{10}$/.test((value || "").trim());
 
@@ -36,9 +31,20 @@ const isValidPhoneNumber = (value) => /^\d{10}$/.test((value || "").trim());
 function RegisterRenter() {
 
     const navigate = useNavigate();
-    /*
-     * Search state
-     */
+
+    // Get the user who logged in through Module 1.
+    const loggedInUser = (() => {
+        try {
+            return JSON.parse(
+                sessionStorage.getItem("rentflowUser") || "null"
+            );
+        } catch {
+            return null;
+        }
+    })();
+
+    const COMPANY_ID = loggedInUser?.companyId;
+    const USER_ID = loggedInUser?.userId;
 
     const documentFileInputRef = useRef(null);
     // Synchronous lock: React state alone cannot stop two rapid submit events.

@@ -8,6 +8,20 @@ function CreateRental({ onBack }) {
     const location = useLocation();
     const navigate = useNavigate();
 
+    // Logged-in staff information from Module 1
+    let loggedInUser = null;
+
+    try {
+        loggedInUser = JSON.parse(
+            sessionStorage.getItem("rentflowUser") || "null"
+        );
+    } catch {
+        loggedInUser = null;
+    }
+
+    const COMPANY_ID = loggedInUser?.companyId;
+    const USER_ID = loggedInUser?.userId;
+
     // Restore the unfinished rental from this browser tab.
     let savedDraft = {};
 
@@ -82,6 +96,16 @@ function CreateRental({ onBack }) {
         setError("");
         setSuccess("");
 
+        if (!COMPANY_ID || !USER_ID) {
+            setError("Login session not found. Please log in again.");
+            return;
+        }
+
+        if (Number(selectedRenter?.companyId) !== Number(COMPANY_ID)) {
+            setError("The selected renter does not belong to your company.");
+            return;
+        }
+
         if (!selectedRenter) {
             setError("Please select a renter first.");
             return;
@@ -92,9 +116,9 @@ function CreateRental({ onBack }) {
         }
 
         const rentalDetails = {
-            companyId: 1000,
+            companyId: COMPANY_ID,
             customerId: selectedRenter.customerId,
-            createdBy: 3,
+            createdBy: USER_ID,
             startDate: startDate,
             dueDate: dueDate,
             rentalStatus: "DRAFT",

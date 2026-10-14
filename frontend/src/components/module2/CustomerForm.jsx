@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { createCustomer } from "../../services/module2/customerService";
 
+function getLoggedInUser() {
+    try {
+        return JSON.parse(sessionStorage.getItem("rentflowUser") || "null");
+    } catch {
+        return null;
+    }
+}
+
 function CustomerForm({ onCustomerCreated}) {
     const [formData, setFormData] = useState({
         customerName: "",
@@ -40,11 +48,15 @@ function CustomerForm({ onCustomerCreated}) {
         event.preventDefault();
 
         try {
+            const loggedInUser = getLoggedInUser();
+            if (!loggedInUser?.companyId || !loggedInUser?.userId) {
+                throw new Error("Login session missing. Please log in again.");
+            }
             const customerData = {
                 ...formData,
-                companyId: 1000,
+                companyId: loggedInUser.companyId,
                 customerStatus: "ACTIVE",
-                createdBy: 3
+                createdBy: loggedInUser.userId
             };
 
             const response = await createCustomer(customerData);

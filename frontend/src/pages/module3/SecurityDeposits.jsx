@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDeposits, createDeposit } from '../../services/module3/depositApi';
+import { getDeposits } from '../../services/module3/depositApi';
 import ReceiveDepositModal from '../../components/module3/ReceiveDepositModal';
 import RefundDepositModal from '../../components/module3/RefundDepositModal';
 import '../../styles/module3/PaymentManagement.css';
@@ -10,11 +10,6 @@ export default function SecurityDeposits() {
     const [error, setError] = useState(null);
     const [receiveTarget, setReceiveTarget] = useState(null);
     const [refundTarget, setRefundTarget] = useState(null);
-
-    // State for creating a new deposit
-    const [rentalIdInput, setRentalIdInput] = useState('');
-    const [amountInput, setAmountInput] = useState('');
-    const [creating, setCreating] = useState(false);
 
     const fetchList = async () => {
         setLoading(true);
@@ -30,22 +25,6 @@ export default function SecurityDeposits() {
 
     useEffect(() => { fetchList(); }, []);
 
-    const handleCreate = async (e) => {
-        e.preventDefault();
-        setCreating(true);
-        setError(null);
-        try {
-            await createDeposit(Number(rentalIdInput), Number(amountInput));
-            setRentalIdInput('');
-            setAmountInput('');
-            await fetchList();
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setCreating(false);
-        }
-    };
-
     const getBadgeClass = (status) => {
         if (status === 'REFUNDED') return 'badge-paid';
         if (status === 'HELD' || status === 'PARTIALLY_REFUNDED') return 'badge-partial';
@@ -58,35 +37,14 @@ export default function SecurityDeposits() {
     return (
         <div className="payment-container">
             <div className="header-bar">
-                <h2>Security Deposits</h2>
+                <div>
+                    <h2>Security Deposits</h2>
+                    <p style={{ margin: '4px 0 0', color: 'var(--rf-muted)', fontSize: '13px' }}>
+                        Deposits appear here automatically when a rental is created. Click Receive when the customer pays it.
+                    </p>
+                </div>
 
-                <form onSubmit={handleCreate} style={{ display: 'flex', gap: '10px' }}>
-                    <input
-                        type="number"
-                        placeholder="Rental ID"
-                        value={rentalIdInput}
-                        onChange={(e) => setRentalIdInput(e.target.value)}
-                        style={{ padding: '8px 12px', borderRadius: '4px', border: '1px solid #ccc', width: '110px' }}
-                        required
-                    />
-                    <input
-                        type="number"
-                        step="0.01"
-                        placeholder="Deposit (Rs.)"
-                        value={amountInput}
-                        onChange={(e) => setAmountInput(e.target.value)}
-                        style={{ padding: '8px 12px', borderRadius: '4px', border: '1px solid #ccc', width: '130px' }}
-                        required
-                    />
-                    <button
-                        type="submit"
-                        disabled={creating}
-                        style={{ backgroundColor: '#28a745', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}
-                    >
-                        {creating ? 'Creating...' : '+ New Deposit'}
-                    </button>
-                    <button type="button" className="btn-refresh" onClick={fetchList}>↻ Refresh</button>
-                </form>
+                <button type="button" className="btn-refresh" onClick={fetchList}>↻ Refresh</button>
             </div>
 
             {error && <div className="error-banner">{error}</div>}

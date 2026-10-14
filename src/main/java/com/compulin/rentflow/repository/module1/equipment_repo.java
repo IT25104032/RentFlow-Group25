@@ -101,7 +101,7 @@ public interface equipment_repo extends JpaRepository<equipment, Integer> {
     SET available_quantity = available_quantity - :quantity
     WHERE equipment_id = :equipmentId
       AND company_id = :companyId
-      AND equ_status = 'AVAILABLE'
+      AND UPPER(equ_status) = 'ACTIVE'
       AND :quantity > 0
       AND available_quantity >= :quantity
     """, nativeQuery = true)
@@ -166,4 +166,17 @@ public interface equipment_repo extends JpaRepository<equipment, Integer> {
 
 
 
+    @Modifying
+    @Query(value = """
+        UPDATE equipment
+        SET available_quantity = available_quantity + :quantity
+        WHERE equipment_id = :equipmentId
+          AND company_id = :companyId
+          AND :quantity > 0
+          AND available_quantity + :quantity <= total_quantity
+        """, nativeQuery = true)
+    int restoreReservedQuantity(
+            @Param("equipmentId") Integer equipmentId,
+            @Param("companyId") Integer companyId,
+            @Param("quantity") Integer quantity);
 }
