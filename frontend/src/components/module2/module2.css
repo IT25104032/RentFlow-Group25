@@ -2,9 +2,9 @@
     min-height: 100vh;
     width: 100%;
     box-sizing: border-box;
-    background: #f6f9fc;
+    background: #F8FAFC;
     padding: 48px 24px;
-    color: #172b4d;
+    color: #1E293B;
 }
 
 .module2-container {
@@ -19,7 +19,7 @@
 
 .module2-header h1 {
     margin: 0 0 8px;
-    color: #1456a0;
+    color: #2563A6;
     font-size: 34px;
     font-weight: 700;
     letter-spacing: -0.5px;
@@ -27,7 +27,7 @@
 
 .module2-header p {
     margin: 0;
-    color: #667085;
+    color: #64748B;
     font-size: 16px;
 }
 
@@ -60,7 +60,7 @@
     flex-shrink: 0;
 
     background: #eaf3ff;
-    color: #1456a0;
+    color: #2563A6;
     border-radius: 10px;
 
     font-size: 15px;
@@ -69,14 +69,14 @@
 
 .module2-card h2 {
     margin: 0;
-    color: #172b4d;
+    color: #1E293B;
     font-size: 20px;
     font-weight: 650;
 }
 
 .module2-card-description {
     margin: 4px 0 0;
-    color: #667085;
+    color: #64748B;
     font-size: 14px;
 }
 
@@ -129,7 +129,7 @@
     border-radius: 9px;
 
     background: #ffffff;
-    color: #172b4d;
+    color: #1E293B;
 
     font-family: inherit;
     font-size: 15px;
@@ -184,7 +184,7 @@
     border-radius: 9px;
 
     background: #ffffff;
-    color: #667085;
+    color: #64748B;
 
     font-family: inherit;
     font-size: 13px;
@@ -201,7 +201,7 @@
 .module2-clear-selection:hover {
     background: #f8fafc;
     border-color: #2878c8;
-    color: #1456a0;
+    color: #2563A6;
 }
 
 /* Buttons */
@@ -238,8 +238,8 @@
 }
 
 .module2-btn-primary {
-    border: 1px solid #1456a0;
-    background: #1456a0;
+    border: 1px solid #2563A6;
+    background: #2563A6;
     color: #ffffff;
 }
 
@@ -411,7 +411,7 @@
 .module2-empty-state {
     padding: 30px;
     text-align: center;
-    color: #64748b;
+    color: #64748B;
     background: #f8fafc;
     border-radius: 10px;
 }

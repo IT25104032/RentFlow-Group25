@@ -4,11 +4,11 @@
     margin-bottom: 30px;
     padding: 30px;
     border-radius: 14px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, #2563A6, #1E4F82);
     color: white;
 }
 .module1-dashboard-original .welcome-card h2 { margin: 0 0 10px; }
-.module1-dashboard-original .welcome-card p { margin: 0; color: #dbeafe; }
+.module1-dashboard-original .welcome-card p { margin: 0; color: #E8F1FA; }
 .module1-dashboard-original .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -28,14 +28,14 @@
     width: 52px;
     height: 52px;
     border-radius: 10px;
-    background: #eff6ff;
+    background: #E8F1FA;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
     flex-shrink: 0;
 }
-.module1-dashboard-original .stat-card span { display: block; color: #6b7280; font-size: 13px; }
+.module1-dashboard-original .stat-card span { display: block; color: #64748B; font-size: 13px; }
 .module1-dashboard-original .stat-card strong { display: block; margin-top: 5px; font-size: 28px; }
 .module1-dashboard-original .dashboard-stats-error { color: #b91c1c; }
 @media (max-width: 1000px) {

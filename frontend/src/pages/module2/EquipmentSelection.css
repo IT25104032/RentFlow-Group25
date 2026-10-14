@@ -10,7 +10,7 @@
 
 .create-rental-page {
     min-height: 100vh;
-    background: #f6f9fc;
+    background: #F8FAFC;
     padding: 34px 40px 60px;
     box-sizing: border-box;
 }
@@ -49,7 +49,7 @@
     margin: 0 auto 22px;
     padding: 26px 28px;
     background: #ffffff;
-    border: 1px solid #e3ebf3;
+    border: 1px solid #E2E8F0;
     border-radius: 14px;
     box-shadow: 0 5px 18px rgba(24, 63, 96, 0.055);
     box-sizing: border-box;
@@ -69,7 +69,7 @@
 
 .card-header h2 {
     margin: 0;
-    color: #173f64;
+    color: #1E4F82;
     font-size: 19px;
     font-weight: 700;
     letter-spacing: -0.2px;
@@ -118,7 +118,7 @@
 }
 
 .field-value {
-    color: #173f64;
+    color: #1E4F82;
     font-size: 15px;
     font-weight: 600;
 }
@@ -185,7 +185,7 @@
     width: 100%;
     overflow-x: auto;
 
-    border: 1px solid #e2eaf2;
+    border: 1px solid #E2E8F0;
     border-radius: 11px;
     background: #ffffff;
 }
@@ -206,7 +206,7 @@
 /* Table header */
 
 .equipment-table thead {
-    background: #f7fafd;
+    background: #F8FAFC;
 }
 
 .equipment-table th {
@@ -219,7 +219,7 @@
     text-transform: uppercase;
     letter-spacing: 0.7px;
 
-    border-bottom: 1px solid #e2eaf2;
+    border-bottom: 1px solid #E2E8F0;
     white-space: nowrap;
 }
 
@@ -232,7 +232,7 @@
     color: #44576a;
     font-size: 13px;
 
-    border-bottom: 1px solid #edf2f6;
+    border-bottom: 1px solid #F1F5F9;
     vertical-align: middle;
 }
 
@@ -248,7 +248,7 @@
 }
 
 .equipment-table tbody tr:hover {
-    background: #f9fbfd;
+    background: #F8FAFC;
 }
 
 
@@ -258,7 +258,7 @@
     display: inline-block;
     margin-bottom: 3px;
 
-    color: #173f64;
+    color: #1E4F82;
     font-size: 14px;
     font-weight: 650;
 }
@@ -288,10 +288,10 @@
     height: 34px;
     padding: 0 13px;
 
-    border: 1px solid #3275ad;
+    border: 1px solid #2563A6;
     border-radius: 7px;
 
-    background: #3275ad;
+    background: #2563A6;
     color: #ffffff;
 
     font-size: 12px;
@@ -306,8 +306,8 @@
 }
 
 .equipment-table button:hover {
-    background: #285f91;
-    border-color: #285f91;
+    background: #1E4F82;
+    border-color: #1E4F82;
 }
 
 .equipment-table button:active {
@@ -329,7 +329,7 @@
     border-radius: 7px;
 
     background: #ffffff;
-    color: #173f64;
+    color: #1E4F82;
 
     font-size: 13px;
     font-weight: 600;
@@ -343,8 +343,8 @@
 }
 
 .equipment-table input[type="number"]:focus {
-    border-color: #3275ad;
-    box-shadow: 0 0 0 3px rgba(50, 117, 173, 0.10);
+    border-color: #2563A6;
+    box-shadow: 0 0 0 3px rgba(37, 99, 166, 0.10);
 }
 
 
@@ -388,7 +388,7 @@
     border-radius: 7px;
 
     background: #ffffff;
-    color: #173f64;
+    color: #1E4F82;
 
     font-size: 13px;
     font-weight: 600;
@@ -401,8 +401,8 @@
 }
 
 .deposit-input:focus {
-    border-color: #3275ad;
-    box-shadow: 0 0 0 3px rgba(50, 117, 173, 0.10);
+    border-color: #2563A6;
+    box-shadow: 0 0 0 3px rgba(37, 99, 166, 0.10);
 }
 
 .deposit-input::placeholder {
@@ -425,12 +425,12 @@
 .empty-message {
     padding: 28px 20px;
 
-    border: 1px dashed #cfdce8;
+    border: 1px dashed #CBD5E1;
     border-radius: 10px;
 
-    background: #f9fbfd;
+    background: #F8FAFC;
 
-    color: #7b8b9b;
+    color: #64748B;
     font-size: 13px;
     text-align: center;
 }
@@ -438,7 +438,7 @@
 .empty-table-message {
     padding: 30px !important;
 
-    color: #7b8b9b !important;
+    color: #64748B !important;
     text-align: center !important;
 }
 
@@ -540,12 +540,12 @@
 
 .form-actions button:first-child {
     background: #ffffff;
-    border: 1px solid #c8d5e2;
-    color: #4c647b;
+    border: 1px solid #CBD5E1;
+    color: #64748B;
 }
 
 .form-actions button:first-child:hover {
-    background: #f6f9fc;
+    background: #F8FAFC;
     border-color: #aebfd0;
 }
 
@@ -553,14 +553,14 @@
 /* Continue */
 
 .form-actions button:last-child {
-    background: #3275ad;
-    border: 1px solid #3275ad;
+    background: #2563A6;
+    border: 1px solid #2563A6;
     color: #ffffff;
 }
 
 .form-actions button:last-child:hover {
-    background: #285f91;
-    border-color: #285f91;
+    background: #1E4F82;
+    border-color: #1E4F82;
 }
 
 

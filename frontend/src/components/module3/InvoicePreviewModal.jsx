@@ -21,14 +21,14 @@ export default function InvoicePreviewModal({ preview, onClose, onSuccess }) {
         }
     };
 
-    const cell = { padding: '6px 8px', borderBottom: '1px solid #eee', fontSize: '0.85rem' };
+    const cell = { padding: '6px 8px', borderBottom: '1px solid #E2E8F0', fontSize: '0.85rem' };
     const right = { ...cell, textAlign: 'right', whiteSpace: 'nowrap' };
 
     return (
         <div className="modal-overlay">
             <div className="modal-content" style={{ width: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
                 <h3>Invoice Preview for Rental #{preview.rentalId}</h3>
-                <p style={{ fontSize: '0.9rem', color: '#555' }}>
+                <p style={{ fontSize: '0.9rem', color: '#64748B' }}>
                     Rental period: {preview.startDate} to {preview.dueDate} ({preview.rentalDays} days)
                 </p>
 

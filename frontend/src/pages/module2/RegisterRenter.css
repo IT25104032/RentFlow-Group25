@@ -8,19 +8,19 @@
    ========================================================= */
 
 .register-renter-page {
-    --primary: #087ff5;
+    --primary: #2563A6;
     --primary-dark: #0568c9;
     --primary-soft: #eaf5ff;
 
     --navy: #102a43;
-    --text: #263f57;
+    --text: #334155;
     --muted: #6b7f93;
 
     --border: #d9e3ec;
-    --border-light: #e8eef4;
+    --border-light: #E2E8F0;
 
     --surface: #ffffff;
-    --surface-soft: #f7fafd;
+    --surface-soft: #F8FAFC;
 
     --success: #159957;
     --success-soft: #e9f9f0;
@@ -30,7 +30,7 @@
     background:
             linear-gradient(
                     180deg,
-                    #f8fbfe 0%,
+                    #F8FAFC 0%,
                     #ffffff 42%,
                     #ffffff 100%
             );
@@ -337,7 +337,7 @@
     background:
             linear-gradient(
                     180deg,
-                    #f8fbfe,
+                    #F8FAFC,
                     #f3f8fc
             );
 
@@ -562,7 +562,7 @@
     background:
             linear-gradient(
                     135deg,
-                    #087ff5,
+                    #2563A6,
                     #056bd4
             );
 
@@ -780,7 +780,7 @@
 
     background: #f1f6fa;
 
-    color: #344c63;
+    color: #475569;
 
     text-align: left;
 
@@ -794,7 +794,7 @@
     padding:
             12px;
 
-    color: #344c63;
+    color: #475569;
 
     border-top:
             1px solid
@@ -843,7 +843,7 @@
 
     border-radius: 6px;
 
-    background: #087ff5;
+    background: #2563A6;
 
     color: #ffffff;
 
@@ -907,7 +907,7 @@
 
 
 .form-heading-icon {
-    color: #087ff5;
+    color: #2563A6;
 
     font-size: 21px;
 }
@@ -931,7 +931,7 @@
 
     border:
             1px solid
-            #cbd8e3;
+            #CBD5E1;
 
     border-radius: 6px;
 
@@ -1034,7 +1034,7 @@
 
     border:
             1px solid
-            #cbd8e3;
+            #CBD5E1;
 
     border-radius: 6px;
 
@@ -1144,7 +1144,7 @@
     padding:
             20px;
 
-    background: #fbfdff;
+    background: #F8FAFC;
 
     border-top:
             1px solid
@@ -1452,7 +1452,7 @@
 
     border:
             1px solid
-            #d5dfe8;
+            #E2E8F0;
 
     border-radius: 6px;
 
@@ -1476,11 +1476,11 @@
 
 
 .clear-section-button:hover {
-    border-color: #b9c8d5;
+    border-color: #CBD5E1;
 
     background: #f6f9fb;
 
-    color: #263f57;
+    color: #334155;
 }
 
 
@@ -1521,7 +1521,7 @@
 
     border:
             1px solid
-            #d5dfe8;
+            #E2E8F0;
 
     border-radius: 6px;
 
@@ -1549,7 +1549,7 @@
 .inline-clear-button:hover {
     background: #f0f4f7;
 
-    border-color: #b9c8d5;
+    border-color: #CBD5E1;
 
     color: #253e56;
 }
@@ -1696,7 +1696,7 @@
 
     padding: 30px 16px 20px;
 
-    background: #111827;
+    background: #0F172A;
 
     color: #ffffff;
 
@@ -1835,7 +1835,7 @@
 /* Active menu item */
 
 .module2-sidebar-item.active {
-    background: #2563eb;
+    background: #2563A6;
 
     color: #ffffff;
 
@@ -1920,7 +1920,7 @@
 
     border-radius: 50%;
 
-    background: #2563eb;
+    background: #2563A6;
 
     color: #ffffff;
 

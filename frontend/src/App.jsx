@@ -139,35 +139,43 @@ const styles = {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background: "#f4f6f8"
+        background: "linear-gradient(135deg, #D6EAFE 0%, #E6F2FF 45%, #D3E8FC 100%)"
     },
     form: {
-        width: "350px",
-        padding: "30px",
-        background: "white",
-        borderRadius: "10px",
-        boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
+        width: "400px",
+        padding: "40px 36px",
+        background: "rgba(255, 255, 255, 0.92)",
+        borderRadius: "24px",
+        boxShadow: "0 1px 2px rgba(18, 52, 110, 0.04), 0 24px 60px rgba(36, 92, 170, 0.18)",
+        border: "1px solid rgba(255, 255, 255, 0.9)",
+        color: "#0B1B3F"
     },
     input: {
         width: "100%",
-        padding: "12px",
+        padding: "13px 18px",
         marginBottom: "15px",
         boxSizing: "border-box",
-        border: "1px solid #ccc",
-        borderRadius: "5px"
+        border: "1px solid #DCE8F6",
+        borderRadius: "999px",
+        color: "#0B1B3F",
+        background: "#FFFFFF",
+        outline: "none",
+        boxShadow: "0 1px 2px rgba(18, 52, 110, 0.05), 0 4px 12px rgba(36, 92, 170, 0.07)"
     },
     button: {
         width: "100%",
-        padding: "12px",
+        padding: "13px",
         border: "none",
-        borderRadius: "5px",
+        borderRadius: "999px",
         cursor: "pointer",
-        background: "#222",
-        color: "white"
+        background: "#0B63F6",
+        fontWeight: 700,
+        color: "white",
+        boxShadow: "0 8px 18px rgba(11, 99, 246, 0.28)"
     },
     message: {
         marginTop: "15px",
-        color: "#b91c1c"
+        color: "#E5384D"
     }
 };
 

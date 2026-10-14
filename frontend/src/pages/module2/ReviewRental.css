@@ -4,7 +4,7 @@
 
 .review-rental-page {
     min-height: 100vh;
-    background: #f6f9fc;
+    background: #F8FAFC;
     padding: 34px 40px 60px;
     box-sizing: border-box;
 }
@@ -39,7 +39,7 @@
     margin: 0 auto 22px;
     padding: 26px 28px;
     background: #ffffff;
-    border: 1px solid #e3ebf3;
+    border: 1px solid #E2E8F0;
     border-radius: 14px;
     box-shadow: 0 5px 18px rgba(24, 63, 96, 0.055);
     box-sizing: border-box;
@@ -54,7 +54,7 @@
 
 .review-card-header h2 {
     margin: 0;
-    color: #173f64;
+    color: #1E4F82;
     font-size: 19px;
     font-weight: 700;
 }
@@ -76,8 +76,8 @@
 
 .review-info-item {
     padding: 16px 18px;
-    background: #f8fbfe;
-    border: 1px solid #e2eaf2;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
     border-radius: 9px;
 }
 
@@ -92,7 +92,7 @@
 }
 
 .review-info-item strong {
-    color: #173f64;
+    color: #1E4F82;
     font-size: 14px;
     font-weight: 600;
 }
@@ -106,7 +106,7 @@
     background: #eef5fb;
     border: 1px solid #d4e4f1;
     border-radius: 20px;
-    color: #3275ad !important;
+    color: #2563A6 !important;
     font-size: 11px !important;
 }
 
@@ -115,7 +115,7 @@
 
 .review-equipment-table-wrapper {
     overflow-x: auto;
-    border: 1px solid #e2eaf2;
+    border: 1px solid #E2E8F0;
     border-radius: 11px;
 }
 
@@ -127,7 +127,7 @@
 }
 
 .review-equipment-table thead {
-    background: #f7fafd;
+    background: #F8FAFC;
 }
 
 .review-equipment-table th {
@@ -138,14 +138,14 @@
     text-align: left;
     text-transform: uppercase;
     letter-spacing: 0.7px;
-    border-bottom: 1px solid #e2eaf2;
+    border-bottom: 1px solid #E2E8F0;
 }
 
 .review-equipment-table td {
     padding: 15px;
     color: #44576a;
     font-size: 13px;
-    border-bottom: 1px solid #edf2f6;
+    border-bottom: 1px solid #F1F5F9;
 }
 
 .review-equipment-table tbody tr:last-child td {
@@ -155,7 +155,7 @@
 .review-equipment-table td strong {
     display: block;
     margin-bottom: 3px;
-    color: #173f64;
+    color: #1E4F82;
     font-size: 14px;
 }
 
@@ -169,10 +169,10 @@
 
 .review-empty {
     padding: 25px;
-    border: 1px dashed #cfdce8;
+    border: 1px dashed #CBD5E1;
     border-radius: 9px;
-    background: #f9fbfd;
-    color: #7b8b9b;
+    background: #F8FAFC;
+    color: #64748B;
     text-align: center;
     font-size: 13px;
 }
@@ -182,7 +182,7 @@
 
 .review-summary {
     overflow: hidden;
-    border: 1px solid #e0e9f1;
+    border: 1px solid #E2E8F0;
     border-radius: 10px;
 }
 
@@ -193,7 +193,7 @@
     padding: 17px 20px;
     color: #587086;
     font-size: 14px;
-    border-bottom: 1px solid #edf2f6;
+    border-bottom: 1px solid #F1F5F9;
 }
 
 .summary-row:last-child {
@@ -201,7 +201,7 @@
 }
 
 .summary-row strong {
-    color: #173f64;
+    color: #1E4F82;
     font-size: 17px;
 }
 
@@ -243,26 +243,26 @@
 
 .review-back-button {
     background: #ffffff;
-    border: 1px solid #c8d5e2;
-    color: #4c647b;
+    border: 1px solid #CBD5E1;
+    color: #64748B;
 }
 
 .review-back-button:hover {
-    background: #f6f9fc;
+    background: #F8FAFC;
 }
 
 
 /* Confirm */
 
 .review-confirm-button {
-    background: #3275ad;
-    border: 1px solid #3275ad;
+    background: #2563A6;
+    border: 1px solid #2563A6;
     color: #ffffff;
 }
 
 .review-confirm-button:hover {
-    background: #285f91;
-    border-color: #285f91;
+    background: #1E4F82;
+    border-color: #1E4F82;
 }
 
 

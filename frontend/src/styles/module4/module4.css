@@ -1,19 +1,19 @@
 
 .m4-page {
-    --m4-bg: #f4f6f8;
+    --m4-bg: #F8FAFC;
     --m4-surface: #ffffff;
-    --m4-surface-2: #f8fafb;
-    --m4-border: #e3e8ec;
-    --m4-text: #17222b;
-    --m4-muted: #61707c;
-    --m4-primary: #0f766e;
-    --m4-primary-dark: #0b5e57;
-    --m4-primary-soft: #e6f4f2;
+    --m4-surface-2: #F8FAFC;
+    --m4-border: #E2E8F0;
+    --m4-text: #1E293B;
+    --m4-muted: #64748B;
+    --m4-primary: #2563A6;
+    --m4-primary-dark: #1E4F82;
+    --m4-primary-soft: #E8F1FA;
     --m4-green: #15803d;  --m4-green-soft: #e7f6ec;
-    --m4-blue: #1d4ed8;   --m4-blue-soft: #e8eefd;
+    --m4-blue: #1E4F82;   --m4-blue-soft: #E8F1FA;
     --m4-amber: #a16207;  --m4-amber-soft: #fdf5dc;
     --m4-red: #b91c1c;    --m4-red-soft: #fdeaea;
-    --m4-gray: #4b5563;   --m4-gray-soft: #eef0f2;
+    --m4-gray: #4b5563;   --m4-gray-soft: #F1F5F9;
     --m4-radius: 10px;
     --m4-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
 
@@ -307,7 +307,7 @@
     font-weight: 600;
     padding: 8px 14px;
     border-radius: 7px;
-    border: 1px solid #cfd8de;
+    border: 1px solid #CBD5E1;
     background: #fff;
     color: var(--m4-text);
     cursor: pointer;
@@ -361,7 +361,7 @@
     font: inherit;
     width: 100%;
     padding: 8px 10px;
-    border: 1px solid #cfd8de;
+    border: 1px solid #CBD5E1;
     border-radius: 7px;
     background: #fff;
     color: var(--m4-text);
@@ -767,7 +767,7 @@
     width: 100%;
     max-width: 520px;
     background: #fff;
-    color: #17222b;
+    color: #1E293B;
     border-radius: 12px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
     font-size: 14px;
@@ -780,7 +780,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid #e3e8ec;
+    border-bottom: 1px solid #E2E8F0;
 }
 
 .m4-modal-head h3 { margin: 0; font-size: 17px; }
@@ -791,7 +791,7 @@
     justify-content: flex-end;
     gap: 8px;
     padding: 14px 20px;
-    border-top: 1px solid #e3e8ec;
+    border-top: 1px solid #E2E8F0;
 }
 
 .m4-icon-btn {
@@ -800,7 +800,7 @@
     font-size: 22px;
     line-height: 1;
     cursor: pointer;
-    color: #61707c;
+    color: #64748B;
 }
 
 

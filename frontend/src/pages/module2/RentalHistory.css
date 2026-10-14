@@ -5,7 +5,7 @@
 .rental-history-page {
     min-height: 100vh;
 
-    background: #f6f9fc;
+    background: #F8FAFC;
 
     padding: 34px 40px 60px;
 
@@ -63,7 +63,7 @@
 
     background: #ffffff;
 
-    border: 1px solid #e3ebf3;
+    border: 1px solid #E2E8F0;
 
     border-radius: 14px;
 
@@ -92,7 +92,7 @@
 .history-card-header h2 {
     margin: 0;
 
-    color: #173f64;
+    color: #1E4F82;
 
     font-size: 18px;
 
@@ -103,7 +103,7 @@
 .history-card-header p {
     margin: 5px 0 0;
 
-    color: #7b8b9b;
+    color: #64748B;
 
     font-size: 13px;
 
@@ -129,7 +129,7 @@
 
     padding: 0 14px;
 
-    border: 1px solid #cfdce8;
+    border: 1px solid #CBD5E1;
 
     border-radius: 8px;
 
@@ -156,7 +156,7 @@
     border-color: #5d94c2;
 
     box-shadow:
-            0 0 0 3px rgba(50, 117, 173, 0.10);
+            0 0 0 3px rgba(37, 99, 166, 0.10);
 }
 
 
@@ -170,7 +170,7 @@
 
     overflow-x: auto;
 
-    border: 1px solid #e0e9f1;
+    border: 1px solid #E2E8F0;
 
     border-radius: 10px;
 }
@@ -192,9 +192,9 @@
 .rental-history-table th {
     padding: 13px 15px;
 
-    background: #f7fafd;
+    background: #F8FAFC;
 
-    color: #536b82;
+    color: #64748B;
 
     font-size: 11px;
 
@@ -206,7 +206,7 @@
 
     letter-spacing: 0.6px;
 
-    border-bottom: 1px solid #e2eaf2;
+    border-bottom: 1px solid #E2E8F0;
 
     white-space: nowrap;
 }
@@ -216,11 +216,11 @@
 .rental-history-table td {
     padding: 15px;
 
-    color: #52697e;
+    color: #64748B;
 
     font-size: 13px;
 
-    border-bottom: 1px solid #edf2f6;
+    border-bottom: 1px solid #F1F5F9;
 
     vertical-align: middle;
 }
@@ -234,13 +234,13 @@
 
 .history-renter-table tbody tr:hover,
 .rental-history-table tbody tr:hover {
-    background: #fbfdff;
+    background: #F8FAFC;
 }
 
 
 .history-renter-table td strong,
 .rental-history-table td strong {
-    color: #173f64;
+    color: #1E4F82;
 
     font-size: 14px;
 
@@ -257,11 +257,11 @@
 
     padding: 0 14px;
 
-    border: 1px solid #3275ad;
+    border: 1px solid #2563A6;
 
     border-radius: 7px;
 
-    background: #3275ad;
+    background: #2563A6;
 
     color: #ffffff;
 
@@ -278,9 +278,9 @@
 
 
 .history-select-button:hover {
-    background: #285f91;
+    background: #1E4F82;
 
-    border-color: #285f91;
+    border-color: #1E4F82;
 }
 
 
@@ -300,13 +300,13 @@
 
     flex-shrink: 0;
 
-    border: 1px solid #c8d5e2;
+    border: 1px solid #CBD5E1;
 
     border-radius: 8px;
 
     background: #ffffff;
 
-    color: #4c647b;
+    color: #64748B;
 
     font-size: 12px;
 
@@ -321,7 +321,7 @@
 
 
 .history-clear-button:hover {
-    background: #f6f9fc;
+    background: #F8FAFC;
 
     border-color: #b8c8d8;
 }
@@ -348,9 +348,9 @@
 
     padding: 15px 16px;
 
-    background: #f8fbfe;
+    background: #F8FAFC;
 
-    border: 1px solid #e1eaf2;
+    border: 1px solid #E2E8F0;
 
     border-radius: 9px;
 }
@@ -361,7 +361,7 @@
 
     margin-bottom: 6px;
 
-    color: #8191a1;
+    color: #64748B;
 
     font-size: 11px;
 
@@ -378,7 +378,7 @@
 
     overflow: hidden;
 
-    color: #173f64;
+    color: #1E4F82;
 
     font-size: 14px;
 
@@ -467,7 +467,7 @@
    ========================================================= */
 
 .rental-history-table td:last-child {
-    color: #536b82;
+    color: #64748B;
 
     font-weight: 600;
 }
@@ -481,13 +481,13 @@
 .history-message {
     padding: 25px;
 
-    border: 1px dashed #cfdce8;
+    border: 1px dashed #CBD5E1;
 
     border-radius: 9px;
 
-    background: #f9fbfd;
+    background: #F8FAFC;
 
-    color: #7b8b9b;
+    color: #64748B;
 
     text-align: center;
 
@@ -575,13 +575,13 @@
 
     padding: 0 14px;
 
-    border: 1px solid #3275ad;
+    border: 1px solid #2563A6;
 
     border-radius: 7px;
 
     background: #ffffff;
 
-    color: #3275ad;
+    color: #2563A6;
 
     font-size: 12px;
 
@@ -634,7 +634,7 @@
 
     background: #ffffff;
 
-    border: 1px solid #e0e9f1;
+    border: 1px solid #E2E8F0;
 
     border-radius: 14px;
 
@@ -663,7 +663,7 @@
 .rental-details-header h2 {
     margin: 0;
 
-    color: #173f64;
+    color: #1E4F82;
 
     font-size: 20px;
 
@@ -674,7 +674,7 @@
 .rental-details-header p {
     margin: 5px 0 0;
 
-    color: #7b8b9b;
+    color: #64748B;
 
     font-size: 13px;
 }
@@ -691,7 +691,7 @@
 
     background: #f3f6f9;
 
-    color: #52697e;
+    color: #64748B;
 
     font-size: 22px;
 
@@ -702,7 +702,7 @@
 
 
 .rental-details-close:hover {
-    background: #e8eef4;
+    background: #E2E8F0;
 }
 
 
@@ -713,14 +713,14 @@
 .rental-details-section {
     padding: 22px 25px;
 
-    border-bottom: 1px solid #edf2f6;
+    border-bottom: 1px solid #F1F5F9;
 }
 
 
 .rental-details-section h3 {
     margin: 0 0 15px;
 
-    color: #173f64;
+    color: #1E4F82;
 
     font-size: 15px;
 
@@ -745,9 +745,9 @@
 .rental-details-grid > div {
     padding: 14px;
 
-    background: #f8fbfe;
+    background: #F8FAFC;
 
-    border: 1px solid #e1eaf2;
+    border: 1px solid #E2E8F0;
 
     border-radius: 8px;
 }
@@ -758,7 +758,7 @@
 
     margin-bottom: 6px;
 
-    color: #8191a1;
+    color: #64748B;
 
     font-size: 10px;
 
@@ -771,7 +771,7 @@
 
 
 .rental-details-grid strong {
-    color: #173f64;
+    color: #1E4F82;
 
     font-size: 13px;
 }
@@ -784,7 +784,7 @@
 .rental-details-table-wrapper {
     overflow-x: auto;
 
-    border: 1px solid #e0e9f1;
+    border: 1px solid #E2E8F0;
 
     border-radius: 9px;
 }
@@ -802,9 +802,9 @@
 .rental-details-table th {
     padding: 12px 14px;
 
-    background: #f7fafd;
+    background: #F8FAFC;
 
-    color: #536b82;
+    color: #64748B;
 
     font-size: 10px;
 
@@ -816,18 +816,18 @@
 
     letter-spacing: 0.5px;
 
-    border-bottom: 1px solid #e2eaf2;
+    border-bottom: 1px solid #E2E8F0;
 }
 
 
 .rental-details-table td {
     padding: 13px 14px;
 
-    color: #52697e;
+    color: #64748B;
 
     font-size: 12px;
 
-    border-bottom: 1px solid #edf2f6;
+    border-bottom: 1px solid #F1F5F9;
 }
 
 
@@ -845,13 +845,13 @@
 
     padding: 14px;
 
-    background: #f8fbfe;
+    background: #F8FAFC;
 
-    border: 1px solid #e1eaf2;
+    border: 1px solid #E2E8F0;
 
     border-radius: 8px;
 
-    color: #52697e;
+    color: #64748B;
 
     font-size: 13px;
 
@@ -877,13 +877,13 @@
 
     padding: 0 18px;
 
-    border: 1px solid #c8d5e2;
+    border: 1px solid #CBD5E1;
 
     border-radius: 8px;
 
     background: #ffffff;
 
-    color: #4c647b;
+    color: #64748B;
 
     font-size: 12px;
 
@@ -894,7 +894,7 @@
 
 
 .rental-details-footer button:hover {
-    background: #f6f9fc;
+    background: #F8FAFC;
 }
 
 
@@ -944,7 +944,7 @@
 
 
 .rental-details-payment-summary {
-    border: 1px solid #dce6f2;
+    border: 1px solid #E2E8F0;
     border-radius: 10px;
     overflow: hidden;
 }
@@ -959,7 +959,7 @@
 }
 
 .rental-payment-row + .rental-payment-row {
-    border-top: 1px solid #dce6f2;
+    border-top: 1px solid #E2E8F0;
     background-color: #eef5fc;
 }
 

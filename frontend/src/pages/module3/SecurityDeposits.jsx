@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getDeposits } from '../../services/module3/depositApi';
 import ReceiveDepositModal from '../../components/module3/ReceiveDepositModal';
 import RefundDepositModal from '../../components/module3/RefundDepositModal';
+import BillingTabs from '../../components/module3/BillingTabs';
 import '../../styles/module3/PaymentManagement.css';
 
 export default function SecurityDeposits() {
@@ -36,20 +37,28 @@ export default function SecurityDeposits() {
 
     return (
         <div className="payment-container">
-            <div className="header-bar">
+            <div className="rf-page-head">
+                <h1>Billing &amp; Payments</h1>
+                <BillingTabs />
+            </div>
+
+            <div className="rf-section-head">
                 <div>
                     <h2>Security Deposits</h2>
-                    <p style={{ margin: '4px 0 0', color: 'var(--rf-muted)', fontSize: '13px' }}>
+                    <p>
                         Deposits appear here automatically when a rental is created. Click Receive when the customer pays it.
                     </p>
                 </div>
 
-                <button type="button" className="btn-refresh" onClick={fetchList}>↻ Refresh</button>
+                <div className="rf-toolbar">
+                    <button type="button" className="btn-refresh" onClick={fetchList}>↻ Refresh</button>
+                </div>
             </div>
 
             {error && <div className="error-banner">{error}</div>}
 
             {!loading && (
+                <div className="rf-table-card"><div className="rf-table-scroll">
                 <table className="invoice-table">
                     <thead>
                     <tr>
@@ -72,7 +81,7 @@ export default function SecurityDeposits() {
                             <td>{dep.rentalId}</td>
                             <td>{money(dep.calculatedDeposit)}</td>
                             <td>{money(dep.depositAmountReceived)}</td>
-                            <td style={{ color: dep.amountDeducted > 0 ? '#d9534f' : 'inherit' }}>{money(dep.amountDeducted)}</td>
+                            <td style={{ color: dep.amountDeducted > 0 ? 'var(--rf-danger)' : 'inherit', fontWeight: dep.amountDeducted > 0 ? 700 : undefined }}>{money(dep.amountDeducted)}</td>
                             <td>{money(dep.amountRefunded)}</td>
                             <td style={{ whiteSpace: 'nowrap' }}>{formatDate(dep.receivedDate)}</td>
                             <td style={{ whiteSpace: 'nowrap' }}>{formatDate(dep.refundDate)}</td>
@@ -82,13 +91,14 @@ export default function SecurityDeposits() {
                                     <button className="btn-pay" onClick={() => setReceiveTarget(dep)}>Receive</button>
                                 )}
                                 {dep.depositStatus === 'HELD' && (
-                                    <button className="btn-pay" style={{ backgroundColor: '#17a2b8' }} onClick={() => setRefundTarget(dep)}>Refund</button>
+                                    <button className="btn-pay" onClick={() => setRefundTarget(dep)}>Refund</button>
                                 )}
                             </td>
                         </tr>
                     ))}
                     </tbody>
                 </table>
+                </div></div>
             )}
 
             {receiveTarget && (

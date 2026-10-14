@@ -2,7 +2,7 @@
 
 .users-page {
     width: 100%;
-    color: #172033;
+    color: #1E293B;
 }
 
 .users-header {
@@ -16,19 +16,19 @@
 .users-header h2 {
     margin: 0;
     font-size: 28px;
-    color: #172033;
+    color: #1E293B;
 }
 
 .users-header p,
 .users-toolbar p {
     margin: 6px 0 0;
-    color: #64748b;
+    color: #64748B;
     font-size: 14px;
 }
 
 .users-primary-button {
     border: none;
-    background: #2563eb;
+    background: #2563A6;
     color: #fff;
     padding: 11px 18px;
     border-radius: 8px;
@@ -39,7 +39,7 @@
 }
 
 .users-primary-button:hover:not(:disabled) {
-    background: #1d4ed8;
+    background: #1E4F82;
 }
 
 .users-primary-button:active:not(:disabled) {
@@ -93,7 +93,7 @@
 .users-form-header h3 {
     margin: 0;
     font-size: 20px;
-    color: #172033;
+    color: #1E293B;
 }
 
 .users-close-button {
@@ -143,7 +143,7 @@
     padding: 10px 12px;
     font-family: inherit;
     font-size: 14px;
-    color: #172033;
+    color: #1E293B;
     background: #fff;
     outline: none;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -151,7 +151,7 @@
 
 .users-form-group input:focus,
 .users-form-group select:focus {
-    border-color: #2563eb;
+    border-color: #2563A6;
     box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
 }
 
@@ -192,12 +192,12 @@
 
 .users-toolbar h3 {
     margin: 0;
-    color: #172033;
+    color: #1E293B;
     font-size: 20px;
 }
 
 .users-count {
-    color: #64748b;
+    color: #64748B;
     font-size: 14px;
     font-weight: 600;
     white-space: nowrap;
@@ -245,11 +245,11 @@
 }
 
 .users-table tbody tr:hover {
-    background: #fbfdff;
+    background: #F8FAFC;
 }
 
 .users-table td strong {
-    color: #172033;
+    color: #1E293B;
     font-weight: 600;
 }
 
@@ -274,8 +274,8 @@
 }
 
 .users-edit-button {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: #E8F1FA;
+    color: #1E4F82;
 }
 
 .users-edit-button:hover {
@@ -322,7 +322,7 @@
 .users-empty-state {
     text-align: center;
     padding: 34px 18px !important;
-    color: #64748b !important;
+    color: #64748B !important;
 }
 
 @media (max-width: 768px) {

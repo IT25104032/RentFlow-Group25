@@ -391,17 +391,7 @@ function AppLayout({ user, onLogout }) {
                     <button
                         type="button"
                         onClick={onLogout}
-                        style={{
-                            width: "100%",
-                            padding: "10px 12px",
-                            background: "#28364d",
-                            color: "#ffffff",
-                            border: "1px solid #45546b",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                            fontSize: "14px",
-                            textAlign: "center"
-                        }}
+                        className="rf-logout-button"
                     >
                         ↪ Logout
                     </button>

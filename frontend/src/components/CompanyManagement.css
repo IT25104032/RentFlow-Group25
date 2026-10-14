@@ -9,12 +9,12 @@
 .company-page .section-header h2 {
     margin: 0;
     font-size: 28px;
-    color: #172033;
+    color: #1E293B;
 }
 
 .company-page .section-header p {
     margin: 6px 0 0;
-    color: #64748b;
+    color: #64748B;
     font-size: 16px;
 }
 
@@ -32,12 +32,12 @@
 }
 
 .company-page .primary-button {
-    background: #2563eb;
+    background: #2563A6;
     color: white;
 }
 
 .company-page .primary-button:hover {
-    background: #1d4ed8;
+    background: #1E4F82;
 }
 
 .company-page .primary-button:disabled {
@@ -55,12 +55,12 @@
 }
 
 .company-page .edit-button {
-    background: #e8f0ff;
-    color: #2563eb;
+    background: #E8F1FA;
+    color: #2563A6;
 }
 
 .company-page .edit-button:hover {
-    background: #dbe7ff;
+    background: #D9E8F6;
 }
 
 .company-page .delete-button {
@@ -102,7 +102,7 @@
 .companies-table-card h3 {
     margin: 0 0 25px;
     font-size: 22px;
-    color: #172033;
+    color: #1E293B;
 }
 
 .admin-section-title {
@@ -111,12 +111,12 @@
     border-top: 1px solid #e2e8f0;
     font-size: 20px;
     font-weight: 600;
-    color: #172033;
+    color: #1E293B;
 }
 
 .admin-login-note {
     margin: 10px 0 0;
-    color: #64748b;
+    color: #64748B;
     font-size: 13px;
     line-height: 1.5;
 }
@@ -144,7 +144,7 @@
 .form-group label {
     margin-bottom: 8px;
     font-weight: 600;
-    color: #172033;
+    color: #1E293B;
 }
 
 .form-group label span {
@@ -160,7 +160,7 @@
     border-radius: 8px;
     padding: 12px 14px;
     font-size: 15px;
-    color: #172033;
+    color: #1E293B;
     background: white;
     outline: none;
     font-family: inherit;
@@ -171,8 +171,8 @@
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: #2563A6;
+    box-shadow: 0 0 0 3px rgba(37, 99, 166, 0.12);
 }
 
 .form-group textarea {
@@ -182,7 +182,7 @@
 
 .form-group small {
     margin-top: 7px;
-    color: #64748b;
+    color: #64748B;
     font-size: 13px;
 }
 
@@ -204,7 +204,7 @@
 }
 
 .table-header span {
-    color: #64748b;
+    color: #64748B;
     font-size: 14px;
 }
 
@@ -254,7 +254,7 @@
 .empty-row {
     text-align: center !important;
     padding: 30px !important;
-    color: #64748b !important;
+    color: #64748B !important;
 }
 
 @media (max-width: 900px) {

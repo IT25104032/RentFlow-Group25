@@ -33,7 +33,7 @@
     padding:
             30px 16px 20px;
 
-    background: #111827;
+    background: #0F172A;
 
     color: #ffffff;
 
@@ -160,7 +160,7 @@
 
 
 .module2-sidebar-item.active {
-    background: #2563eb;
+    background: #2563A6;
 
     color: #ffffff;
 
@@ -224,7 +224,7 @@
 
     border-radius: 50%;
 
-    background: #2563eb;
+    background: #2563A6;
 
     color: #ffffff;
 
@@ -371,7 +371,7 @@
     justify-content: flex-end;
     padding: 0 30px;
     background: #ffffff;
-    border-bottom: 1px solid #e8ebf0;
+    border-bottom: 1px solid #E2E8F0;
     position: relative;
     z-index: 100;
 }
@@ -401,7 +401,7 @@
     border: none;
     border-radius: 50%;
 
-    background: #f5f7fa;
+    background: #F1F5F9;
 
     display: flex;
     align-items: center;
@@ -482,7 +482,7 @@
 
     background: #ffffff;
 
-    border: 1px solid #e3e7ed;
+    border: 1px solid #E2E8F0;
 
     border-radius: 12px;
 
@@ -506,7 +506,7 @@
 
     padding: 18px 20px;
 
-    border-bottom: 1px solid #edf0f4;
+    border-bottom: 1px solid #E2E8F0;
 }
 
 .module2-notification-header h3 {
@@ -515,7 +515,7 @@
     font-size: 16px;
     font-weight: 700;
 
-    color: #1f2937;
+    color: #1E293B;
 }
 
 .module2-notification-header span {
@@ -525,7 +525,7 @@
 
     font-size: 12px;
 
-    color: #8a94a6;
+    color: #64748B;
 }
 
 .module2-notification-total {
@@ -536,8 +536,8 @@
 
     border-radius: 14px;
 
-    background: #eef3ff;
-    color: #315efb !important;
+    background: #E8F1FA;
+    color: #2563A6 !important;
 
     display: flex !important;
     align-items: center;
@@ -697,19 +697,19 @@
     font-size: 13px;
     font-weight: 700;
 
-    color: #1f2937;
+    color: #1E293B;
 }
 
 .module2-notification-item-content span {
     font-size: 11px;
 
-    color: #667085;
+    color: #64748B;
 }
 
 .module2-notification-item-content small {
     font-size: 11px;
 
-    color: #8a94a6;
+    color: #64748B;
 }
 
 
@@ -737,7 +737,7 @@
 
     padding: 25px;
 
-    color: #8a94a6;
+    color: #64748B;
 
     font-size: 12px;
 }
