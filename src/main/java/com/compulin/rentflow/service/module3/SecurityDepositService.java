@@ -104,9 +104,9 @@ public class SecurityDepositService {
         return securityDepositRepository.findByDepositStatus(status);
     }
 
-    /**
-     * Retrieve deposits processed by a specific staff member
-     */
+
+     // Retrieve deposits processed by a specific staff member
+
     public List<SecurityDeposit> getDepositsByStaff(Integer staffId) {
         return securityDepositRepository.findByReceivedBy(staffId);
     }
@@ -127,9 +127,9 @@ public class SecurityDepositService {
         return securityDepositRepository.save(deposit);
     }
 
-    /**
-     * Record deposit collection from customer (transitions status to HELD)
-     */
+
+     // Record deposit collection from customer (transitions status to HELD)
+
     @Transactional
     public SecurityDeposit receiveDeposit(Integer depositId, BigDecimal amountReceived, Integer receivedByStaffId) {
         SecurityDeposit deposit = getDepositById(depositId);
