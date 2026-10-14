@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @Service
 public class SecurityDepositService {
 
@@ -25,57 +28,78 @@ public class SecurityDepositService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-
-     // Retrieve all security deposit records.
-
+    /**
+     * Retrieve all security deposit records.
+     * Runs syncFromRentals() first so new rentals from Module 2 show up automatically.
+     */
     @Transactional
     public List<SecurityDeposit> getAllDeposits() {
         syncFromRentals();
         return securityDepositRepository.findAll();
     }
 
+    /**
+     * Restore the officer's agreed deposit for PENDING rentals affected by a
+     * previous sync. Existing collected/refunded records are never modified.
+     * Old rentals without an agreed-deposit marker retain their existing amount.
+     */
+    private static final Pattern FINAL_DEPOSIT_PATTERN =
+            Pattern.compile("\\[FINAL_DEPOSIT=([0-9]+(?:\\.[0-9]+)?)\\]");
+
     @Transactional
     public void syncFromRentals() {
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT rental_id, SUM(line_deposit) AS total_deposit " +
-                        "FROM rental_item GROUP BY rental_id HAVING SUM(line_deposit) > 0");
+                "SELECT r.rental_id, r.notes, COALESCE(SUM(ri.line_deposit), 0) AS total_deposit " +
+                        "FROM rental r LEFT JOIN rental_item ri ON ri.rental_id = r.rental_id " +
+                        "GROUP BY r.rental_id, r.notes");
 
         for (Map<String, Object> row : rows) {
             Integer rentalId = ((Number) row.get("rental_id")).intValue();
-            BigDecimal total = new BigDecimal(row.get("total_deposit").toString());
+            BigDecimal lineTotal = new BigDecimal(row.get("total_deposit").toString());
+            String notes = row.get("notes") == null ? "" : row.get("notes").toString();
+            Matcher matcher = FINAL_DEPOSIT_PATTERN.matcher(notes);
+            BigDecimal agreedDeposit = null;
+            while (matcher.find()) {
+                agreedDeposit = new BigDecimal(matcher.group(1));
+            }
 
             Optional<SecurityDeposit> existing = securityDepositRepository.findByRentalId(rentalId);
             if (existing.isEmpty()) {
-                initializeDeposit(rentalId, total);
-            } else if (existing.get().getDepositStatus() == SecurityDeposit.DepositStatus.PENDING
-                    && existing.get().getCalculatedDeposit().compareTo(total) != 0) {
-                existing.get().setCalculatedDeposit(total);
-                securityDepositRepository.save(existing.get());
+                BigDecimal amount = agreedDeposit != null ? agreedDeposit : lineTotal;
+                if (agreedDeposit != null || amount.compareTo(BigDecimal.ZERO) > 0) {
+                    initializeDeposit(rentalId, amount);
+                }
+            } else if (agreedDeposit != null
+                    && existing.get().getDepositStatus() == SecurityDeposit.DepositStatus.PENDING
+                    && existing.get().getCalculatedDeposit().compareTo(agreedDeposit) != 0) {
+                SecurityDeposit deposit = existing.get();
+                deposit.setCalculatedDeposit(agreedDeposit);
+                securityDepositRepository.save(deposit);
             }
         }
     }
 
-
-     // Retrieve deposit record by primary key
-
+    /**
+     * Retrieve deposit record by primary key
+     */
     public SecurityDeposit getDepositById(Integer depositId) {
         return securityDepositRepository.findById(depositId)
                 .orElseThrow(() -> new RuntimeException("Security deposit not found with ID: " + depositId));
     }
 
-
-     // Retrieve deposit record linked to a specific rental ID
-
-     @Transactional
+    /**
+     * Retrieve deposit record linked to a specific rental ID
+     */
+    @Transactional
     public SecurityDeposit getDepositByRentalId(Integer rentalId) {
         syncFromRentals();
         return securityDepositRepository.findByRentalId(rentalId)
                 .orElseThrow(() -> new RuntimeException("No security deposit found for Rental ID: " + rentalId));
     }
 
-
-     // Retrieve deposits filtered by status
-
+    /**
+     * Retrieve deposits filtered by status (PENDING, HELD, REFUNDED, etc.)
+     */
     public List<SecurityDeposit> getDepositsByStatus(SecurityDeposit.DepositStatus status) {
         return securityDepositRepository.findByDepositStatus(status);
     }
@@ -87,27 +111,11 @@ public class SecurityDepositService {
         return securityDepositRepository.findByReceivedBy(staffId);
     }
 
-
-     // Creates the PENDING row for a rental
-
+    /**
+     * Creates the PENDING row for a rental (called by syncFromRentals, not by the user)
+     */
     @Transactional
     public SecurityDeposit initializeDeposit(Integer rentalId, BigDecimal calculatedDeposit) {
-        if (rentalId == null || calculatedDeposit == null
-                || calculatedDeposit.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Valid rental ID and non-negative deposit amount are required.");
-        }
-
-        // Do not create a second deposit or overwrite a deposit that has been paid.
-        SecurityDeposit existing = securityDepositRepository.findByRentalId(rentalId).orElse(null);
-        if (existing != null) {
-            if (existing.getCalculatedDeposit().compareTo(calculatedDeposit) != 0) {
-                throw new IllegalStateException(
-                        "Rental already has a security deposit with a different amount: " + rentalId
-                );
-            }
-            return existing;
-        }
-
         SecurityDeposit deposit = new SecurityDeposit();
         deposit.setRentalId(rentalId);
         deposit.setCalculatedDeposit(calculatedDeposit != null ? calculatedDeposit : BigDecimal.ZERO);
@@ -138,10 +146,10 @@ public class SecurityDepositService {
         return securityDepositRepository.save(deposit);
     }
 
-
-     // Process deposit refund upon equipment return and inspection
-     // amountDeducted is any extra deduction now; amounts already deducted are kept
-
+    /**
+     * Process deposit return/refund upon equipment return and inspection.
+     * amountDeducted is any extra deduction now; amounts already deducted (e.g. used on an invoice) are kept.
+     */
     @Transactional
     public SecurityDeposit processDepositReturn(Integer depositId, BigDecimal amountDeducted) {
         SecurityDeposit deposit = getDepositById(depositId);

@@ -8,9 +8,9 @@ import {
 
 import "./Module2Layout.css";
 
-const COMPANY_ID = 1000;
 
 function AppLayout({ user, onLogout }) {
+    const COMPANY_ID = user?.companyId ?? null;
     const navigate = useNavigate();
     const location = useLocation();
 

@@ -18,7 +18,18 @@ import {
 import "./Module2Layout.css";
 
 
+function getLoggedInUser() {
+    try {
+        return JSON.parse(sessionStorage.getItem("rentflowUser") || "null");
+    } catch {
+        return null;
+    }
+}
+
 function Module2Layout() {
+    const loggedInUser = getLoggedInUser();
+    const COMPANY_ID = loggedInUser?.companyId ?? null;
+
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -48,7 +59,6 @@ function Module2Layout() {
     // NOTIFICATION STATE
     // =====================================================
 
-    const COMPANY_ID = 1000;
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [overdueRentals, setOverdueRentals] = useState([]);
     const [dueSoonRentals, setDueSoonRentals] = useState([]);

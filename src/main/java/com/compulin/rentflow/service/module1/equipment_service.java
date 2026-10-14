@@ -120,7 +120,9 @@ public class equipment_service {
                 newEquipment.getTotal_quantity()
         );
 
-        newEquipment.setEqu_status("AVAILABLE");
+        newEquipment.setEqu_status(
+                normalizeStatus(newEquipment.getEqu_status())
+        );
 
         newEquipment.setCreated_at(
                 LocalDateTime.now()

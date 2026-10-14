@@ -14,6 +14,7 @@ import com.compulin.rentflow.repository.module3.RentalBillingRepository;
 import com.compulin.rentflow.repository.module3.RentalBillingRepository.RentalItemLine;
 import com.compulin.rentflow.repository.module3.RentalBillingRepository.RentalPeriod;
 import com.compulin.rentflow.repository.module3.SecurityDepositRepository;
+import com.compulin.rentflow.entity.module2.RentalExtension;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -292,6 +293,115 @@ public class InvoiceService {
     // Retrieves all invoices
     public List<Invoice> getAllInvoices() {
         return invoiceRepository.findAll();
+    }
+
+    @Transactional
+    public void recordRentalExtension(RentalExtension extension) {
+
+        Integer rentalId = extension.getRentalId();
+
+        // An invoice may not exist yet.
+        Invoice invoice = invoiceRepository.findByRentalId(rentalId)
+                .orElse(null);
+
+        if (invoice != null
+                && invoice.getInvoiceStatus() == Invoice.InvoiceStatus.CANCELLED) {
+            throw new InvoiceGenerationException(
+                    "Cannot update a cancelled invoice for rental #" + rentalId
+            );
+        }
+
+        // Record the fixed extension fee separately.
+        BigDecimal fee = orZero(extension.getExtensionCharge());
+
+        if (fee.compareTo(BigDecimal.ZERO) > 0) {
+
+            String description =
+                    "Fixed rental extension fee #" + extension.getExtensionId();
+
+            boolean alreadyRecorded = chargeRepository.findByRentalId(rentalId)
+                    .stream()
+                    .anyMatch(charge ->
+                            charge.getChargeType() == Charge.ChargeType.EXTENSION
+                                    && description.equals(charge.getChargeDescription())
+                    );
+
+            if (!alreadyRecorded) {
+                Charge charge = new Charge();
+
+                charge.setRentalId(rentalId);
+                charge.setRentalItemId(null);
+                charge.setInvoice(invoice);
+                charge.setChargeType(Charge.ChargeType.EXTENSION);
+                charge.setChargeDescription(description);
+                charge.setAmount(fee);
+                charge.setChargeDate(LocalDateTime.now());
+                charge.setCreatedBy(extension.getApprovedBy());
+
+                chargeRepository.save(charge);
+            }
+        }
+
+        // No invoice yet: its normal generation will pick up the unbilled fee.
+        if (invoice == null) {
+            return;
+        }
+
+        // Update existing RENTAL charge amounts for the new rental period.
+        RentalPeriod rental = rentalBillingRepository.findRentalPeriod(rentalId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Rental not found with ID: " + rentalId
+                ));
+
+        List<RentalItemLine> items =
+                rentalBillingRepository.findRentalItems(rentalId);
+
+        if (items.isEmpty()) {
+            throw new InvoiceGenerationException(
+                    "Rental #" + rentalId + " has no rental items."
+            );
+        }
+
+        long days = chargeCalculator.rentalDays(
+                rental.startDate(),
+                rental.dueDate()
+        );
+
+        List<InvoicePreview.RentalLine> newLines =
+                calculateRentalLines(items, days);
+
+        List<Charge> existingCharges =
+                chargeRepository.findByInvoice_InvoiceId(invoice.getInvoiceId());
+
+        for (InvoicePreview.RentalLine line : newLines) {
+
+            Charge rentalCharge = existingCharges.stream()
+                    .filter(charge ->
+                            charge.getChargeType() == Charge.ChargeType.RENTAL
+                                    && line.rentalItemId().equals(
+                                    charge.getRentalItemId()
+                            )
+                    )
+                    .findFirst()
+                    .orElseGet(() -> {
+                        Charge newCharge = new Charge();
+                        newCharge.setRentalId(rentalId);
+                        newCharge.setRentalItemId(line.rentalItemId());
+                        newCharge.setInvoice(invoice);
+                        newCharge.setChargeType(Charge.ChargeType.RENTAL);
+                        newCharge.setCreatedBy(rental.createdBy());
+                        return newCharge;
+                    });
+
+            rentalCharge.setChargeDescription(describe(line));
+            rentalCharge.setAmount(line.amount());
+            rentalCharge.setChargeDate(LocalDateTime.now());
+
+            chargeRepository.save(rentalCharge);
+        }
+
+        // Existing payments and invoice payment due date are preserved.
+        recalculateInvoiceTotals(invoice.getInvoiceId());
     }
 
     // Recalculates subtotal, additional charges, total amount, and balance due when fees are updated

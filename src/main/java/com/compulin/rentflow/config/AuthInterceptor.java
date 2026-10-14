@@ -66,6 +66,16 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         if (path.startsWith("/api/module1/users")) {
 
+            // Allow authenticated roles to view user information.
+            if (HttpMethod.GET.matches(request.getMethod())) {
+                if ("COMPANY_ADMIN".equals(role)
+                        || "RENTAL_OFFICER".equals(role)
+                        || "COMPULIN_ADMIN".equals(role)) {
+                    return true;
+                }
+            }
+
+            // Only Company Admin can create, edit or deactivate users.
             if ("COMPANY_ADMIN".equals(role)) {
                 return true;
             }

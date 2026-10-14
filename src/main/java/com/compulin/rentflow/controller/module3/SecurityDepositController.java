@@ -32,7 +32,8 @@ public class SecurityDepositController {
         return ResponseEntity.ok(securityDepositService.getDepositByRentalId(rentalId));
     }
 
-    // Records the deposit being collected from the customer
+    // Records the deposit being collected from the customer (PENDING -> HELD)
+    // Body: { "amountReceived": 6000 }
     @PutMapping("/{id}/receive")
     public ResponseEntity<SecurityDeposit> receiveDeposit(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
         BigDecimal amountReceived = new BigDecimal(body.get("amountReceived").toString());

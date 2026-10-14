@@ -6,10 +6,18 @@ import { getCustomerRentalHistory } from "../../services/module2/rentalService";
 import "./RentalHistory.css";
 
 
-const COMPANY_ID = 1000;
-
+function getLoggedInUser() {
+    try {
+        return JSON.parse(sessionStorage.getItem("rentflowUser") || "null");
+    } catch {
+        return null;
+    }
+}
 
 function RentalHistory() {
+    const loggedInUser = getLoggedInUser();
+    const COMPANY_ID = loggedInUser?.companyId ?? null;
+
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -26,7 +34,65 @@ function RentalHistory() {
     const [error, setError] = useState("");
     const [historyError, setHistoryError] = useState("");
     const [selectedRental, setSelectedRental] = useState(null);
+    const [financialSummary, setFinancialSummary] = useState(null);
+    const [financialLoading, setFinancialLoading] = useState(false);
+    const [financialError, setFinancialError] = useState("");
 
+    useEffect(() => {
+        const rentalId = selectedRental?.rental?.rentalId;
+
+        if (!rentalId) {
+            setFinancialSummary(null);
+            setFinancialError("");
+            return;
+        }
+
+        let cancelled = false;
+
+        async function loadFinancialSummary() {
+            setFinancialLoading(true);
+            setFinancialSummary(null);
+            setFinancialError("");
+
+            try {
+                const response = await fetch(
+                    `http://localhost:8081/api/settlements/${rentalId}`,
+                    {
+                        method: "GET",
+                        credentials: "include"
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Unable to retrieve financial summary (${response.status}).`
+                    );
+                }
+
+                const data = await response.json();
+
+                if (!cancelled) {
+                    setFinancialSummary(data);
+                }
+
+            } catch (error) {
+                if (!cancelled) {
+                    setFinancialError(error.message);
+                }
+            } finally {
+                if (!cancelled) {
+                    setFinancialLoading(false);
+                }
+            }
+        }
+
+        loadFinancialSummary();
+
+        return () => {
+            cancelled = true;
+        };
+
+    }, [selectedRental?.rental?.rentalId]);
 
     // Load all registered renters.
     useEffect(() => {
@@ -877,8 +943,6 @@ function RentalHistory() {
                                         <th>Quantity</th>
                                         <th>Rate / Unit</th>
                                         <th>Rate Period</th>
-                                        <th>Deposit / Unit</th>
-                                        <th>Line Deposit</th>
                                     </tr>
                                     </thead>
 
@@ -915,24 +979,6 @@ function RentalHistory() {
 
                                             <td>
                                                 {item.ratePeriod}
-                                            </td>
-
-                                            <td>
-                                                Rs.{" "}
-                                                {
-                                                    Number(
-                                                        item.depositPerUnit
-                                                    ).toLocaleString()
-                                                }
-                                            </td>
-
-                                            <td>
-                                                Rs.{" "}
-                                                {
-                                                    Number(
-                                                        item.lineDeposit
-                                                    ).toLocaleString()
-                                                }
                                             </td>
 
                                         </tr>
@@ -989,6 +1035,92 @@ function RentalHistory() {
                                         {getTotalSecurityDeposit(selectedRental).toLocaleString()}
                                     </strong>
                                 </div>
+
+                                {financialLoading && (
+                                    <p>Loading updated payment summary...</p>
+                                )}
+
+                                {financialError && (
+                                    <p className="error-message">
+                                        {financialError}
+                                    </p>
+                                )}
+
+                                {financialSummary && (
+                                    <>
+                                        <div className="rental-payment-row">
+                                            <span>Late Charges</span>
+                                            <strong>
+                                                Rs. {Number(
+                                                financialSummary.lateCharges ?? 0
+                                            ).toLocaleString()}
+                                            </strong>
+                                        </div>
+
+                                        <div className="rental-payment-row">
+                                            <span>Damage Charges</span>
+                                            <strong>
+                                                Rs. {Number(
+                                                financialSummary.damageCharges ?? 0
+                                            ).toLocaleString()}
+                                            </strong>
+                                        </div>
+
+                                        <div className="rental-payment-row">
+                                            <span>Lost Item Charges</span>
+                                            <strong>
+                                                Rs. {Number(
+                                                financialSummary.lostItemCharges ?? 0
+                                            ).toLocaleString()}
+                                            </strong>
+                                        </div>
+
+                                        <div className="rental-payment-row">
+                                            <span>Total Charges</span>
+                                            <strong>
+                                                Rs. {Number(
+                                                financialSummary.totalCharges ?? 0
+                                            ).toLocaleString()}
+                                            </strong>
+                                        </div>
+
+                                        <div className="rental-payment-row">
+                                            <span>Amount Already Paid</span>
+                                            <strong>
+                                                Rs. {Number(
+                                                financialSummary.alreadyPaid ?? 0
+                                            ).toLocaleString()}
+                                            </strong>
+                                        </div>
+
+                                        <div className="rental-payment-row">
+                                            <span>Deposit Applied</span>
+                                            <strong>
+                                                Rs. {Number(
+                                                financialSummary.depositToUse ?? 0
+                                            ).toLocaleString()}
+                                            </strong>
+                                        </div>
+
+                                        <div className="rental-payment-row">
+                                            <span>Remaining Balance After Deposit</span>
+                                            <strong>
+                                                Rs. {Number(
+                                                financialSummary.balanceAfterDeposit ?? 0
+                                            ).toLocaleString()}
+                                            </strong>
+                                        </div>
+
+                                        <div className="rental-payment-row">
+                                            <span>Deposit to Refund</span>
+                                            <strong>
+                                                Rs. {Number(
+                                                financialSummary.depositToRefund ?? 0
+                                            ).toLocaleString()}
+                                            </strong>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
