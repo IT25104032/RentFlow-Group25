@@ -779,7 +779,6 @@ FROM customer c
 WHERE company_id = 1000 AND (c.customer_name LIKE '%John%' OR phone = '0771234567')
 ORDER BY customer_name;
 
-
 #IT25104032
 #2. View customer profile
 SELECT
