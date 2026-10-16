@@ -1,5 +1,6 @@
 CREATE DATABASE IF NOT EXISTS rentflow_db;
 USE rentflow_db;
+DROP DATABASE rentflow_db;
 
 # ============== MODULE 1 TABLES ================
 
@@ -374,7 +375,8 @@ CREATE TABLE payment(
 	CONSTRAINT check_payment_method CHECK (payment_method IN ('CASH', 'CARD', 'BANK_TRANSFER')),
 	CONSTRAINT check_paymen_status CHECK (payment_status IN ('COMPLETED', 'VOIDED'))
     );
-    
+ALTER TABLE payment MODIFY COLUMN received_by INT NULL;
+
 #IT25104036
 CREATE TABLE security_deposit(
 	deposit_id INT AUTO_INCREMENT,
@@ -776,7 +778,6 @@ SELECT customer_id, customer_name, email, phone, address, customer_type, custome
 FROM customer c
 WHERE company_id = 1000 AND (c.customer_name LIKE '%John%' OR phone = '0771234567')
 ORDER BY customer_name;
-
 
 #IT25104032
 #2. View customer profile
