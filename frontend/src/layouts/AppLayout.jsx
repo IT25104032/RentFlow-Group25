@@ -34,6 +34,7 @@ function AppLayout({ user, onLogout }) {
     ].includes(location.pathname);
 
     const isRentalHistory = location.pathname === "/rental-history";
+    const isRentalReports = location.pathname === "/rental-reports";
     const isIssueEquipment = location.pathname === "/issue-equipment";
     const isRentalExtension = location.pathname === "/rental-extension";
 
@@ -266,6 +267,13 @@ function AppLayout({ user, onLogout }) {
                                 "📄",
                                 "/rental-history",
                                 isRentalHistory
+                            )}
+
+                            {renderNavigationItem(
+                                "Rental Reports",
+                                "📊",
+                                "/rental-reports",
+                                isRentalReports
                             )}
                         </>
                     )}
