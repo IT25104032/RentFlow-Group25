@@ -82,7 +82,7 @@ export default function SecurityDeposits() {
                                     <button className="btn-pay" onClick={() => setReceiveTarget(dep)}>Receive</button>
                                 )}
                                 {dep.depositStatus === 'HELD' && (
-                                    <button className="btn-pay" style={{ backgroundColor: '#17a2b8' }} onClick={() => setRefundTarget(dep)}>Refund</button>
+                                    <button className="btn-print" onClick={() => setRefundTarget(dep)}>Refund</button>
                                 )}
                             </td>
                         </tr>

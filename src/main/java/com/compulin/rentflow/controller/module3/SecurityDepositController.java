@@ -41,12 +41,10 @@ public class SecurityDepositController {
         return ResponseEntity.ok(securityDepositService.receiveDeposit(id, amountReceived, null));
     }
 
-    // Refunds the deposit after return, minus any deduction (HELD -> REFUNDED / PARTIALLY_REFUNDED / FORFEITED)
-    // Body: { "amountDeducted": 2000 }
+    // Refunds the deposit after return, minus any deduction
     @PutMapping("/{id}/refund")
     public ResponseEntity<SecurityDeposit> processDepositReturn(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
         BigDecimal amountDeducted = new BigDecimal(body.getOrDefault("amountDeducted", "0").toString());
         return ResponseEntity.ok(securityDepositService.processDepositReturn(id, amountDeducted));
     }
 }
-
