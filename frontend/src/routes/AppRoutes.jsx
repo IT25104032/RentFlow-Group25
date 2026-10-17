@@ -45,6 +45,7 @@ import CreateRental from "../pages/module2/CreateRental";
 import EquipmentSelection from "../pages/module2/EquipmentSelection";
 import ReviewRental from "../pages/module2/ReviewRental";
 import RentalHistory from "../pages/module2/RentalHistory";
+import RentalReports from "../pages/module2/RentalReports";
 import RentalExtension from "../pages/module2/RentalExtension";
 import IssueEquipment from "../pages/module2/IssueEquipment";
 
@@ -133,6 +134,11 @@ function AppRoutes({ user, onLogout }) {
                     <Route
                         path="/rental-history"
                         element={<RoleGate user={user} allowed={["COMPANY_ADMIN", "RENTAL_OFFICER"]}><RentalHistory /></RoleGate>}
+                    />
+
+                    <Route
+                        path="/rental-reports"
+                        element={<RoleGate user={user} allowed={["COMPANY_ADMIN", "RENTAL_OFFICER"]}><RentalReports /></RoleGate>}
                     />
 
                     <Route
