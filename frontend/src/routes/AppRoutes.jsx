@@ -8,12 +8,6 @@ import {
 } from "react-router-dom";
 
 import AppLayout from "../layouts/AppLayout";
-import CompanyManagement from "../components/CompanyManagement";
-import Users from "../pages/Users";
-import EquipmentCategories from "../pages/EquipmentCategories";
-import EquipmentManagement from "../pages/EquipmentManagement";
-import CompanyProfile from "../pages/CompanyProfile";
-import Dashboard from "../pages/Dashboard";
 
 const getRole = (user) => String(user?.role || "")
     .replace(/^ROLE_/, "").toUpperCase();
@@ -38,6 +32,14 @@ function Module4Gate({ user, children }) {
     return <Navigate to={role === "COMPULIN_ADMIN" ? "/dashboard" : "/returns/history"} replace />;
 }
 
+// MODULE 1
+import CompanyManagement from "../components/CompanyManagement";
+import Users from "../pages/Users";
+import EquipmentCategories from "../pages/EquipmentCategories";
+import EquipmentManagement from "../pages/EquipmentManagement";
+import CompanyProfile from "../pages/CompanyProfile";
+import Dashboard from "../pages/Dashboard";
+import ChangePassword from "../pages/ChangePassword";
 
 // MODULE 2
 import RegisterRenter from "../pages/module2/RegisterRenter";
@@ -103,6 +105,13 @@ function AppRoutes({ user, onLogout }) {
                             <EquipmentManagement user={user} />
                         </RoleGate>
                     } />
+
+                    <Route path="/change-password" element={
+                            <RoleGate user={user} allowed={["COMPULIN_ADMIN", "COMPANY_ADMIN", "RENTAL_OFFICER"]}
+                            >
+                                <ChangePassword user={user} />
+                            </RoleGate>
+                        }/>
 
                     {/* MODULE 2 ROUTES */}
 

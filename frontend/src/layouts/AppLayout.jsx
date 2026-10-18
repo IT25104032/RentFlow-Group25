@@ -248,6 +248,7 @@ function AppLayout({ user, onLogout }) {
                         </>
                     )}
 
+
                     {/* MODULE 2 — RENTAL MANAGEMENT */}
                     {(isRentalOfficer || isCompanyAdmin) && (
                         <>
@@ -359,6 +360,20 @@ function AppLayout({ user, onLogout }) {
                         </>
                     )}
 
+                    {(isCompulinAdmin || isCompanyAdmin || isRentalOfficer) && (
+                        <>
+                            <div className="module2-sidebar-section-title operations">
+                                ACCOUNT
+                            </div>
+
+                            {renderNavigationItem(
+                                "Change Password",
+                                "🔑",
+                                "/change-password",
+                                location.pathname === "/change-password"
+                            )}
+                        </>
+                    )}
 
 
                 </nav>
