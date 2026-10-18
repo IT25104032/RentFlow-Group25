@@ -1,110 +1,117 @@
 package com.compulin.rentflow.controller.module2;
 
-
 import com.compulin.rentflow.dto.module2.RentalItemRequest;
 import com.compulin.rentflow.dto.module2.RentalItemResponse;
+import com.compulin.rentflow.repository.module1.equipment_repo;
+import com.compulin.rentflow.repository.module2.RentalRepository;
+import com.compulin.rentflow.security.Module1SessionAccess;
 import com.compulin.rentflow.service.module2.RentalItemService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-        import java.util.List;
-
+import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/rental-items")
 public class RentalItemController {
 
     private final RentalItemService rentalItemService;
-
+    private final RentalRepository rentalRepository;
+    private final equipment_repo equipmentRepository;
 
     public RentalItemController(
-            RentalItemService rentalItemService
+            RentalItemService rentalItemService,
+            RentalRepository rentalRepository,
+            equipment_repo equipmentRepository
     ) {
-        this.rentalItemService =
-                rentalItemService;
+        this.rentalItemService = rentalItemService;
+        this.rentalRepository = rentalRepository;
+        this.equipmentRepository = equipmentRepository;
     }
 
+    private Integer authenticatedCompanyId(HttpSession session) {
+        Integer companyId = Module1SessionAccess.getCompanyId(session);
+        if (companyId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Company login required.");
+        }
+        return companyId;
+    }
 
-    /*
-     * Create a rental item.
-     */
+    private Integer requireOwnedRental(Integer rentalId, HttpSession session) {
+        Integer companyId = authenticatedCompanyId(session);
+        if (rentalId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rental ID is required.");
+        }
+
+        var rental = rentalRepository.findById(rentalId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Rental not found."));
+
+        if (!Objects.equals(rental.getCompanyId(), companyId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Rental belongs to another company.");
+        }
+        return companyId;
+    }
+
     @PostMapping
     public ResponseEntity<RentalItemResponse> createRentalItem(
-            @RequestBody RentalItemRequest request
+            @RequestBody RentalItemRequest request,
+            HttpSession session
     ) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rental item request is required.");
+        }
 
-        RentalItemResponse response =
-                rentalItemService.createRentalItem(
-                        request
-                );
+        Integer companyId = requireOwnedRental(request.getRentalId(), session);
+        if (request.getEquipmentId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipment ID is required.");
+        }
+        if (equipmentRepository.findByIdAndCompanyId(request.getEquipmentId(), companyId).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Equipment does not belong to your company.");
+        }
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+        RentalItemResponse response = rentalItemService.createRentalItem(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-
-    /*
-     * Get all items belonging to a rental.
-     */
     @GetMapping("/rental/{rentalId}")
     public ResponseEntity<List<RentalItemResponse>> getRentalItems(
-            @PathVariable Integer rentalId
+            @PathVariable Integer rentalId,
+            HttpSession session
     ) {
-
-        List<RentalItemResponse> response =
-                rentalItemService.getRentalItems(
-                        rentalId
-                );
-
-        return ResponseEntity.ok(response);
+        requireOwnedRental(rentalId, session);
+        return ResponseEntity.ok(rentalItemService.getRentalItems(rentalId));
     }
 
-
-    /*
-     * Get one rental item belonging to
-     * a specific rental.
-     */
     @GetMapping("/{rentalItemId}")
     public ResponseEntity<RentalItemResponse> getRentalItem(
             @PathVariable Integer rentalItemId,
-            @RequestParam Integer rentalId
+            @RequestParam Integer rentalId,
+            HttpSession session
     ) {
-
-        RentalItemResponse response =
-                rentalItemService.getRentalItem(
-                        rentalItemId,
-                        rentalId
-                );
-
-        return ResponseEntity.ok(response);
+        requireOwnedRental(rentalId, session);
+        return ResponseEntity.ok(rentalItemService.getRentalItem(rentalItemId, rentalId));
     }
 
-    /*
-     * Issue a rental item.
-     */
     @PostMapping("/{rentalItemId}/issue")
     public ResponseEntity<RentalItemResponse> issueRentalItem(
             @PathVariable Integer rentalItemId,
-            @RequestParam Integer rentalId
+            @RequestParam Integer rentalId,
+            HttpSession session
     ) {
-
+        Integer companyId = requireOwnedRental(rentalId, session);
+        // Reject a mismatched equipment reference before any issue-side mutation.
+        RentalItemResponse item = rentalItemService.getRentalItem(rentalItemId, rentalId);
+        if (equipmentRepository.findByIdAndCompanyId(item.getEquipmentId(), companyId).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Rental item equipment belongs to another company.");
+        }
         try {
-
-            RentalItemResponse response =
-                    rentalItemService.issueRentalItem(
-                            rentalItemId,
-                            rentalId
-                    );
-
-            return ResponseEntity.ok(response);
-
+            return ResponseEntity.ok(rentalItemService.issueRentalItem(rentalItemId, rentalId));
         } catch (IllegalArgumentException exception) {
-
-            return ResponseEntity
-                    .badRequest()
-                    .build();
+            return ResponseEntity.badRequest().build();
         }
     }
 }

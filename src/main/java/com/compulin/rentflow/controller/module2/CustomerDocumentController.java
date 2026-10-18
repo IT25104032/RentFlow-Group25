@@ -2,6 +2,12 @@ package com.compulin.rentflow.controller.module2;
 
 import com.compulin.rentflow.dto.module2.CustomerDocumentResponse;
 import com.compulin.rentflow.service.module2.CustomerDocumentService;
+import com.compulin.rentflow.repository.module2.CustomerRepository;
+import com.compulin.rentflow.security.Module1SessionAccess;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Objects;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,14 +24,40 @@ public class CustomerDocumentController {
 
     private final CustomerDocumentService
             customerDocumentService;
+    private final CustomerRepository customerRepository;
 
 
     public CustomerDocumentController(
-            CustomerDocumentService customerDocumentService
+            CustomerDocumentService customerDocumentService,
+            CustomerRepository customerRepository
     ) {
 
         this.customerDocumentService =
                 customerDocumentService;
+        this.customerRepository = customerRepository;
+    }
+
+    // Validate ownership before any document lookup, upload, or update.
+    private void requireOwnCustomer(Integer customerId, HttpSession session) {
+        Integer sessionCompanyId = Module1SessionAccess.getCompanyId(session);
+        if (sessionCompanyId == null || session.getAttribute("RENTFLOW_USER_ID") == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Login required.");
+        }
+        var customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Renter not found."));
+        if (!Objects.equals(customer.getCompanyId(), sessionCompanyId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Cannot access another company's renter documents.");
+        }
+    }
+
+    private Integer authenticatedUserId(HttpSession session) {
+        Object value = session.getAttribute("RENTFLOW_USER_ID");
+        if (!(value instanceof Number)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Login required.");
+        }
+        return ((Number) value).intValue();
     }
 
 
@@ -56,9 +88,11 @@ public class CustomerDocumentController {
             @RequestParam Integer checkedBy,
 
             @RequestParam(required = false)
-            String notes
+            String notes,
+            HttpSession session
     ) {
 
+        requireOwnCustomer(customerId, session);
         CustomerDocumentResponse response =
                 customerDocumentService.createDocument(
 
@@ -72,7 +106,7 @@ public class CustomerDocumentController {
 
                         expiryDate,
 
-                        checkedBy,
+                        authenticatedUserId(session),
 
                         notes
                 );
@@ -93,9 +127,11 @@ public class CustomerDocumentController {
             List<CustomerDocumentResponse>
             > getDocumentsByCustomerId(
 
-            @PathVariable Integer customerId
+            @PathVariable Integer customerId,
+            HttpSession session
     ) {
 
+        requireOwnCustomer(customerId, session);
         List<CustomerDocumentResponse> documents =
                 customerDocumentService
                         .getDocumentsByCustomerId(
@@ -117,9 +153,11 @@ public class CustomerDocumentController {
 
             @PathVariable Integer documentId,
 
-            @RequestParam Integer customerId
+            @RequestParam Integer customerId,
+            HttpSession session
     ) {
 
+        requireOwnCustomer(customerId, session);
         CustomerDocumentResponse response =
                 customerDocumentService.getDocument(
                         documentId,
@@ -175,9 +213,11 @@ public class CustomerDocumentController {
             @RequestParam Integer checkedBy,
 
             @RequestParam(required = false)
-            String notes
+            String notes,
+            HttpSession session
     ) {
 
+        requireOwnCustomer(customerId, session);
         CustomerDocumentResponse response =
                 customerDocumentService.updateDocument(
 
@@ -193,7 +233,7 @@ public class CustomerDocumentController {
 
                         expiryDate,
 
-                        checkedBy,
+                        authenticatedUserId(session),
 
                         notes
                 );
