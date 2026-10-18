@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpSession;
+import com.compulin.rentflow.security.Module3Access;
 import com.compulin.rentflow.dto.module3.InvoicePreview;
 import com.compulin.rentflow.dto.module3.ExtensionPreview;
 
@@ -13,85 +15,100 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/invoices")
-@CrossOrigin(origins = "*")
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
+    private final Module3Access access;
 
     @Autowired
-    public InvoiceController(InvoiceService invoiceService) {
+    public InvoiceController(InvoiceService invoiceService, Module3Access access) {
         this.invoiceService = invoiceService;
+        this.access = access;
     }
 
 
-     // Generates a new invoice for a given rental ID by collecting rental items and charges
+    // Generates a new invoice for a given rental ID by collecting rental items and charges
 
     @PostMapping("/generate/{rentalId}")
-    public ResponseEntity<Invoice> generateInvoice(@PathVariable Integer rentalId) {
+    public ResponseEntity<Invoice> generateInvoice(@PathVariable Integer rentalId, HttpSession session) {
+        access.rental(rentalId, session);
         Invoice createdInvoice = invoiceService.generateInvoiceForRental(rentalId);
         return new ResponseEntity<>(createdInvoice, HttpStatus.CREATED);
     }
 
 
-     //Retrieves an invoice by its primary key ID
+    //Retrieves an invoice by its primary key ID
 
     @GetMapping("/{id}")
-    public ResponseEntity<Invoice> getInvoiceById(@PathVariable Integer id) {
+    public ResponseEntity<Invoice> getInvoiceById(@PathVariable Integer id, HttpSession session) {
+        access.invoice(id, session);
         Invoice invoice = invoiceService.getInvoiceById(id);
         return ResponseEntity.ok(invoice);
     }
 
 
-     //Retrieves the invoice associated with a specific rental ID
+    //Retrieves the invoice associated with a specific rental ID
 
     @GetMapping("/rental/{rentalId}")
-    public ResponseEntity<Invoice> getInvoiceByRentalId(@PathVariable Integer rentalId) {
+    public ResponseEntity<Invoice> getInvoiceByRentalId(@PathVariable Integer rentalId, HttpSession session) {
+        access.rental(rentalId, session);
         Invoice invoice = invoiceService.getInvoiceByRentalId(rentalId);
         return ResponseEntity.ok(invoice);
     }
 
 
-     //Retrieves all invoices in the system
+    //Retrieves all invoices in the system
 
     @GetMapping
-    public ResponseEntity<List<Invoice>> getAllInvoices() {
-        List<Invoice> invoices = invoiceService.getAllInvoices();
+    public ResponseEntity<List<Invoice>> getAllInvoices(HttpSession session) {
+        Integer companyId = access.companyId(session);
+        List<Invoice> invoices = invoiceService.getAllInvoices().stream()
+                .filter(invoice -> invoice.getRentalId() != null)
+                .filter(invoice -> {
+                    try { access.rental(invoice.getRentalId(), session); return true; }
+                    catch (org.springframework.web.server.ResponseStatusException ex) { return false; }
+                }).toList();
         return ResponseEntity.ok(invoices);
     }
 
 
-     //Recalculates invoice totals when late fees or damages are added
+    //Recalculates invoice totals when late fees or damages are added
 
     @PostMapping("/{id}/recalculate")
-    public ResponseEntity<Invoice> recalculateInvoice(@PathVariable Integer id) {
+    public ResponseEntity<Invoice> recalculateInvoice(@PathVariable Integer id, HttpSession session) {
+        access.invoice(id, session);
         Invoice updatedInvoice = invoiceService.recalculateInvoiceTotals(id);
         return ResponseEntity.ok(updatedInvoice);
     }
 
 
-     //Cancels an invoice
+    //Cancels an invoice
 
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<Invoice> cancelInvoice(@PathVariable Integer id) {
+    public ResponseEntity<Invoice> cancelInvoice(@PathVariable Integer id, HttpSession session) {
+        access.invoice(id, session);
         Invoice cancelledInvoice = invoiceService.cancelInvoice(id);
         return ResponseEntity.ok(cancelledInvoice);
     }
 
     // Shows the invoice breakdown for review before it is generated
     @GetMapping("/preview/{rentalId}")
-    public ResponseEntity<InvoicePreview> previewInvoice(@PathVariable Integer rentalId) {
+    public ResponseEntity<InvoicePreview> previewInvoice(@PathVariable Integer rentalId, HttpSession session) {
+        access.rental(rentalId, session);
         return ResponseEntity.ok(invoiceService.previewInvoice(rentalId));
     }
 
     // Shows previous vs updated amounts after the rental is extended
     @GetMapping("/{id}/extension-preview")
-    public ResponseEntity<ExtensionPreview> previewExtension(@PathVariable Integer id) {
+    public ResponseEntity<ExtensionPreview> previewExtension(@PathVariable Integer id, HttpSession session) {
+        access.invoice(id, session);
         return ResponseEntity.ok(invoiceService.previewExtensionUpdate(id));
     }
 
     // Saves the recalculated charges for the extended rental period
     @PutMapping("/{id}/apply-extension")
-    public ResponseEntity<Invoice> applyExtension(@PathVariable Integer id) {
+    public ResponseEntity<Invoice> applyExtension(@PathVariable Integer id, HttpSession session) {
+        access.invoice(id, session);
         return ResponseEntity.ok(invoiceService.applyExtensionUpdate(id));
     }
 }

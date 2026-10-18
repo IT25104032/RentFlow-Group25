@@ -25,6 +25,11 @@ public class AuthService {
             throw new RuntimeException("User account is not active");
         }
 
+        if (user.getCompany() != null &&
+                !"ACTIVE".equalsIgnoreCase(user.getCompany().getCompany_status())) {
+            throw new RuntimeException("Company account is not active");
+        }
+
         if (!passwordEncoder.matches(password, user.getPassword_hash())) {
             throw new RuntimeException("Invalid email or password");
         }

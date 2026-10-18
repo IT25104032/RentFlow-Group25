@@ -1,6 +1,8 @@
 package com.compulin.rentflow.config;
 
 import com.compulin.rentflow.controller.AuthController;
+import com.compulin.rentflow.entity.module1.sys_user;
+import com.compulin.rentflow.repository.module1.sys_user_repo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -11,6 +13,12 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
+    private final sys_user_repo userRepo;
+
+    public AuthInterceptor(sys_user_repo userRepo) {
+        this.userRepo = userRepo;
+    }
+
     @Override
     public boolean preHandle(
             HttpServletRequest request,
@@ -19,11 +27,20 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         String path = request.getRequestURI();
 
-        if (path.startsWith("/api/auth/")) {
+        // Preflight requests contain no authenticated session.
+        if (HttpMethod.OPTIONS.matches(request.getMethod())) {
             return true;
         }
 
-        if (!path.startsWith("/api/module1/")) {
+        // Permit unauthenticated login requests only for known login paths.
+        // Verify the actual mapping in AuthController before deployment.
+        if (HttpMethod.POST.matches(request.getMethod()) &&
+                (path.equals("/api/auth/login") ||
+                        path.equals("/api/module1/auth/login"))) {
+            return true;
+        }
+
+        if (!path.startsWith("/api/")) {
             return true;
         }
 
@@ -48,6 +65,66 @@ public class AuthInterceptor implements HandlerInterceptor {
                         AuthController.SESSION_ROLE
                 )
         );
+
+        // Do not trust an old session after the company or user is deactivated.
+        // Check against the database on each protected API request.
+        Object rawUserId = session.getAttribute(AuthController.SESSION_USER_ID);
+        Integer userId;
+        try {
+            userId = rawUserId instanceof Number number
+                    ? number.intValue()
+                    : Integer.valueOf(rawUserId.toString());
+        } catch (NumberFormatException ex) {
+            session.invalidate();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\":\"Invalid login session.\"}");
+            return false;
+        }
+
+        sys_user currentUser = userRepo.findByIdWithCompany(userId).orElse(null);
+        if (currentUser == null ||
+                !"ACTIVE".equalsIgnoreCase(currentUser.getUser_status()) ||
+                (currentUser.getCompany() != null &&
+                        !"ACTIVE".equalsIgnoreCase(currentUser.getCompany().getCompany_status()))) {
+            session.invalidate();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\":\"Account or company is inactive. Please contact your administrator.\"}");
+            return false;
+        }
+
+        if (path.startsWith("/api/auth/")) {
+            return true;
+        }
+
+        // Module 2/3/4 manage company data. Compulin administrators
+        // must not acquire unrestricted access to renter records.
+        if (!path.startsWith("/api/module1/")
+                && !path.startsWith("/api/auth/")) {
+            String normalizedRole = role.startsWith("ROLE_")
+                    ? role.substring(5) : role;
+            if (!"COMPANY_ADMIN".equals(normalizedRole)
+                    && !"RENTAL_OFFICER".equals(normalizedRole)) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json");
+                response.getWriter().write(
+                        "{\"message\":\"Not authorized for company data.\"}");
+                return false;
+            }
+            if (session.getAttribute(AuthController.SESSION_COMPANY_ID) == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write(
+                        "{\"message\":\"A company session is required.\"}");
+                return false;
+            }
+            return true;
+        }
+
+        if (path.startsWith("/api/module1/company-profile")) {
+            return true; // The profile controller enforces COMPANY_ADMIN and session company.
+        }
 
         if (path.startsWith("/api/module1/companies")) {
 
@@ -124,6 +201,8 @@ public class AuthInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        return true;
+        // Do not permit unknown Module 1 routes by default.
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        return false;
     }
 }

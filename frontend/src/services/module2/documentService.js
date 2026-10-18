@@ -11,7 +11,8 @@ export async function getDocumentsByCustomerId(
 ) {
 
     const response = await fetch(
-        `${API_BASE_URL}/customer/${customerId}`
+        `${API_BASE_URL}/customer/${customerId}`,
+        { credentials: "include" }
     );
 
     if (!response.ok) {
@@ -93,6 +94,7 @@ export async function createDocument(
         API_BASE_URL,
         {
             method: "POST",
+            credentials: "include",
             body: formData
         }
     );
@@ -184,6 +186,7 @@ export async function updateDocument(
         `${API_BASE_URL}/${documentId}`,
         {
             method: "PUT",
+            credentials: "include",
             body: formData
         }
     );

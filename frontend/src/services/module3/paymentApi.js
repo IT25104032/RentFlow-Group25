@@ -1,13 +1,18 @@
+// Send the browser's authenticated session cookie with every backend request.
+// Required because the React development server and Spring Boot use different origins.
+const authenticatedFetch = (url, options = {}) =>
+    fetch(url, { ...options, credentials: "include" });
+
 const API_BASE_URL = 'http://localhost:8081/api/v1';
 
 export const getInvoices = async () => {
-    const response = await fetch(`${API_BASE_URL}/invoices`);
+    const response = await authenticatedFetch(`${API_BASE_URL}/invoices`);
     if (!response.ok) throw new Error(`Server returned status ${response.status}`);
     return await response.json();
 };
 
 export const recordPayment = async (payload) => {
-    const response = await fetch(`${API_BASE_URL}/payments`, {
+    const response = await authenticatedFetch(`${API_BASE_URL}/payments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -25,7 +30,7 @@ export const getChargesByInvoice = async (invoiceId, rentalId) => {
     const baseUrl = 'http://localhost:8081/api/v1';
 
     try {
-        const response = await fetch(`${baseUrl}/charges/invoice/${invoiceId}`);
+        const response = await authenticatedFetch(`${baseUrl}/charges/invoice/${invoiceId}`);
         if (response.ok) {
             const data = await response.json();
             if (Array.isArray(data) && data.length > 0) return data;
@@ -34,7 +39,7 @@ export const getChargesByInvoice = async (invoiceId, rentalId) => {
         console.warn("Invoice ID charge query failed, falling back to Rental ID...", e);
     }
 
-    const response = await fetch(`${baseUrl}/charges/rental/${rentalId}`);
+    const response = await authenticatedFetch(`${baseUrl}/charges/rental/${rentalId}`);
     if (!response.ok) {
         throw new Error(`Server returned HTTP status ${response.status}`);
     }
@@ -43,7 +48,7 @@ export const getChargesByInvoice = async (invoiceId, rentalId) => {
 
 export const generateInvoice = async (rentalId) => {
     const baseUrl = 'http://localhost:8081/api/v1';
-    const response = await fetch(`${baseUrl}/invoices/generate/${rentalId}`, {
+    const response = await authenticatedFetch(`${baseUrl}/invoices/generate/${rentalId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
     });
@@ -56,7 +61,7 @@ export const generateInvoice = async (rentalId) => {
 };
 
 export const previewInvoice = async (rentalId) => {
-    const response = await fetch(`http://localhost:8081/api/v1/invoices/preview/${rentalId}`);
+    const response = await authenticatedFetch(`http://localhost:8081/api/v1/invoices/preview/${rentalId}`);
     if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.message || `Failed to preview invoice for Rental #${rentalId}`);
@@ -65,13 +70,13 @@ export const previewInvoice = async (rentalId) => {
 };
 
 export const getPaymentHistory = async (invoiceId) => {
-    const response = await fetch(`http://localhost:8081/api/v1/payments/invoice/${invoiceId}`);
+    const response = await authenticatedFetch(`http://localhost:8081/api/v1/payments/invoice/${invoiceId}`);
     if (!response.ok) throw new Error('Failed to load payment history.');
     return response.json();
 };
 
 export const previewExtension = async (invoiceId) => {
-    const response = await fetch(`http://localhost:8081/api/v1/invoices/${invoiceId}/extension-preview`);
+    const response = await authenticatedFetch(`http://localhost:8081/api/v1/invoices/${invoiceId}/extension-preview`);
     if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.message || 'Failed to load extension preview.');
@@ -80,7 +85,7 @@ export const previewExtension = async (invoiceId) => {
 };
 
 export const applyExtension = async (invoiceId) => {
-    const response = await fetch(`http://localhost:8081/api/v1/invoices/${invoiceId}/apply-extension`, { method: 'PUT' });
+    const response = await authenticatedFetch(`http://localhost:8081/api/v1/invoices/${invoiceId}/apply-extension`, { method: 'PUT' });
     if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.message || 'Failed to update charges.');

@@ -1,9 +1,14 @@
+// Send the browser's authenticated session cookie with every backend request.
+// Required because the React development server and Spring Boot use different origins.
+const authenticatedFetch = (url, options = {}) =>
+    fetch(url, { ...options, credentials: "include" });
+
 
 const API_BASE_URL = "http://localhost:8081/api";
 
 // Get DRAFT rentals available for issuing.
 export async function getActiveRentalsForIssue(companyId) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_BASE_URL}/rentals/for-issue?companyId=${companyId}`
     );
 
@@ -16,7 +21,7 @@ export async function getActiveRentalsForIssue(companyId) {
 
 // Issue all selected rental items and activate the rental.
 export async function issueRental(rentalId, companyId) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_BASE_URL}/rentals/${rentalId}/issue?companyId=${companyId}`,
         {
             method: "POST"
@@ -33,7 +38,7 @@ export async function issueRental(rentalId, companyId) {
 
 // Cancel a DRAFT rental.
 export async function cancelRental(rentalId, companyId) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_BASE_URL}/rentals/${rentalId}/cancel?companyId=${companyId}`,
         {
             method: "POST"
@@ -50,7 +55,7 @@ export async function cancelRental(rentalId, companyId) {
 
 // Get the equipment items associated with a rental.
 export async function getRentalItemsForIssue(rentalId) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_BASE_URL}/rental-items/rental/${rentalId}`
     );
 

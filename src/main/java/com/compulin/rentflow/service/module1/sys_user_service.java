@@ -70,6 +70,7 @@ public class sys_user_service {
             newUser.setUser_status("ACTIVE");
         }
 
+        ensureActivationAllowed(newUser, newUser.getUser_status());
         return userRepo.save(newUser);
     }
 
@@ -111,8 +112,8 @@ public class sys_user_service {
         }
 
         if (userDetails.getUser_status() != null) {
-            existingUser.setUser_status(
-                    userDetails.getUser_status());
+            ensureActivationAllowed(existingUser, userDetails.getUser_status());
+            existingUser.setUser_status(userDetails.getUser_status());
         }
 
         return userRepo.save(existingUser);
@@ -125,6 +126,7 @@ public class sys_user_service {
 
         sys_user existingUser = getUserById(id);
 
+        ensureActivationAllowed(existingUser, status);
         existingUser.setUser_status(status);
 
         return userRepo.save(existingUser);
@@ -140,6 +142,15 @@ public class sys_user_service {
         existingUser.setUser_role(role);
 
         return userRepo.save(existingUser);
+    }
+
+    private void ensureActivationAllowed(sys_user user, String status) {
+        if ("ACTIVE".equalsIgnoreCase(status) &&
+                user.getCompany() != null &&
+                !"ACTIVE".equalsIgnoreCase(user.getCompany().getCompany_status())) {
+            throw new IllegalArgumentException(
+                    "Cannot activate a user while their company is inactive");
+        }
     }
 
     // Delete user

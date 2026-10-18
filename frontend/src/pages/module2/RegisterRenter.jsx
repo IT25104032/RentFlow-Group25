@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
-    createCustomer,
+    createCompleteRenter,
     getAllCustomers,
     searchCustomers,
     updateCustomer
@@ -813,33 +813,41 @@ function RegisterRenter() {
                     );
 
             } else {
-
-                customer =
-                    await createCustomer({
-
+                // New renter: ONE atomic server request, not three independent saves.
+                customer = await createCompleteRenter({
+                    customer: {
                         companyId: COMPANY_ID,
                         customerName: renterForm.customerName,
                         email: renterForm.email,
                         phone: renterForm.phone,
                         address: renterForm.address,
                         customerType: renterForm.customerType,
-                        customerStatus: renterForm.customerStatus,
-                        createdBy: USER_ID
-
-                    });
+                        customerStatus: renterForm.customerStatus
+                    },
+                    contact: {
+                        contactName: secondaryForm.contactName,
+                        relationship: secondaryForm.relationship,
+                        phoneNumber: secondaryForm.phoneNumber,
+                        alternatePhone: secondaryForm.alternatePhone,
+                        email: secondaryForm.email,
+                        address: secondaryForm.address,
+                        notes: secondaryForm.notes
+                    },
+                    document: {
+                        documentType: documentForm.documentType,
+                        documentNumber: documentForm.documentNumber,
+                        documentFile: documentForm.documentCopy,
+                        expiryDate: documentForm.expiryDate,
+                        notes: documentForm.notes
+                    }
+                });
             }
 
-
-            // Save manually entered identification.
-            await saveIdentification(
-                customer.customerId
-            );
-
-
-            // Save manually entered secondary contact.
-            await saveSecondaryContact(
-                customer.customerId
-            );
+            // Existing renter edit flow remains unchanged.
+            if (selectedRenter) {
+                await saveIdentification(customer.customerId);
+                await saveSecondaryContact(customer.customerId);
+            }
 
             await loadRenters();
 
