@@ -98,6 +98,53 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @RequestBody Map<String, String> passwordRequest,
+            HttpSession session) {
+
+        Object sessionUserId = session.getAttribute(SESSION_USER_ID);
+        if (sessionUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Please log in before changing your password."));
+        }
+
+        Integer userId;
+        try {
+            userId = sessionUserId instanceof Number number
+                    ? number.intValue()
+                    : Integer.valueOf(sessionUserId.toString());
+        } catch (NumberFormatException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Your login session is invalid. Please log in again."));
+        }
+
+        String currentPassword = passwordRequest.get("currentPassword");
+        String newPassword = passwordRequest.get("newPassword");
+        String confirmPassword = passwordRequest.get("confirmPassword");
+
+        if (currentPassword == null || currentPassword.isEmpty()
+                || newPassword == null || newPassword.isEmpty()
+                || confirmPassword == null || confirmPassword.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "All password fields are required."));
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "New password and confirmation do not match."));
+        }
+
+        try {
+            authService.changePassword(userId, currentPassword, newPassword);
+            return ResponseEntity.ok(
+                    Map.of("message", "Password changed successfully."));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", ex.getMessage()));
+        }
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpSession session) {
 

@@ -3,10 +3,14 @@ import { getAllCustomers } from "../../services/module2/customerService";
 import "./RentalReports.css";
 
 const API = "http://localhost:8081/api/rentals";
-const dateText = (value) => value ? String(value).slice(0, 10) : "—";
+const dateText = (value) =>
+    value ? String(value).slice(0, 10) : "—";
 const getUser = () => {
-    try { return JSON.parse(sessionStorage.getItem("rentflowUser") || "null"); }
-    catch { return null; }
+    try {
+        return JSON.parse(sessionStorage.getItem("rentflowUser") || "null");
+    } catch {
+        return null;
+    }
 };
 
 export default function RentalReports() {
@@ -20,13 +24,21 @@ export default function RentalReports() {
     const [settlementMessage, setSettlementMessage] = useState("");
     const [renterSearch, setRenterSearch] = useState("");
     const [customers, setCustomers] = useState([]);
+    const [equipmentNames, setEquipmentNames] = useState({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [generatedAt, setGeneratedAt] = useState(null);
 
     async function generateReport(type = reportType) {
-        if (!companyId) { setError("Login session not found. Please log in again."); return; }
-        if ((type === "history" || type === "individual") && !selectedCustomerId) { setError("Select a renter to generate their full history."); setGeneratedAt(null); return; }
+        if (!companyId) {
+            setError("Login session not found. Please log in again.");
+            return;
+        }
+        if ((type === "history" || type === "individual") && !selectedCustomerId) {
+            setError("Select a renter to generate their full history.");
+            setGeneratedAt(null);
+            return;
+        }
         setLoading(true);
         setError("");
         setGeneratedAt(null);
@@ -38,16 +50,28 @@ export default function RentalReports() {
                     fetch(`${API}/customer/${encodeURIComponent(selectedCustomerId)}?companyId=${encodeURIComponent(companyId)}`, { credentials: "include" }),
                     getAllCustomers(companyId)
                 ]);
-                if (!historyResponse.ok) throw new Error(`Could not retrieve rental history (HTTP ${historyResponse.status}).`);
-                if (!Array.isArray(customerData)) throw new Error("Unexpected renter data from server.");
+                if (!historyResponse.ok) {
+                    throw new Error(`Could not retrieve rental history (HTTP ${historyResponse.status}).`);
+                }
+                if (!Array.isArray(customerData)) {
+                    throw new Error("Unexpected renter data from server.");
+                }
                 if (!customerData.some(c => String(c.customerId) === String(selectedCustomerId))) {
                     throw new Error("The selected renter does not belong to this company.");
                 }
                 const records = await historyResponse.json();
-                if (!Array.isArray(records)) throw new Error("Unexpected history data from server.");
+                if (!Array.isArray(records)) {
+                    throw new Error("Unexpected history data from server.");
+                }
                 const sorted = [...records].sort((a, b) => Number(a.rental?.rentalId) - Number(b.rental?.rentalId));
                 setHistory(sorted);
-                if (type === "individual") setSelectedRentalId(previous => sorted.some(r => String(r.rental?.rentalId) === previous) ? previous : String(sorted[0]?.rental?.rentalId ?? ""));
+                if (type === "individual") {
+                    setSelectedRentalId(previous =>
+                        sorted.some(r => String(r.rental?.rentalId) === previous)
+                            ? previous
+                            : String(sorted[0]?.rental?.rentalId ?? "")
+                    );
+                }
                 setCustomers(customerData);
                 setGeneratedAt(new Date());
                 return;
@@ -68,14 +92,57 @@ export default function RentalReports() {
             setRentals([...rentalData].sort((a, b) => Number(a.rentalId) - Number(b.rentalId)));
             setCustomers(customerData);
             setGeneratedAt(new Date());
-        } catch (e) { setError(e.message || "Report could not be generated."); }
-        finally { setLoading(false); }
+        } catch (e) {
+            setError(e.message || "Report could not be generated.");
+        } finally {
+            setLoading(false);
+        }
     }
+
+
+    // Load the company equipment catalog, including inactive equipment
+    // that may still appear in older rental history records.
+    useEffect(() => {
+        if (!companyId) return;
+        const controller = new AbortController();
+
+        async function loadEquipmentNames() {
+            try {
+                const response = await fetch("http://localhost:8081/api/module1/equipment", {
+                    credentials: "include",
+                    signal: controller.signal
+                });
+                if (!response.ok) {
+                    throw new Error(`Equipment lookup failed (${response.status}).`);
+                }
+                const equipment = await response.json();
+                if (!Array.isArray(equipment)) {
+                    throw new Error("Invalid equipment list.");
+                }
+                setEquipmentNames(Object.fromEntries(
+                    equipment.map(item => [String(item.equipmentId), item.itemName])
+                ));
+            } catch (error) {
+                if (error.name !== "AbortError") {
+                    console.error("Could not load equipment names:", error);
+                }
+            }
+        }
+
+        loadEquipmentNames();
+        return () => controller.abort();
+    }, [companyId]);
+
 
     // Generate a snapshot once on opening. 'Refresh Report' fetches latest data.
     useEffect(() => {
-        if ((reportType !== "history" && reportType !== "individual") || selectedCustomerId) generateReport(reportType);
-        else { setGeneratedAt(null); setHistory([]); setError(""); }
+        if ((reportType !== "history" && reportType !== "individual") || selectedCustomerId) {
+            generateReport(reportType);
+        } else {
+            setGeneratedAt(null);
+            setHistory([]);
+            setError("");
+        }
     }, [companyId, reportType, selectedCustomerId]);
 
     useEffect(() => {
@@ -128,10 +195,14 @@ export default function RentalReports() {
         return Math.max(0, Math.floor((today - due) / 86400000));
     }
 
+
     return (
         <main className="rrep-page">
             <div className="rrep-toolbar">
-                <div><h1>Rental Reports</h1><p>Review the report before printing or saving it as a PDF.</p></div>
+                <div>
+                    <h1>Rental Reports</h1>
+                    <p>Review the report before printing or saving it as a PDF.</p>
+                </div>
                 <div className="rrep-actions">
                     <button type="button" className="rrep-secondary" onClick={() => generateReport(reportType)} disabled={loading}>
                         {loading ? "Loading…" : "Refresh Report"}
@@ -142,14 +213,38 @@ export default function RentalReports() {
                 </div>
             </div>
             <div className="rrep-report-tabs" role="group" aria-label="Rental report type">
-                <button type="button" className={reportType === "current" ? "rrep-tab selected" : "rrep-tab"}
-                        aria-pressed={reportType === "current"} onClick={() => setReportType("current")}>Current Rentals</button>
-                <button type="button" className={overdue ? "rrep-tab selected" : "rrep-tab"}
-                        aria-pressed={overdue} onClick={() => setReportType("overdue")}>Overdue Rentals</button>
-                <button type="button" className={isHistory ? "rrep-tab selected" : "rrep-tab"}
-                        aria-pressed={isHistory} onClick={() => setReportType("history")}>Renter History</button>
-                <button type="button" className={isIndividual ? "rrep-tab selected" : "rrep-tab"}
-                        aria-pressed={isIndividual} onClick={() => setReportType("individual")}>Individual Rental</button>
+                <button
+                    type="button"
+                    className={reportType === "current" ? "rrep-tab selected" : "rrep-tab"}
+                    aria-pressed={reportType === "current"}
+                    onClick={() => setReportType("current")}
+                >
+                    Current Rentals
+                </button>
+                <button
+                    type="button"
+                    className={overdue ? "rrep-tab selected" : "rrep-tab"}
+                    aria-pressed={overdue}
+                    onClick={() => setReportType("overdue")}
+                >
+                    Overdue Rentals
+                </button>
+                <button
+                    type="button"
+                    className={isHistory ? "rrep-tab selected" : "rrep-tab"}
+                    aria-pressed={isHistory}
+                    onClick={() => setReportType("history")}
+                >
+                    Renter History
+                </button>
+                <button
+                    type="button"
+                    className={isIndividual ? "rrep-tab selected" : "rrep-tab"}
+                    aria-pressed={isIndividual}
+                    onClick={() => setReportType("individual")}
+                >
+                    Individual Rental
+                </button>
             </div>
             {isRenterReport && (
                 <div className="rrep-renter-filter">
@@ -212,14 +307,25 @@ export default function RentalReports() {
                     <span>{isIndividual ? "Detailed report for one rental belonging to the selected renter." : "All rentals for the selected renter, including completed and cancelled rentals."}</span>
                 </div>
             )}
-            {error && <div className="rrep-error" role="alert">{error}</div>}
-            {loading && <p role="status">Loading {isRenterReport ? "rental details" : `${reportType} rentals`}…</p>}
-            {printable && <div className="rrep-preview-wrap">
+            {error &&
+                <div className="rrep-error" role="alert">{error}</div>
+            }
+            {loading &&
+                <p role="status">Loading {isRenterReport ? "rental details" : `${reportType} rentals`}…</p>
+            }
+            {printable &&
+                <div className="rrep-preview-wrap">
                 <div className="rrep-preview-label">A4 report preview · {isIndividual ? "Individual rental" : isHistory ? "Renter history" : (overdue ? "Overdue" : "Current rentals")}</div>
                 <article className="rrep-paper" id="rentflow-print-report">
                     <header className="rrep-paper-header">
-                        <div><div className="rrep-brand">RentFlow</div><div className="rrep-subtitle">Equipment Hire &amp; Rental Management System</div></div>
-                        <div className="rrep-meta"><strong>Company ID: {companyId}</strong><div>Generated: {generatedAt.toLocaleString()}</div></div>
+                        <div>
+                            <div className="rrep-brand">RentFlow</div>
+                            <div className="rrep-subtitle">Equipment Hire &amp; Rental Management System</div>
+                        </div>
+                        <div className="rrep-meta">
+                            <strong>Company ID: {companyId}</strong>
+                            <div>Generated: {generatedAt.toLocaleString()}</div>
+                        </div>
                     </header>
                     <h2>{reportTitle}</h2>
                     {isRenterReport && <div className="rrep-history-person"><strong>{selectedCustomer?.customerName || `Renter #${selectedCustomerId}`}</strong><div>Customer ID: {selectedCustomerId} · Phone: {selectedCustomer?.phone || "—"} · Email: {selectedCustomer?.email || "—"}</div></div>}
@@ -230,20 +336,47 @@ export default function RentalReports() {
                     {isIndividual ? (
                         individualRecord ? <>
                             <div className="rrep-detail-grid">
-                                <div><span>Rental ID</span><strong>#{individualRecord.rental.rentalId}</strong></div>
-                                <div><span>Status</span><strong>{individualRecord.rental.rentalStatus || "—"}</strong></div>
-                                <div><span>Rental Date</span><strong>{dateText(individualRecord.rental.rentalDate)}</strong></div>
-                                <div><span>Start Date</span><strong>{dateText(individualRecord.rental.startDate)}</strong></div>
-                                <div><span>Due Date</span><strong>{dateText(individualRecord.rental.dueDate)}</strong></div>
-                                <div><span>Agreed Security Deposit</span><strong>{currency(individualRecord.totalDeposit)}</strong></div>
+                                <div>
+                                    <span>Rental ID</span>
+                                    <strong>#{individualRecord.rental.rentalId}</strong>
+                                </div>
+                                <div><span>Status</span>
+                                    <strong>{individualRecord.rental.rentalStatus || "—"}</strong>
+                                </div>
+                                <div>
+                                    <span>Rental Date</span>
+                                    <strong>{dateText(individualRecord.rental.rentalDate)}</strong>
+                                </div>
+                                <div>
+                                    <span>Start Date</span>
+                                    <strong>{dateText(individualRecord.rental.startDate)}</strong>
+                                </div>
+                                <div>
+                                    <span>Due Date</span>
+                                    <strong>{dateText(individualRecord.rental.dueDate)}</strong>
+                                </div>
+                                <div>
+                                    <span>Agreed Security Deposit</span>
+                                    <strong>{currency(individualRecord.totalDeposit)}</strong>
+                                </div>
                             </div>
                             <h3 className="rrep-section-title">Rented Equipment</h3>
                             <table className="rrep-table">
-                                <thead><tr><th>Equipment ID</th><th>Quantity</th><th>Rate / Unit</th><th>Rate Period</th><th>Line Deposit</th></tr></thead>
+                                <thead>
+                                <tr>
+                                    <th>Equipment Name</th>
+                                    <th>Quantity</th>
+                                    <th>Rate / Unit</th>
+                                    <th>Rate Period</th>
+                                    <th>Line Deposit</th>
+                                </tr>
+                                </thead>
                                 <tbody>{(individualRecord.rentalItems || []).length ? individualRecord.rentalItems.map((item, index) =>
                                     <tr key={item.rentalItemId ?? index}>
-                                        <td>#{item.equipmentId}</td><td>{item.quantity}</td>
-                                        <td>{currency(item.ratePerUnit ?? item.rentalRate)}</td><td>{item.ratePeriod || "—"}</td>
+                                        <td>{equipmentNames[String(item.equipmentId)] || `Equipment #${item.equipmentId}`}</td>
+                                        <td>{item.quantity}</td>
+                                        <td>{currency(item.ratePerUnit ?? item.rentalRate)}</td>
+                                        <td>{item.ratePeriod || "—"}</td>
                                         <td>{currency(item.lineDeposit)}</td>
                                     </tr>) : <tr><td colSpan="5" className="rrep-empty">No rental items recorded.</td></tr>}
                                 </tbody>
@@ -284,8 +417,10 @@ export default function RentalReports() {
                                 rentals.map(r => {
                                     const renter = customerMap.get(Number(r.customerId));
                                     return <tr key={r.rentalId}>
-                                        <td>{r.rentalId}</td><td>{renter?.customerName || `Customer #${r.customerId}`}</td>
-                                        <td>{renter?.phone || "—"}</td><td>{dateText(r.startDate)}</td>
+                                        <td>{r.rentalId}</td>
+                                        <td>{renter?.customerName || `Customer #${r.customerId}`}</td>
+                                        <td>{renter?.phone || "—"}</td>
+                                        <td>{dateText(r.startDate)}</td>
                                         <td>{dateText(r.dueDate)}</td>{overdue && <td>{daysOverdue(r.dueDate)}</td>}<td>{r.rentalStatus || "—"}</td>
                                     </tr>;
                                 })}

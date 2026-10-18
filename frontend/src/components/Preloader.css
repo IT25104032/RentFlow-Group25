@@ -1,0 +1,185 @@
+
+/* ==========================================
+   RENTFLOW PRELOADING SCREEN
+   ========================================== */
+
+.rentflow-preloader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 100vh;
+    background: #ffffff;
+    overflow: hidden;
+
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+/* Fade out when loading is complete */
+
+.rentflow-preloader.preloader-exit {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Main centered content */
+
+.preloader-content {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+    padding: 24px;
+    animation: preloaderAppear 0.7s ease-out;
+}
+
+/* Logo */
+
+.preloader-logo {
+    width: 240px;
+    height: 240px;
+    object-fit: contain;
+
+    /* Pull the title closer to the visible icon (PNG has inner padding). */
+    margin-bottom: -28px;
+
+    animation: logoFloat 2.5s ease-in-out infinite;
+
+    filter: drop-shadow(
+            0 8px 18px rgba(0, 119, 255, 0.16)
+    );
+}
+
+@keyframes logoFloat {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateY(-10px) scale(1.04);
+    }
+}
+
+/* RentFlow title */
+
+.preloader-title {
+    margin: 0;
+
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -2px;
+
+    color: #0f172a;
+}
+
+.preloader-title span {
+    color: #168bff;
+}
+
+/* Tagline */
+
+.preloader-tagline {
+    margin-top: 4px;
+    margin-bottom: 0;
+
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+
+    color: #64748b;
+}
+
+/* Loading indicator */
+
+.preloader-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.preloader-dots span {
+    width: 12px;
+    height: 12px;
+
+    border-radius: 50%;
+    background: #168bff;
+
+    animation: loadingPulse 1.3s ease-in-out infinite;
+}
+
+.preloader-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.preloader-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Animations */
+
+@keyframes loadingPulse {
+    0%, 60%, 100% {
+        transform: scale(0.7);
+        opacity: 0.35;
+    }
+
+    30% {
+        transform: scale(1.15);
+        opacity: 1;
+    }
+}
+
+@keyframes preloaderAppear {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsiveness */
+
+@media (max-width: 600px) {
+    .preloader-logo {
+        width: 180px;
+        height: 180px;
+        margin-bottom: -20px;
+    }
+
+    .preloader-title {
+        font-size: 40px;
+    }
+
+    .preloader-tagline {
+        font-size: 15px;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .preloader-content,
+    .preloader-logo,
+    .preloader-dots span {
+        animation: none;
+    }
+
+    .rentflow-preloader {
+        transition: none;
+    }
+}

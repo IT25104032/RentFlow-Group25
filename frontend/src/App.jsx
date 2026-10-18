@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Preloader from "./components/Preloader";
 import AppRoutes from "./routes/AppRoutes";
 
 function getStoredUser() {
@@ -16,6 +17,24 @@ function App() {
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
+
+    const [showPreloader, setShowPreloader] = useState(true);
+    const [preloaderExiting, setPreloaderExiting] = useState(false);
+
+    useEffect(() => {
+        const exitTimer = setTimeout(() => {
+            setPreloaderExiting(true);
+        }, 1800);
+
+        const removeTimer = setTimeout(() => {
+            setShowPreloader(false);
+        }, 2300);
+
+        return () => {
+            clearTimeout(exitTimer);
+            clearTimeout(removeTimer);
+        };
+    }, []);
 
     const handleLogin = async (event) => {
         event.preventDefault();
@@ -78,6 +97,12 @@ function App() {
         setPassword("");
         setMessage("");
     };
+
+    if (showPreloader) {
+        return (
+            <Preloader isExiting={preloaderExiting} />
+        );
+    }
 
     // Logged-in user: show the integrated application
     if (user) {

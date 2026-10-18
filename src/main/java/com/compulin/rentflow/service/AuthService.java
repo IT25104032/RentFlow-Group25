@@ -31,4 +31,36 @@ public class AuthService {
 
         return user;
     }
+
+    public void changePassword(Integer userId, String currentPassword, String newPassword) {
+        if (userId == null) {
+            throw new IllegalArgumentException("Your login session is invalid. Please log in again.");
+        }
+
+        if (newPassword.length() < 8) {
+            throw new IllegalArgumentException("New password must be at least 8 characters long.");
+        }
+
+        if (newPassword.length() > 72) {
+            throw new IllegalArgumentException("New password must not exceed 72 characters.");
+        }
+
+        sys_user user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User account was not found."));
+
+        if (!"ACTIVE".equalsIgnoreCase(user.getUser_status())) {
+            throw new IllegalArgumentException("Your user account is not active.");
+        }
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword_hash())) {
+            throw new IllegalArgumentException("Current password is incorrect.");
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPassword_hash())) {
+            throw new IllegalArgumentException("Your new password must be different from your current password.");
+        }
+
+        user.setPassword_hash(passwordEncoder.encode(newPassword));
+        userRepo.save(user);
+    }
 }
