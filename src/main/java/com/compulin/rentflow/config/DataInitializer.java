@@ -37,7 +37,12 @@ public class DataInitializer {
             );
 
             admin.setPassword_hash(
-                    passwordEncoder.encode("123456")
+                    passwordEncoder.encode(
+                            java.util.Objects.requireNonNull(
+                                    System.getenv("COMPULIN_ADMIN_INITIAL_PASSWORD"),
+                                    "COMPULIN_ADMIN_INITIAL_PASSWORD must be configured before creating the administrator."
+                            )
+                    )
             );
 
             admin.setPhone(

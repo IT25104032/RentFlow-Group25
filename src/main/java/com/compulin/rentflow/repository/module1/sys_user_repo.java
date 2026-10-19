@@ -46,6 +46,10 @@ public interface sys_user_repo
             @Param("companyId") Integer companyId
     );
 
+    // Load user's company in the same query for authentication checks.
+    @Query("select u from sys_user u left join fetch u.company where u.userId = :userId")
+    Optional<sys_user> findByIdWithCompany(@Param("userId") Integer userId);
+
     @Query(value = """
         SELECT * FROM sys_user
         WHERE user_id = :userId

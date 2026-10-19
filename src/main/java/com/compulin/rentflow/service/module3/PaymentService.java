@@ -30,6 +30,12 @@ public class PaymentService {
 
     @Transactional
     public Payment recordPayment(Integer invoiceId, BigDecimal amount, Payment.PaymentMethod paymentMethod, String referenceNo) {
+        return recordPayment(invoiceId, amount, paymentMethod, referenceNo, null);
+    }
+
+    @Transactional
+    public Payment recordPayment(Integer invoiceId, BigDecimal amount, Payment.PaymentMethod paymentMethod,
+                                 String referenceNo, Integer receivedBy) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found with ID: " + invoiceId));
 
@@ -52,6 +58,7 @@ public class PaymentService {
                 ? referenceNo
                 : "TXN-" + System.currentTimeMillis());
         payment.setPaymentStatus(Payment.PaymentStatus.COMPLETED);
+        payment.setReceivedBy(receivedBy);
 
         Payment savedPayment = paymentRepository.save(payment);
 
@@ -67,14 +74,14 @@ public class PaymentService {
     }
 
 
-     //Get all payment records in the system
+    //Get all payment records in the system
 
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
     }
 
 
-     //Get payment history for a specific invoice
+    //Get payment history for a specific invoice
 
     public List<Payment> getPaymentsByInvoiceId(Integer invoiceId) {
         return paymentRepository.findByInvoice_InvoiceId(invoiceId);

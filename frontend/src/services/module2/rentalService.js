@@ -1,10 +1,15 @@
+// Send the browser's authenticated session cookie with every backend request.
+// Required because the React development server and Spring Boot use different origins.
+const authenticatedFetch = (url, options = {}) =>
+    fetch(url, { ...options, credentials: "include" });
+
 const API_BASE_URL = "http://localhost:8081/api/rentals";
 
 /*
  * Create a new rental.
  */
 export async function createRental(rentalData) {
-    const response = await fetch(API_BASE_URL, {
+    const response = await authenticatedFetch(API_BASE_URL, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -24,7 +29,7 @@ export async function createRental(rentalData) {
  * Get one rental by rental ID and company ID.
  */
 export async function getRental(rentalId, companyId) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_BASE_URL}/${rentalId}?companyId=${companyId}`
     );
 
@@ -43,7 +48,7 @@ export async function getCustomerRentalHistory(
     customerId,
     companyId
 ) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_BASE_URL}/customer/${customerId}?companyId=${companyId}`
     );
 

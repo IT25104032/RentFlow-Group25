@@ -151,7 +151,7 @@ public class DamageService {
         if ("REPAIRED".equals(d.getStatus())) {
             throw new IllegalArgumentException("Already marked as repaired.");
         }
-        links.addToAvailableStock(links.equipmentOfRentalItem(d.getReturnItem().getRentalItemId()),
+        links.addToAvailableStock(companyId, links.equipmentOfRentalItem(d.getReturnItem().getRentalItemId()),
                 d.getDamagedQuantity());
         d.setStatus("REPAIRED");
         damageRecordRepository.saveAndFlush(d);

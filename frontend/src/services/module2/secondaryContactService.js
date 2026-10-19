@@ -11,7 +11,8 @@ export async function getSecondaryContact(
 ) {
 
     const response = await fetch(
-        `${API_BASE_URL}/customer/${customerId}`
+        `${API_BASE_URL}/customer/${customerId}`,
+        { credentials: "include" }
     );
 
 
@@ -48,6 +49,7 @@ export async function createSecondaryContact(
         API_BASE_URL,
         {
             method: "POST",
+            credentials: "include",
 
             headers: {
                 "Content-Type": "application/json"
@@ -84,6 +86,7 @@ export async function updateSecondaryContact(
         `${API_BASE_URL}/${secondaryContactId}?customerId=${customerId}`,
         {
             method: "PUT",
+            credentials: "include",
 
             headers: {
                 "Content-Type": "application/json"

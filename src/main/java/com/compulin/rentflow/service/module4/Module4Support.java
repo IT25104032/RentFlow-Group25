@@ -2,6 +2,8 @@ package com.compulin.rentflow.service.module4;
 
 import com.compulin.rentflow.repository.module4.RentalLookupRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -47,7 +49,10 @@ public class Module4Support {
             throw new IllegalArgumentException("Rental #" + rentalId + " was not found.");
         }
         if (companyId != null && !companyId.equals(asInt(rental.get("company_id")))) {
-            throw new IllegalArgumentException("Rental #" + rentalId + " belongs to another company.");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Rental #" + rentalId + " belongs to another company."
+            );
         }
         return rental;
     }

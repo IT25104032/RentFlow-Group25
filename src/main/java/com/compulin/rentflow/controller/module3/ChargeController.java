@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpSession;
+import com.compulin.rentflow.security.Module3Access;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,20 +16,22 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/charges")
-@CrossOrigin(origins = "*")
 public class ChargeController {
 
     private final ChargeRepository chargeRepository;
+    private final Module3Access access;
 
     @Autowired
-    public ChargeController(ChargeRepository chargeRepository) {
+    public ChargeController(ChargeRepository chargeRepository, Module3Access access) {
         this.chargeRepository = chargeRepository;
+        this.access = access;
     }
 
 
     // Get all charges for a specific invoice
     @GetMapping("/invoice/{invoiceId}")
-    public ResponseEntity<List<Map<String, Object>>> getChargesByInvoiceId(@PathVariable Integer invoiceId) {
+    public ResponseEntity<List<Map<String, Object>>> getChargesByInvoiceId(@PathVariable Integer invoiceId, HttpSession session) {
+        access.invoice(invoiceId, session);
         List<Charge> charges = chargeRepository.findByInvoice_InvoiceId(invoiceId);
 
         // Manually map only the exact fields React needs, stripping away all relationships and dates
@@ -43,7 +47,8 @@ public class ChargeController {
     }
 
     @GetMapping("/rental/{rentalId}")
-    public ResponseEntity<List<Charge>> getChargesByRentalId(@PathVariable Integer rentalId) {
+    public ResponseEntity<List<Charge>> getChargesByRentalId(@PathVariable Integer rentalId, HttpSession session) {
+        access.rental(rentalId, session);
         List<Charge> charges = chargeRepository.findByRentalId(rentalId);
         return ResponseEntity.ok(charges);
     }

@@ -129,3 +129,31 @@ export async function getCustomer(
 
     return await response.json();
 }
+
+/* Register renter, ID document and secondary contact in one transaction. */
+export async function createCompleteRenter({ customer, contact, document }) {
+    const data = new FormData();
+    data.append("customer", new Blob([JSON.stringify(customer)], { type: "application/json" }));
+    data.append("contact", new Blob([JSON.stringify(contact)], { type: "application/json" }));
+    data.append("documentType", document.documentType);
+    data.append("documentNumber", document.documentNumber);
+    data.append("documentFile", document.documentFile);
+    if (document.expiryDate) data.append("expiryDate", document.expiryDate);
+    if (document.notes) data.append("notes", document.notes);
+
+    const response = await fetch(`${API_BASE_URL}/complete-registration`, {
+        method: "POST",
+        credentials: "include",
+        body: data
+    });
+    if (!response.ok) {
+        let message = `Complete renter registration failed (HTTP ${response.status}).`;
+        try {
+            const body = await response.json();
+            if (body.message) message += ` ${body.message}`;
+            else if (body.detail) message += ` ${body.detail}`;
+        } catch { /* empty or non-JSON response */ }
+        throw new Error(message);
+    }
+    return response.json();
+}

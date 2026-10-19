@@ -8,6 +8,9 @@ import com.compulin.rentflow.service.module4.SettlementService;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.*;
+import com.compulin.rentflow.controller.AuthController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -24,6 +27,23 @@ public class SettlementController {
         this.settlementService = settlementService;
     }
 
+    private void requireRentalOfficer(HttpSession session) {
+        Object roleValue = session.getAttribute(AuthController.SESSION_ROLE);
+
+        String role = roleValue == null ? "" : roleValue.toString();
+
+        if (role.startsWith("ROLE_")) {
+            role = role.substring(5);
+        }
+
+        if (!"RENTAL_OFFICER".equals(role)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only rental officers can perform settlements and record payments."
+            );
+        }
+    }
+
     @GetMapping
     public List<SettlementRow> list(@RequestParam(required = false) String search, HttpSession session) {
         return settlementService.list(Module4Session.companyId(session), search);
@@ -38,6 +58,7 @@ public class SettlementController {
     public SettlementPreview settle(@PathVariable Integer rentalId,
                                     @RequestBody(required = false) SettleRequest request,
                                     HttpSession session) {
+        requireRentalOfficer(session);
         return settlementService.settle(Module4Session.companyId(session), rentalId,
                 Module4Session.userId(session, request == null ? null : request.userId()));
     }
@@ -46,6 +67,7 @@ public class SettlementController {
     public SettlementPreview pay(@PathVariable Integer rentalId,
                                  @RequestBody SettlementPaymentRequest request,
                                  HttpSession session) {
+        requireRentalOfficer(session);
         return settlementService.payAndSettle(Module4Session.companyId(session), rentalId,
                 request.amount(), request.paymentMethod(), request.referenceNo(),
                 Module4Session.userId(session, request.userId()));

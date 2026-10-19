@@ -173,6 +173,7 @@ public class company_service {
                 );
     }
 
+    @Transactional
     public company updateCompany(
             Integer id,
             company companyDetails
@@ -206,25 +207,41 @@ public class company_service {
                 companyDetails.getAddress()
         );
 
-        existing.setCompany_status(
-                companyDetails.getCompany_status()
-        );
+        // Synchronize users only when the company actually changes status.
+        // Editing the name, phone, etc. must not reset individual user statuses.
+        String requestedStatus = companyDetails.getCompany_status();
+        if (requestedStatus != null && !requestedStatus.isBlank()) {
+            String normalized = requestedStatus.trim().toUpperCase(java.util.Locale.ROOT);
+            if (!"ACTIVE".equals(normalized) && !"INACTIVE".equals(normalized)) {
+                throw new IllegalArgumentException("Company status must be ACTIVE or INACTIVE");
+            }
+            if (!normalized.equalsIgnoreCase(existing.getCompany_status())) {
+                setCompanyAndUsersStatus(existing, normalized);
+            }
+        }
 
         return companyRepo.save(existing);
     }
 
+    @Transactional
     public void deactivateCompany(Integer id) {
-
-        company existing =
-                companyRepo.findById(id)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Company not found"
-                                )
-                        );
-
-        existing.setCompany_status("INACTIVE");
-
+        company existing = companyRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Company not found"));
+        setCompanyAndUsersStatus(existing, "INACTIVE");
         companyRepo.save(existing);
+    }
+
+    /**
+     * Apply a company status change and synchronize ALL company users.
+     * Deactivation and reactivation are atomic in the calling transaction.
+     * COMPULIN_ADMIN accounts (not assigned to the company) are unaffected.
+     */
+    private void setCompanyAndUsersStatus(company existing, String status) {
+        existing.setCompany_status(status);
+        var users = userRepo.findByCompanyCompanyId(existing.getCompany_id());
+        for (sys_user user : users) {
+            user.setUser_status(status);
+        }
+        userRepo.saveAll(users);
     }
 }
