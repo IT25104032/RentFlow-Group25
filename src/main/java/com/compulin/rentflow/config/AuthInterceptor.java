@@ -27,6 +27,12 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         String path = request.getRequestURI();
 
+        // Allow the frontend to obtain a CSRF token before login.
+        if ("GET".equals(request.getMethod())
+                && "/api/auth/csrf".equals(path)) {
+            return true;
+        }
+
         // Preflight requests contain no authenticated session.
         if (HttpMethod.OPTIONS.matches(request.getMethod())) {
             return true;
@@ -91,6 +97,31 @@ public class AuthInterceptor implements HandlerInterceptor {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"message\":\"Account or company is inactive. Please contact your administrator.\"}");
+            return false;
+        }
+
+        // Ensure that the session role matches the user's current database role.
+        String databaseRole = currentUser.getUser_role();
+
+        String sessionRole = role.startsWith("ROLE_")
+                ? role.substring(5)
+                : role;
+
+        String normalizedDatabaseRole = databaseRole == null
+                ? ""
+                : databaseRole.startsWith("ROLE_")
+                ? databaseRole.substring(5)
+                : databaseRole;
+
+        if (!normalizedDatabaseRole.equals(sessionRole)) {
+            session.invalidate();
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    "{\"message\":\"Your account permissions have changed. Please log in again.\"}"
+            );
+
             return false;
         }
 

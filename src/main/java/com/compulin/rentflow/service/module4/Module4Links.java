@@ -43,38 +43,39 @@ public class Module4Links {
     }
 
     // Module 1 - Equipment
-    /** Returned / repaired units are available again */
-    public void addToAvailableStock(Integer equipmentId, int quantity) {
-        if (equipmentId == null || quantity <= 0) {
-            return;
-        }
-        jdbc.update("""
+    /** Returned / repaired units become available again, within the rental company. */
+    public void addToAvailableStock(Integer companyId, Integer equipmentId, int quantity) {
+        requireStockArguments(companyId, equipmentId, quantity);
+        int updated = jdbc.update("""
                 UPDATE equipment
                 SET available_quantity = LEAST(total_quantity, available_quantity + ?)
-                WHERE equipment_id = ?
-                """, quantity, equipmentId);
+                WHERE equipment_id = ? AND company_id = ?
+                """, quantity, equipmentId, companyId);
+        requireUpdatedEquipment(updated);
     }
 
-    /** Lost units leave the company's stock. */
-    public void writeOffStock(Integer equipmentId, int quantity) {
-        requireEquipment(equipmentId);
-        jdbc.update("""
+    /** Lost units leave only the authenticated company's inventory. */
+    public void writeOffStock(Integer companyId, Integer equipmentId, int quantity) {
+        requireStockArguments(companyId, equipmentId, quantity);
+        int updated = jdbc.update("""
                 UPDATE equipment
                 SET total_quantity = GREATEST(0, total_quantity - ?),
                     available_quantity = LEAST(available_quantity, total_quantity)
-                WHERE equipment_id = ?
-                """, quantity, equipmentId);
+                WHERE equipment_id = ? AND company_id = ?
+                """, quantity, equipmentId, companyId);
+        requireUpdatedEquipment(updated);
     }
 
-    /** Lost units were found and returned. */
-    public void restoreStock(Integer equipmentId, int quantity) {
-        requireEquipment(equipmentId);
-        jdbc.update("""
+    /** Recovered lost units return only to the authenticated company's inventory. */
+    public void restoreStock(Integer companyId, Integer equipmentId, int quantity) {
+        requireStockArguments(companyId, equipmentId, quantity);
+        int updated = jdbc.update("""
                 UPDATE equipment
                 SET total_quantity = total_quantity + ?,
                     available_quantity = available_quantity + ?
-                WHERE equipment_id = ?
-                """, quantity, quantity, equipmentId);
+                WHERE equipment_id = ? AND company_id = ?
+                """, quantity, quantity, equipmentId, companyId);
+        requireUpdatedEquipment(updated);
     }
 
     public Integer equipmentOfRentalItem(Integer rentalItemId) {
@@ -83,11 +84,15 @@ public class Module4Links {
         return ids.isEmpty() ? null : ids.get(0);
     }
 
-    private void requireEquipment(Integer equipmentId) {
-        Integer n = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM equipment WHERE equipment_id = ?", Integer.class, equipmentId);
-        if (n == null || n == 0) {
-            throw new IllegalArgumentException("Equipment not found.");
+    private void requireStockArguments(Integer companyId, Integer equipmentId, int quantity) {
+        if (companyId == null || equipmentId == null || quantity <= 0) {
+            throw new IllegalArgumentException("Company, equipment and a positive quantity are required.");
+        }
+    }
+
+    private void requireUpdatedEquipment(int updated) {
+        if (updated != 1) {
+            throw new IllegalStateException("Equipment inventory update failed or equipment belongs to another company.");
         }
     }
 

@@ -71,7 +71,7 @@ public class LostItemService {
         int out = asInt(item.get("quantity")) - asInt(item.get("returned_qty")) - asInt(item.get("lost_qty"));
         validate(line, out, (String) item.get("item_name"));
 
-        LostItem saved = save(rentalId, item, line, userId);
+        LostItem saved = save(companyId, rentalId, item, line, userId);
         support.refreshStatuses(rentalId);
         return lookup.findLostItems(null, null, null, saved.getLostItemId()).get(0);
     }
@@ -79,7 +79,7 @@ public class LostItemService {
     /**
      * Saves a lost note whose quantity was already validated by the rental officer
      */
-    LostItem save(Integer rentalId, Map<String, Object> item, LostLine line, Integer userId) {
+    LostItem save(Integer companyId, Integer rentalId, Map<String, Object> item, LostLine line, Integer userId) {
         BigDecimal unitCost = money(line.replacementCostPerUnit());
         String name = (String) item.get("item_name");
 
@@ -105,7 +105,7 @@ public class LostItemService {
         }
 
         // INTEGRATION (Module 4 -> Module 1): lost units leave the company's inventory.
-        links.writeOffStock(asInt(item.get("equipment_id")), lost.getQuantityLost());
+        links.writeOffStock(companyId, asInt(item.get("equipment_id")), lost.getQuantityLost());
 
         return lostItemRepository.saveAndFlush(lost);
     }
@@ -126,7 +126,7 @@ public class LostItemService {
         billing.removeCharges(view.rentalId(), Module4Billing.LOST_ITEM, Module4Billing.lostLabel(lostItemId));
 
         Map<String, Object> item = findLine(view.rentalId(), lost.getRentalItemId());
-        links.restoreStock(asInt(item.get("equipment_id")), lost.getQuantityLost());
+        links.restoreStock(companyId, asInt(item.get("equipment_id")), lost.getQuantityLost());
 
         lost.setLostStatus("RECOVERED");
         lost.setChargeAmount(BigDecimal.ZERO);

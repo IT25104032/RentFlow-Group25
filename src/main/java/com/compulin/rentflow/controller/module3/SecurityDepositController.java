@@ -6,6 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpSession;
 import com.compulin.rentflow.security.Module3Access;
+import com.compulin.rentflow.controller.AuthController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -21,6 +24,23 @@ public class SecurityDepositController {
     public SecurityDepositController(SecurityDepositService securityDepositService, Module3Access access) {
         this.securityDepositService = securityDepositService;
         this.access = access;
+    }
+
+    private void requireRentalOfficer(HttpSession session) {
+        Object roleValue = session.getAttribute(AuthController.SESSION_ROLE);
+
+        String role = roleValue == null ? "" : roleValue.toString();
+
+        if (role.startsWith("ROLE_")) {
+            role = role.substring(5);
+        }
+
+        if (!"RENTAL_OFFICER".equals(role)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only rental officers can collect and refund security deposits."
+            );
+        }
     }
 
     // Retrieves all security deposits
@@ -45,6 +65,7 @@ public class SecurityDepositController {
     // Body: { "amountReceived": 6000 }
     @PutMapping("/{id}/receive")
     public ResponseEntity<SecurityDeposit> receiveDeposit(@PathVariable Integer id, @RequestBody Map<String, Object> body, HttpSession session) {
+        requireRentalOfficer(session);
         access.deposit(id, session);
         BigDecimal amountReceived = new BigDecimal(body.get("amountReceived").toString());
         // receivedBy is null until login is integrated
@@ -54,6 +75,7 @@ public class SecurityDepositController {
     // Refunds the deposit after return, minus any deduction
     @PutMapping("/{id}/refund")
     public ResponseEntity<SecurityDeposit> processDepositReturn(@PathVariable Integer id, @RequestBody Map<String, Object> body, HttpSession session) {
+        requireRentalOfficer(session);
         access.deposit(id, session);
         BigDecimal amountDeducted = new BigDecimal(body.getOrDefault("amountDeducted", "0").toString());
         return ResponseEntity.ok(securityDepositService.processDepositReturn(id, amountDeducted));

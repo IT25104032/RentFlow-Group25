@@ -29,90 +29,58 @@ public class CustomerDocumentStorageService {
      * Returns the relative server path that
      * will be stored in the database.
      */
-    public String saveDocument(
-            MultipartFile file
-    ) {
+
+    public String saveDocument(MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
-
             throw new IllegalArgumentException(
-                    "Identification document file is required."
-            );
+                    "Identification document file is required.");
         }
 
+        String originalName = file.getOriginalFilename();
 
-        /*
-         * Get the original filename supplied
-         * by the user's browser.
-         */
-        String originalFileName =
-                StringUtils.cleanPath(
-                        file.getOriginalFilename()
-                );
-
-
-        if (originalFileName.isBlank()) {
-
+        if (originalName == null || originalName.isBlank()) {
             throw new IllegalArgumentException(
-                    "Identification document filename is invalid."
-            );
+                    "Identification document filename is invalid.");
         }
 
+        String extension = org.springframework.util.StringUtils
+                .getFilenameExtension(originalName);
 
-        /*
-         * Generate a unique filename.
-         *
-         * Example:
-         * UUID_kasun_nic.jpg
-         */
-        String uniqueFileName =
-                UUID.randomUUID()
-                        + "_"
-                        + originalFileName;
+        extension = extension == null
+                ? ""
+                : extension.toLowerCase(java.util.Locale.ROOT);
 
+        if (!java.util.Set.of("pdf", "jpg", "jpeg", "png")
+                .contains(extension)) {
+            throw new IllegalArgumentException(
+                    "Only PDF, JPG, JPEG and PNG documents are allowed.");
+        }
+
+        String uniqueFileName = UUID.randomUUID() + "." + extension;
 
         try {
+            Path uploadRoot = UPLOAD_DIRECTORY.toAbsolutePath().normalize();
 
-            /*
-             * Create the upload directory if
-             * it does not already exist.
-             */
-            Files.createDirectories(
-                    UPLOAD_DIRECTORY
-            );
+            Files.createDirectories(uploadRoot);
 
+            Path targetPath = uploadRoot.resolve(uniqueFileName).normalize();
 
-            /*
-             * Create the complete target path.
-             */
-            Path targetPath =
-                    UPLOAD_DIRECTORY.resolve(
-                            uniqueFileName
-                    );
+            if (!targetPath.startsWith(uploadRoot)) {
+                throw new IllegalArgumentException(
+                        "Invalid document storage path.");
+            }
 
-
-            /*
-             * Save the uploaded file.
-             */
             Files.copy(
                     file.getInputStream(),
-                    targetPath,
-                    StandardCopyOption.REPLACE_EXISTING
+                    targetPath
             );
 
-
-            /*
-             * Return the relative path.
-             *
-             * This is what will be stored
-             * in document_copy_path.
-             */
-            return targetPath
+            return UPLOAD_DIRECTORY.resolve(uniqueFileName)
                     .toString()
                     .replace("\\", "/");
 
         } catch (IOException exception) {
-
             throw new IllegalStateException(
                     "Failed to save identification document.",
                     exception

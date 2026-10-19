@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,6 +32,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestBody Map<String, String> loginRequest,
+            HttpServletRequest request,
             HttpSession session) {
 
         String email = loginRequest.get("email");
@@ -48,6 +50,9 @@ public class AuthController {
 
         try {
             sys_user user = authService.login(email, password);
+
+            // Prevent session fixation after successful login.
+            request.changeSessionId();
 
             session.setAttribute(
                     SESSION_USER_ID,

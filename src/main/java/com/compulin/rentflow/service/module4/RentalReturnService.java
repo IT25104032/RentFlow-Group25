@@ -264,7 +264,7 @@ public class RentalReturnService {
             // INTEGRATION (Module 4 & Module 1): good units can be rented again
             int backToStock = line.quantityReturned() - heldBack;
             if (backToStock > 0) {
-                links.addToAvailableStock(asInt(item.get("equipment_id")), backToStock);
+                links.addToAvailableStock(companyId, asInt(item.get("equipment_id")), backToStock);
             }
 
             // INTEGRATION (Module 4 & Module 3): late return charge
@@ -285,7 +285,7 @@ public class RentalReturnService {
 
         //lost units
         for (LostLine line : lostLines) {
-            LostItem lost = lostItemService.save(rentalId, items.get(line.rentalItemId()), line, userId);
+            LostItem lost = lostItemService.save(companyId, rentalId, items.get(line.rentalItemId()), line, userId);
             unitsLost += lost.getQuantityLost();
             lostTotal = lostTotal.add(money(lost.getChargeAmount()));
         }
