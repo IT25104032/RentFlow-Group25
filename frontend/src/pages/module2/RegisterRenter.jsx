@@ -899,36 +899,6 @@ function RegisterRenter() {
 
 
             {/* =====================================
-                TOP NAVIGATION
-            ===================================== */}
-
-            <header className="register-renter-topbar">
-
-                <div className="register-renter-brand">
-                    RentFlow
-                </div>
-
-
-                <div className="register-renter-user">
-
-                    <div className="register-renter-user-avatar">
-                        <span>●</span>
-                    </div>
-
-                    <span>
-                        Rental Officer
-                    </span>
-
-                    <span className="register-renter-chevron">
-                       ⌄
-                    </span>
-
-                </div>
-
-            </header>
-
-
-            {/* =====================================
                 MAIN CONTENT
             ===================================== */}
 
