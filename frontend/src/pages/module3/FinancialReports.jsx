@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { getRentalSummary, getReport } from '../../services/module3/reportApi';
 import '../../styles/module3/PaymentManagement.css';
+import BillingTabs from '../../components/module3/BillingTabs';
 
 const REPORT_TYPES = [
     { value: 'OUTSTANDING', label: 'Outstanding Invoices' },
@@ -187,14 +188,19 @@ export default function FinancialReports() {
 
     // ---------- Render ----------
 
-    const inputStyle = { padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--rf-border)' };
-    const sectionStyle = { background: 'var(--rf-card)', padding: '20px', borderRadius: '8px', border: '1px solid var(--rf-border)', marginBottom: '30px' };
-    const totalRow = { fontWeight: 'bold', backgroundColor: 'var(--rf-card-2)' };
+    const inputStyle = { padding: '0 16px', minHeight: '42px', borderRadius: '999px', border: '1px solid #DCE8F6', background: '#fff', color: '#0B1B3F', boxShadow: '0 1px 2px rgba(18,52,110,.05), 0 4px 12px rgba(36,92,170,.07)' };
+    const sectionStyle = { background: '#fff', padding: '26px 28px', borderRadius: '24px', border: '1px solid rgba(220,232,246,.9)', boxShadow: '0 1px 2px rgba(18,52,110,.04), 0 10px 30px rgba(36,92,170,.09)', marginBottom: '28px' };
+    const totalRow = { fontWeight: 800, backgroundColor: '#EAF3FD' };
 
     return (
         <div className="payment-container">
-            <div className="header-bar">
-                <h2>Financial Summary & Reports</h2>
+            <div className="rf-page-head">
+                <h1>Billing &amp; Payments</h1>
+                <BillingTabs />
+            </div>
+
+            <div className="rf-section-head">
+                <h2>Financial Summary &amp; Reports</h2>
             </div>
 
             {/* ===== Scenario A: Rental Financial Summary ===== */}
@@ -214,7 +220,7 @@ export default function FinancialReports() {
 
                 {summary && (
                     <>
-                        <p style={{ color: 'var(--rf-muted)' }}>
+                        <p style={{ color: '#6A7B9B' }}>
                             <strong>Rental #{summary.rentalId}</strong> | Customer: {summary.customerName || '-'}
                             {summary.customerPhone ? ` (${summary.customerPhone})` : ''} | Period: {summary.startDate} to {summary.dueDate}
                             {' '}| Invoice #{summary.invoiceId}{' '}
@@ -304,10 +310,10 @@ export default function FinancialReports() {
 
                 {report && (
                     <>
-                        <p style={{ color: 'var(--rf-muted)' }}><strong>{report.title}</strong> | {periodText(report)} | {report.recordCount} record(s)</p>
+                        <p style={{ color: '#6A7B9B' }}><strong>{report.title}</strong> | {periodText(report)} | {report.recordCount} record(s)</p>
 
                         {report.recordCount === 0 ? (
-                            <div className="error-banner" style={{ backgroundColor: 'rgba(250, 204, 21, 0.12)', color: '#facc15', borderColor: 'rgba(250, 204, 21, 0.3)' }}>
+                            <div className="error-banner" style={{ backgroundColor: '#FEF1D6', color: '#B45309', borderColor: '#F6DDA0' }}>
                                 No records found for these filters. Try a different report type or date range.
                             </div>
                         ) : report.reportType === 'PAYMENTS_BY_METHOD' ? (
