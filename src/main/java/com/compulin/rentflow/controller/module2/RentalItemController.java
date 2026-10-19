@@ -73,8 +73,11 @@ public class RentalItemController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Equipment does not belong to your company.");
         }
 
-        RentalItemResponse response = rentalItemService.createRentalItem(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Rental items must be created through rental confirmation."
+        );
+
     }
 
     @GetMapping("/rental/{rentalId}")
