@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./ChangePassword.css";
 
-const API_URL = "http://localhost:8081/api/auth/change-password";
+const API_URL = "/api/auth/change-password";
 
 function VisibilityIcon({ visible }) {
     return visible ? (

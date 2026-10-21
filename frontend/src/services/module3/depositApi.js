@@ -3,7 +3,7 @@
 const authenticatedFetch = (url, options = {}) =>
     fetch(url, { ...options, credentials: "include" });
 
-const API_BASE_URL = 'http://localhost:8081/api/v1';
+const API_BASE_URL = '/api/v1';
 
 // Shows the backend's message if there is one, otherwise a fallback
 const handleResponse = async (response, fallbackMessage) => {

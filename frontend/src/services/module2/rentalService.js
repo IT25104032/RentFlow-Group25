@@ -3,7 +3,7 @@
 const authenticatedFetch = (url, options = {}) =>
     fetch(url, { ...options, credentials: "include" });
 
-const API_BASE_URL = "http://localhost:8081/api/rentals";
+const API_BASE_URL = "/api/rentals";
 
 /*
  * Create a new rental.

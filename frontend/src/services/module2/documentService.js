@@ -1,5 +1,5 @@
 const API_BASE_URL =
-    "http://localhost:8081/api/customer-documents";
+    "/api/customer-documents";
 
 
 /*

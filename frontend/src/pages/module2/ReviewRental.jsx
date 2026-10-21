@@ -175,7 +175,7 @@ function ReviewRental() {
             // Send the confirmation request to Spring Boot.
             const response =
                 await fetch(
-                    "http://localhost:8081/api/rentals/confirm",
+                    "/api/rentals/confirm",
                     {
                         method: "POST",
                         credentials: "include",

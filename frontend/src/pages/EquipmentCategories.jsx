@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './EquipmentCategories.css'
 
-const API_URL = 'http://localhost:8081/api/module1/equipment-categories'
+const API_URL = '/api/module1/equipment-categories'
 
 function EquipmentCategories({ user }) {
     const role = (user?.role || '').replace('ROLE_', '').toUpperCase()

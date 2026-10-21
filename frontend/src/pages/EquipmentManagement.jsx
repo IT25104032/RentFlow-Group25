@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import './EquipmentManagement.css'
 
 const EQUIPMENT_API =
-    'http://localhost:8081/api/module1/equipment'
+    '/api/module1/equipment'
 
 const CATEGORY_API =
-    'http://localhost:8081/api/module1/equipment-categories/status/ACTIVE'
+    '/api/module1/equipment-categories/status/ACTIVE'
 
 const displayEquipmentStatus = (status) => {
     const normalized = String(status || 'ACTIVE').trim().toUpperCase()

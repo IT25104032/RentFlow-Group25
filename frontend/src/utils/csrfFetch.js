@@ -1,5 +1,5 @@
+const API_ORIGIN = window.location.origin;
 
-const API_ORIGIN = "http://localhost:8081";
 const originalFetch = window.fetch.bind(window);
 
 let csrfToken = null;

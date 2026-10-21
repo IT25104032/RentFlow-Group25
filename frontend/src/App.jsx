@@ -43,7 +43,7 @@ function App() {
 
         try {
             const response = await fetch(
-                "http://localhost:8081/api/auth/login",
+                "/api/auth/login",
                 {
                     method: "POST",
                     headers: {
@@ -81,7 +81,7 @@ function App() {
     const handleLogout = async () => {
         try {
             await fetch(
-                "http://localhost:8081/api/auth/logout",
+                "/api/auth/logout",
                 {
                     method: "POST",
                     credentials: "include"

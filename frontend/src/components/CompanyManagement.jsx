@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './CompanyManagement.css'
 
-const API_URL = 'http://localhost:8081/api/module1/companies'
+const API_URL = '/api/module1/companies'
 
 function CompanyManagement({ user }) {
     const [companies, setCompanies] = useState([])

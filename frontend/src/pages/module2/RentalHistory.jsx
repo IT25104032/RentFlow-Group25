@@ -56,7 +56,7 @@ function RentalHistory() {
 
             try {
                 const response = await fetch(
-                    `http://localhost:8081/api/settlements/${rentalId}`,
+                    `/api/settlements/${rentalId}`,
                     {
                         method: "GET",
                         credentials: "include"
