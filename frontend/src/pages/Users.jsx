@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import "./Users.css";
 
-const API = "http://localhost:8081/api/module1/users";
+const API = "/api/module1/users";
 
 const emptyForm = () => ({
     full_name: "",

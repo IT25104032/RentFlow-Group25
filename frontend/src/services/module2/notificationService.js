@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8081/api/rentals";
+const API_BASE_URL = "/api/rentals";
 
 
 /*

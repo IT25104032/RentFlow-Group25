@@ -58,7 +58,7 @@ function RoleDashboard({ user, onLogout }) {
         if (compulinAdmin) {
             try {
                 const response = await fetch(
-                    'http://localhost:8081/api/module1/companies',
+                    '/api/module1/companies',
                     {
                         method: 'GET',
                         credentials: 'include'
@@ -102,7 +102,7 @@ function RoleDashboard({ user, onLogout }) {
 
             try {
                 const response = await fetch(
-                    'http://localhost:8081/api/module1/users',
+                    '/api/module1/users',
                     {
                         method: 'GET',
                         credentials: 'include'
@@ -137,7 +137,7 @@ function RoleDashboard({ user, onLogout }) {
 
             try {
                 const response = await fetch(
-                    'http://localhost:8081/api/module1/equipment-categories',
+                    '/api/module1/equipment-categories',
                     {
                         method: 'GET',
                         credentials: 'include'
@@ -172,7 +172,7 @@ function RoleDashboard({ user, onLogout }) {
 
             try {
                 const response = await fetch(
-                    'http://localhost:8081/api/module1/equipment',
+                    '/api/module1/equipment',
                     {
                         method: 'GET',
                         credentials: 'include'

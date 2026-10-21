@@ -3,7 +3,7 @@
 const authenticatedFetch = (url, options = {}) =>
     fetch(url, { ...options, credentials: "include" });
 
-const API_BASE_URL = 'http://localhost:8081/api/v1/reports';
+const API_BASE_URL = '/api/v1/reports';
 
 const handleResponse = async (response, fallbackMessage) => {
     if (!response.ok) {

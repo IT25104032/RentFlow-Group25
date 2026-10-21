@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getAllCustomers } from "../../services/module2/customerService";
 import "./RentalReports.css";
 
-const API = "http://localhost:8081/api/rentals";
+const API = "/api/rentals";
 const dateText = (value) =>
     value ? String(value).slice(0, 10) : "—";
 const getUser = () => {
@@ -108,7 +108,7 @@ export default function RentalReports() {
 
         async function loadEquipmentNames() {
             try {
-                const response = await fetch("http://localhost:8081/api/module1/equipment", {
+                const response = await fetch("/api/module1/equipment", {
                     credentials: "include",
                     signal: controller.signal
                 });
@@ -158,7 +158,7 @@ export default function RentalReports() {
         setSettlementMessage("");
         if (reportType !== "individual" || !selectedRentalId || !history.some(r => String(r.rental?.rentalId) === String(selectedRentalId))) return;
         let active = true;
-        fetch(`http://localhost:8081/api/settlements/${encodeURIComponent(selectedRentalId)}`, { credentials: "include" })
+        fetch(`/api/settlements/${encodeURIComponent(selectedRentalId)}`, { credentials: "include" })
             .then(async response => {
                 if (!response.ok) throw new Error(`Settlement details unavailable (HTTP ${response.status}).`);
                 return response.json();

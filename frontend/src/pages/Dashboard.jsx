@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './Dashboard.css'
 
-const API = 'http://localhost:8081/api/module1'
+const API = '/api/module1'
 
 function Dashboard({ user }) {
     const role = (user?.role || '').replace(/^ROLE_/, '').toUpperCase()

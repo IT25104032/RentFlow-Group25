@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import './CompanyProfile.css'
 
-const API = 'http://localhost:8081/api/module1/company-profile'
+const API = '/api/module1/company-profile'
 
 function CompanyProfile() {
     const [profile, setProfile] = useState({

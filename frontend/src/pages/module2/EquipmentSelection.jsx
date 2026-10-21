@@ -5,7 +5,7 @@ import RentalStepper from "../../components/module2/RentalStepper";
 import "./EquipmentSelection.css";
 
 const EQUIPMENT_API =
-    "http://localhost:8081/api/module1/equipment/available-for-rental";
+    "/api/module1/equipment/available-for-rental";
 
 function EquipmentSelection({ onBack }) {
     const location = useLocation();
